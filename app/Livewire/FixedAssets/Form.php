@@ -1,0 +1,136 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\FixedAssets;
+
+use App\Models\FixedAsset;
+use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+class Form extends Component
+{
+    use AuthorizesRequests;
+
+    public ?FixedAsset $asset = null;
+    public bool $isEditing = false;
+
+    // Form fields
+    public string $name = '';
+    public string $description = '';
+    public string $category = '';
+    public string $location = '';
+    public string $purchase_date = '';
+    public string $purchase_cost = '';
+    public string $salvage_value = '0';
+    public string $useful_life_years = '';
+    public string $useful_life_months = '0';
+    public string $depreciation_method = 'straight_line';
+    public string $depreciation_rate = '';
+    public ?int $supplier_id = null;
+    public string $serial_number = '';
+    public string $model = '';
+    public string $manufacturer = '';
+    public string $warranty_expiry = '';
+    public ?int $assigned_to = null;
+    public string $notes = '';
+
+    protected function rules(): array
+    {
+        return [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category' => 'required|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'purchase_date' => 'required|date',
+            'purchase_cost' => 'required|numeric|min:0',
+            'salvage_value' => 'required|numeric|min:0',
+            'useful_life_years' => 'required|integer|min:1',
+            'useful_life_months' => 'nullable|integer|min:0|max:11',
+            'depreciation_method' => 'required|in:straight_line,declining_balance,units_of_production',
+            'depreciation_rate' => 'nullable|numeric|min:0|max:100',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'serial_number' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:255',
+            'manufacturer' => 'nullable|string|max:255',
+            'warranty_expiry' => 'nullable|date',
+            'assigned_to' => 'nullable|exists:users,id',
+            'notes' => 'nullable|string',
+        ];
+    }
+
+    public function mount(?FixedAsset $asset = null): void
+    {
+        if ($asset && $asset->exists) {
+            $this->authorize('fixed-assets.edit');
+            $this->isEditing = true;
+            $this->asset = $asset;
+            $this->fill($asset->toArray());
+            $this->purchase_date = $asset->purchase_date->format('Y-m-d');
+            $this->warranty_expiry = $asset->warranty_expiry?->format('Y-m-d') ?? '';
+        } else {
+            $this->authorize('fixed-assets.create');
+            $this->purchase_date = now()->format('Y-m-d');
+        }
+    }
+
+    public function save(): void
+    {
+        $this->validate();
+
+        $data = [
+            'branch_id' => auth()->user()->branch_id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'category' => $this->category,
+            'location' => $this->location,
+            'purchase_date' => $this->purchase_date,
+            'purchase_cost' => $this->purchase_cost,
+            'salvage_value' => $this->salvage_value,
+            'useful_life_years' => $this->useful_life_years,
+            'useful_life_months' => $this->useful_life_months ?: 0,
+            'depreciation_method' => $this->depreciation_method,
+            'depreciation_rate' => $this->depreciation_rate ?: null,
+            'supplier_id' => $this->supplier_id,
+            'serial_number' => $this->serial_number,
+            'model' => $this->model,
+            'manufacturer' => $this->manufacturer,
+            'warranty_expiry' => $this->warranty_expiry ?: null,
+            'assigned_to' => $this->assigned_to,
+            'notes' => $this->notes,
+            'status' => 'active',
+        ];
+
+        if ($this->isEditing) {
+            $data['updated_by'] = auth()->id();
+            $this->asset->update($data);
+            session()->flash('success', __('Fixed asset updated successfully'));
+        } else {
+            $data['created_by'] = auth()->id();
+            FixedAsset::create($data);
+            session()->flash('success', __('Fixed asset created successfully'));
+        }
+
+        $this->redirect(route('fixed-assets.index'));
+    }
+
+    #[Layout('layouts.app')]
+    public function render()
+    {
+        $suppliers = Supplier::where('branch_id', auth()->user()->branch_id)
+            ->orderBy('name')
+            ->get();
+
+        $users = User::whereHas('branches', function ($q) {
+            $q->where('branches.id', auth()->user()->branch_id);
+        })->orderBy('name')->get();
+
+        return view('livewire.fixed-assets.form', [
+            'suppliers' => $suppliers,
+            'users' => $users,
+        ]);
+    }
+}

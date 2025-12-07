@@ -502,6 +502,21 @@ Route::middleware('auth')->group(function () {
         //     ->name('dashboard')
         //     ->middleware('can:manufacturing.view');
     });
+
+    // Fixed Assets: Asset Management & Depreciation
+    Route::prefix('fixed-assets')->name('fixed-assets.')->group(function () {
+        Route::get('/', \App\Livewire\FixedAssets\Index::class)
+            ->name('index')
+            ->middleware('can:fixed-assets.view');
+
+        Route::get('/create', \App\Livewire\FixedAssets\Form::class)
+            ->name('create')
+            ->middleware('can:fixed-assets.create');
+
+        Route::get('/{asset}/edit', \App\Livewire\FixedAssets\Form::class)
+            ->name('edit')
+            ->middleware('can:fixed-assets.edit');
+    });
 });
 
 // Scheduled reports manager

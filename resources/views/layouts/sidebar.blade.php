@@ -280,6 +280,18 @@
         </div>
         @endif
 
+        {{-- Fixed Assets Module --}}
+        @if($canAccess('fixed-assets.view'))
+        <a href="{{ route('fixed-assets.index') }}"
+           class="sidebar-link bg-gradient-to-r from-stone-500 to-stone-600 {{ $isActive('fixed-assets') ? 'active ring-2 ring-white/30' : '' }}">
+            <span class="text-lg">🏢</span>
+            <span class="text-sm font-medium">{{ __('Fixed Assets') }}</span>
+            @if($isActive('fixed-assets'))
+                <span class="ms-auto w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            @endif
+        </a>
+        @endif
+
         {{-- HR Module --}}
         @if($canAccess('hrm.employees.view'))
         <a href="{{ route('hrm.employees.index') }}"

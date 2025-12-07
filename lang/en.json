@@ -485,5 +485,15 @@
     "Cashflow Projection": "Cashflow Projection",
     "Expected Inflows": "Expected Inflows",
     "Expected Outflows": "Expected Outflows",
-    "Net Cashflow": "Net Cashflow"
+    "Net Cashflow": "Net Cashflow",
+    "New Asset": "New Asset",
+    "Create Fixed Asset": "Create Fixed Asset",
+    "Edit Fixed Asset": "Edit Fixed Asset",
+    "Asset information and depreciation settings": "Asset information and depreciation settings",
+    "Active": "Active",
+    "Disposed": "Disposed",
+    "Sold": "Sold",
+    "Retired": "Retired",
+    "No assets found": "No assets found",
+    "Start by creating your first fixed asset": "Start by creating your first fixed asset"
 }

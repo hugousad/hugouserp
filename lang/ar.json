@@ -458,5 +458,15 @@
     "Cashflow Projection": "توقعات التدفق النقدي",
     "Expected Inflows": "التدفقات الداخلة المتوقعة",
     "Expected Outflows": "التدفقات الخارجة المتوقعة",
-    "Net Cashflow": "صافي التدفق النقدي"
+    "Net Cashflow": "صافي التدفق النقدي",
+    "New Asset": "أصل جديد",
+    "Create Fixed Asset": "إنشاء أصل ثابت",
+    "Edit Fixed Asset": "تعديل أصل ثابت",
+    "Asset information and depreciation settings": "معلومات الأصل وإعدادات الإهلاك",
+    "Active": "نشط",
+    "Disposed": "مستبعد",
+    "Sold": "مباع",
+    "Retired": "متقاعد",
+    "No assets found": "لم يتم العثور على أصول",
+    "Start by creating your first fixed asset": "ابدأ بإنشاء أول أصل ثابت"
 }
