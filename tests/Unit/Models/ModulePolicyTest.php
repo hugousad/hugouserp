@@ -15,6 +15,7 @@ class ModulePolicyTest extends TestCase
     use RefreshDatabase;
 
     protected Module $module;
+
     protected Branch $branch;
 
     protected function setUp(): void

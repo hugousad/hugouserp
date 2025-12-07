@@ -7,9 +7,7 @@ namespace Tests\Unit\Services;
 use App\Models\Branch;
 use App\Models\BranchModule;
 use App\Models\Module;
-use App\Models\ModuleOperation;
 use App\Models\ModulePolicy;
-use App\Models\User;
 use App\Services\ModuleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -20,7 +18,9 @@ class EnhancedModuleServiceTest extends TestCase
     use RefreshDatabase;
 
     protected ModuleService $service;
+
     protected Branch $branch;
+
     protected Module $module;
 
     protected function setUp(): void
@@ -28,7 +28,7 @@ class EnhancedModuleServiceTest extends TestCase
         parent::setUp();
 
         $this->service = app(ModuleService::class);
-        
+
         $this->branch = Branch::create([
             'name' => 'Test Branch',
             'code' => 'TB001',
@@ -67,7 +67,7 @@ class EnhancedModuleServiceTest extends TestCase
 
         $dataModules = $this->service->getModulesByType('data');
         $this->assertCount(2, $dataModules); // test_module + data_module
-        
+
         $functionalModules = $this->service->getModulesByType('functional');
         $this->assertCount(1, $functionalModules);
     }
@@ -104,7 +104,7 @@ class EnhancedModuleServiceTest extends TestCase
 
         $modules = $this->service->getModulesByType('data', $this->branch->id);
         $moduleKeys = collect($modules)->pluck('key')->toArray();
-        
+
         $this->assertContains('enabled_module', $moduleKeys);
         $this->assertNotContains('disabled_module', $moduleKeys);
     }
@@ -133,7 +133,7 @@ class EnhancedModuleServiceTest extends TestCase
 
         $policies = $this->service->getActivePolicies($this->module->id, $this->branch->id);
         $this->assertCount(2, $policies);
-        
+
         $policyKeys = collect($policies)->pluck('key')->toArray();
         $this->assertContains('global_policy', $policyKeys);
         $this->assertContains('branch_policy', $policyKeys);

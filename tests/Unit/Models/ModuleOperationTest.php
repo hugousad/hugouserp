@@ -6,7 +6,6 @@ namespace Tests\Unit\Models;
 
 use App\Models\Module;
 use App\Models\ModuleOperation;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
