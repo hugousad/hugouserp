@@ -145,12 +145,7 @@ class ModuleService implements ModuleServiceInterface
             $modules = Module::byType($type)->active()->get();
 
             if (! $branchId) {
-                return $modules->map(fn ($m) => [
-                    'id' => $m->id,
-                    'key' => $m->key,
-                    'name' => $m->localized_name,
-                    'type' => $m->module_type,
-                ])->all();
+                return $modules->map(fn ($m) => $this->mapModuleToArray($m))->all();
             }
 
             $enabledKeys = BranchModule::where('branch_id', $branchId)
@@ -159,13 +154,23 @@ class ModuleService implements ModuleServiceInterface
                 ->toArray();
 
             return $modules->filter(fn ($m) => in_array($m->key, $enabledKeys))
-                ->map(fn ($m) => [
-                    'id' => $m->id,
-                    'key' => $m->key,
-                    'name' => $m->localized_name,
-                    'type' => $m->module_type,
-                ])->values()->all();
+                ->map(fn ($m) => $this->mapModuleToArray($m))
+                ->values()
+                ->all();
         });
+    }
+
+    /**
+     * Map module to array representation
+     */
+    protected function mapModuleToArray(Module $module): array
+    {
+        return [
+            'id' => $module->id,
+            'key' => $module->key,
+            'name' => $module->localized_name,
+            'type' => $module->module_type,
+        ];
     }
 
     public function getNavigationForUser($user, ?int $branchId = null): array

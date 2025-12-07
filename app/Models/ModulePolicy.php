@@ -85,8 +85,10 @@ class ModulePolicy extends Model
 
     /**
      * Evaluate policy rules against given context
+     *
+     * @param  bool  $strictComparison  Use strict comparison (===) vs loose comparison (==)
      */
-    public function evaluate(array $context): bool
+    public function evaluate(array $context, bool $strictComparison = false): bool
     {
         if (! $this->is_active) {
             return false;
@@ -99,7 +101,15 @@ class ModulePolicy extends Model
 
         // Simple rule evaluation - can be extended with more complex logic
         foreach ($rules as $key => $value) {
-            if (! isset($context[$key]) || $context[$key] !== $value) {
+            if (! isset($context[$key])) {
+                return false;
+            }
+
+            $matches = $strictComparison
+                ? $context[$key] === $value
+                : $context[$key] == $value;
+
+            if (! $matches) {
                 return false;
             }
         }

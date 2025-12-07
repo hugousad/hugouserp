@@ -123,8 +123,10 @@ class ModuleNavigation extends Model
 
     /**
      * Evaluate visibility conditions
+     *
+     * @param  \App\Services\ModuleService|null  $moduleService  Optional service for module checks
      */
-    protected function evaluateVisibilityConditions(array $conditions, $user, ?int $branchId): bool
+    protected function evaluateVisibilityConditions(array $conditions, $user, ?int $branchId, $moduleService = null): bool
     {
         // Simple condition evaluation - can be extended
         foreach ($conditions as $key => $value) {
@@ -136,8 +138,9 @@ class ModuleNavigation extends Model
                     break;
                 case 'module_enabled':
                     if ($value && $branchId) {
-                        $moduleService = app(\App\Services\ModuleService::class);
-                        if (! $moduleService->isEnabled($this->module->key, $branchId)) {
+                        // Inject service for better testability
+                        $service = $moduleService ?? app(\App\Services\ModuleService::class);
+                        if (! $service->isEnabled($this->module->key, $branchId)) {
                             return false;
                         }
                     }
