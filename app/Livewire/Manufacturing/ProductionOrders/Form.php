@@ -1,0 +1,141 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Manufacturing\ProductionOrders;
+
+use App\Models\BillOfMaterial;
+use App\Models\Branch;
+use App\Models\Product;
+use App\Models\ProductionOrder;
+use App\Models\Warehouse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+class Form extends Component
+{
+    use AuthorizesRequests;
+
+    public ?ProductionOrder $productionOrder = null;
+
+    public bool $editMode = false;
+
+    public ?int $bom_id = null;
+
+    public ?int $product_id = null;
+
+    public ?int $warehouse_id = null;
+
+    public float $quantity_planned = 1.0;
+
+    public string $status = 'draft';
+
+    public string $priority = 'normal';
+
+    public ?string $planned_start_date = null;
+
+    public ?string $planned_end_date = null;
+
+    public string $notes = '';
+
+    protected function rules(): array
+    {
+        return [
+            'bom_id' => ['required', 'exists:bills_of_materials,id'],
+            'product_id' => ['required', 'exists:products,id'],
+            'warehouse_id' => ['required', 'exists:warehouses,id'],
+            'quantity_planned' => ['required', 'numeric', 'min:0.01'],
+            'status' => ['required', 'in:draft,planned,released,in_progress,completed,cancelled'],
+            'priority' => ['required', 'in:low,normal,high,urgent'],
+            'planned_start_date' => ['nullable', 'date'],
+            'planned_end_date' => ['nullable', 'date', 'after_or_equal:planned_start_date'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    public function mount(?ProductionOrder $productionOrder = null): void
+    {
+        if ($productionOrder && $productionOrder->exists) {
+            $this->authorize('manufacturing.edit');
+            $this->productionOrder = $productionOrder;
+            $this->editMode = true;
+            $this->fillFormFromModel();
+        } else {
+            $this->authorize('manufacturing.create');
+        }
+    }
+
+    protected function fillFormFromModel(): void
+    {
+        $this->bom_id = $this->productionOrder->bom_id;
+        $this->product_id = $this->productionOrder->product_id;
+        $this->warehouse_id = $this->productionOrder->warehouse_id;
+        $this->quantity_planned = (float) $this->productionOrder->quantity_planned;
+        $this->status = $this->productionOrder->status;
+        $this->priority = $this->productionOrder->priority;
+        $this->planned_start_date = $this->productionOrder->planned_start_date?->format('Y-m-d');
+        $this->planned_end_date = $this->productionOrder->planned_end_date?->format('Y-m-d');
+        $this->notes = $this->productionOrder->notes ?? '';
+    }
+
+    public function save(): void
+    {
+        $this->validate();
+
+        $user = auth()->user();
+        $branchId = $user->branch_id ?? Branch::first()->id;
+
+        $data = [
+            'branch_id' => $branchId,
+            'bom_id' => $this->bom_id,
+            'product_id' => $this->product_id,
+            'warehouse_id' => $this->warehouse_id,
+            'quantity_planned' => $this->quantity_planned,
+            'status' => $this->status,
+            'priority' => $this->priority,
+            'planned_start_date' => $this->planned_start_date,
+            'planned_end_date' => $this->planned_end_date,
+            'notes' => $this->notes,
+            'created_by' => $user->id,
+        ];
+
+        if ($this->editMode) {
+            $this->productionOrder->update($data);
+            session()->flash('message', __('Production Order updated successfully.'));
+        } else {
+            $data['order_number'] = ProductionOrder::generateOrderNumber($branchId);
+            ProductionOrder::create($data);
+            session()->flash('message', __('Production Order created successfully.'));
+        }
+
+        $this->redirect(route('manufacturing.production-orders.index'), navigate: true);
+    }
+
+    #[Layout('layouts.app')]
+    public function render()
+    {
+        $user = auth()->user();
+        $branchId = $user->branch_id ?? null;
+
+        $boms = BillOfMaterial::where('branch_id', $branchId)
+            ->where('status', 'active')
+            ->with('product')
+            ->orderBy('name')
+            ->get();
+
+        $products = Product::where('branch_id', $branchId)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku']);
+
+        $warehouses = Warehouse::where('branch_id', $branchId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('livewire.manufacturing.production-orders.form', [
+            'boms' => $boms,
+            'products' => $products,
+            'warehouses' => $warehouses,
+        ]);
+    }
+}

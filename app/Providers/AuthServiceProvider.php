@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\BillOfMaterial;
 use App\Models\Branch;
 use App\Models\Notification;
 // Models
 use App\Models\Product;
+use App\Models\ProductionOrder;
 use App\Models\Property;
 use App\Models\Purchase;
 use App\Models\RentalContract;
@@ -16,7 +18,9 @@ use App\Models\RentalUnit;
 use App\Models\Sale;
 use App\Models\Tenant;
 use App\Models\Vehicle;
+use App\Models\WorkCenter;
 use App\Policies\BranchPolicy;
+use App\Policies\ManufacturingPolicy;
 use App\Policies\NotificationPolicy;
 // Policies
 use App\Policies\ProductPolicy;
@@ -46,6 +50,11 @@ class AuthServiceProvider extends ServiceProvider
         Property::class => RentalPolicy::class,
         RentalUnit::class => RentalPolicy::class,
         Tenant::class => RentalPolicy::class,
+
+        // Manufacturing domain mapped to a generic policy handling multiple models
+        BillOfMaterial::class => ManufacturingPolicy::class,
+        ProductionOrder::class => ManufacturingPolicy::class,
+        WorkCenter::class => ManufacturingPolicy::class,
     ];
 
     public function boot(): void

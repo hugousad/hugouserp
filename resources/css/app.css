@@ -204,6 +204,26 @@
         @apply block text-sm font-medium text-slate-700 dark:text-slate-300;
     }
 
+    .erp-checkbox {
+        @apply rounded border-slate-300 text-emerald-600 shadow-sm transition-colors duration-200;
+    }
+    
+    .erp-checkbox:hover {
+        @apply border-slate-400;
+    }
+    
+    .erp-checkbox:focus {
+        @apply ring-2 ring-emerald-500/20 ring-offset-2 border-emerald-500;
+    }
+    
+    .dark .erp-checkbox {
+        @apply bg-slate-900 border-slate-600 text-emerald-500;
+    }
+    
+    .dark .erp-checkbox:hover {
+        @apply border-slate-500;
+    }
+
     .erp-table {
         @apply w-full text-sm text-slate-700 dark:text-slate-300;
     }
