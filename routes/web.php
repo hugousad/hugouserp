@@ -550,6 +550,20 @@ Route::middleware('auth')->group(function () {
                 ->name('edit')
                 ->middleware('can:inventory.products.view');
         });
+
+        Route::prefix('serials')->name('serials.')->group(function () {
+            Route::get('/', \App\Livewire\Inventory\Serials\Index::class)
+                ->name('index')
+                ->middleware('can:inventory.products.view');
+
+            Route::get('/create', \App\Livewire\Inventory\Serials\Form::class)
+                ->name('create')
+                ->middleware('can:inventory.products.view');
+
+            Route::get('/{serial}/edit', \App\Livewire\Inventory\Serials\Form::class)
+                ->name('edit')
+                ->middleware('can:inventory.products.view');
+        });
     });
 });
 

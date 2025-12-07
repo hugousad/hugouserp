@@ -227,6 +227,12 @@
                 <span class="text-base">📦</span>
                 <span class="text-sm">{{ __('Batch Tracking') }}</span>
             </a>
+
+            <a href="{{ route('inventory.serials.index') }}"
+               class="sidebar-link-secondary ms-4 {{ $isActive('inventory.serials') ? 'active' : '' }}">
+                <span class="text-base">🔢</span>
+                <span class="text-sm">{{ __('Serial Tracking') }}</span>
+            </a>
         </div>
         @endif
 
