@@ -483,5 +483,21 @@
     "Update Account": "تحديث الحساب",
     "Create Account": "إنشاء حساب",
     "Inactive": "غير نشط",
-    "Closed": "مغلق"
+    "Closed": "مغلق",
+    "Batch Tracking": "تتبع الدفعات",
+    "Manage inventory batches and expiry dates": "إدارة دفعات المخزون وتواريخ الانتهاء",
+    "New Batch": "دفعة جديدة",
+    "Create Batch": "إنشاء دفعة",
+    "Edit Batch": "تعديل دفعة",
+    "Batch information and tracking": "معلومات الدفعة والتتبع",
+    "Expiring Soon": "تنتهي قريباً",
+    "Total Quantity": "الكمية الإجمالية",
+    "Search by batch number or product...": "البحث برقم الدفعة أو المنتج...",
+    "Depleted": "منفذ",
+    "No batches found": "لم يتم العثور على دفعات",
+    "Supplier Batch Ref": "مرجع دفعة المورد",
+    "Update Batch": "تحديث الدفعة",
+    "Only batch-tracked products are shown": "تظهر فقط المنتجات المتتبعة بالدفعات",
+    "Batch updated successfully": "تم تحديث الدفعة بنجاح",
+    "Batch created successfully": "تم إنشاء الدفعة بنجاح"
 }

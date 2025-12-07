@@ -534,6 +534,23 @@ Route::middleware('auth')->group(function () {
                 ->middleware('can:banking.edit');
         });
     });
+
+    // Inventory: Batch & Serial Tracking
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::prefix('batches')->name('batches.')->group(function () {
+            Route::get('/', \App\Livewire\Inventory\Batches\Index::class)
+                ->name('index')
+                ->middleware('can:inventory.products.view');
+
+            Route::get('/create', \App\Livewire\Inventory\Batches\Form::class)
+                ->name('create')
+                ->middleware('can:inventory.products.view');
+
+            Route::get('/{batch}/edit', \App\Livewire\Inventory\Batches\Form::class)
+                ->name('edit')
+                ->middleware('can:inventory.products.view');
+        });
+    });
 });
 
 // Scheduled reports manager

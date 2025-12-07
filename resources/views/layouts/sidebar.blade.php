@@ -221,6 +221,12 @@
                 <span class="text-base">🏷️</span>
                 <span class="text-sm">{{ __('Print Barcodes') }}</span>
             </a>
+
+            <a href="{{ route('inventory.batches.index') }}"
+               class="sidebar-link-secondary ms-4 {{ $isActive('inventory.batches') ? 'active' : '' }}">
+                <span class="text-base">📦</span>
+                <span class="text-sm">{{ __('Batch Tracking') }}</span>
+            </a>
         </div>
         @endif
 

@@ -510,5 +510,21 @@
     "Update Account": "Update Account",
     "Create Account": "Create Account",
     "Inactive": "Inactive",
-    "Closed": "Closed"
+    "Closed": "Closed",
+    "Batch Tracking": "Batch Tracking",
+    "Manage inventory batches and expiry dates": "Manage inventory batches and expiry dates",
+    "New Batch": "New Batch",
+    "Create Batch": "Create Batch",
+    "Edit Batch": "Edit Batch",
+    "Batch information and tracking": "Batch information and tracking",
+    "Expiring Soon": "Expiring Soon",
+    "Total Quantity": "Total Quantity",
+    "Search by batch number or product...": "Search by batch number or product...",
+    "Depleted": "Depleted",
+    "No batches found": "No batches found",
+    "Supplier Batch Ref": "Supplier Batch Ref",
+    "Update Batch": "Update Batch",
+    "Only batch-tracked products are shown": "Only batch-tracked products are shown",
+    "Batch updated successfully": "Batch updated successfully",
+    "Batch created successfully": "Batch created successfully"
 }
