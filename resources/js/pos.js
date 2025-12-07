@@ -1,23 +1,77 @@
 // resources/js/pos.js
-// POS front-end logic: product search via API, checkout via API, simple offline skeleton using localStorage.
+/**
+ * POS Terminal Frontend Logic
+ * 
+ * This module handles the Point of Sale (POS) terminal functionality including:
+ * - Product search via API
+ * - Shopping cart management with localStorage persistence
+ * - Checkout process via API
+ * - Offline mode with queue synchronization
+ * 
+ * The POS terminal is designed to work both online and offline, storing transactions
+ * in localStorage when offline and syncing them when connection is restored.
+ * 
+ * @param {Object} options - Configuration options
+ * @param {number} options.branchId - The branch ID for this POS terminal
+ * @returns {Object} Alpine.js component data object
+ */
+
+// Configuration Constants
+const CONFIG = {
+    /** Maximum allowed quantity per cart item */
+    MAX_QUANTITY: 999999,
+    
+    /** Maximum allowed price per item */
+    MAX_PRICE: 9999999.99,
+    
+    /** Timeout for product search requests (milliseconds) */
+    SEARCH_TIMEOUT: 10000,
+    
+    /** Timeout for checkout requests (milliseconds) */
+    CHECKOUT_TIMEOUT: 15000,
+};
 
 export function erpPosTerminal(options) {
     const branchId = options.branchId;
 
     return {
+        // ========== State Properties ==========
+        
+        /** @type {number} Current branch ID */
         branchId,
+        
+        /** @type {string} Current search query for products */
         search: '',
+        
+        /** @type {boolean} Whether a product search is in progress */
         isSearching: false,
+        
+        /** @type {Array} List of products matching current search */
         products: [],
+        
+        /** @type {Array} Shopping cart items */
         cart: [],
+        
+        /** @type {boolean} Whether checkout is in progress */
         isCheckingOut: false,
+        
+        /** @type {Object|null} Current user message {type: 'success'|'error'|'info', text: string} */
         message: null,
+        
+        /** @type {boolean} Whether the system is offline */
         offline: !window.navigator.onLine,
 
+        // ========== Lifecycle Methods ==========
+        
+        /**
+         * Initialize the POS terminal
+         * Sets up cart persistence and online/offline event listeners
+         */
         init() {
             this.loadCart();
             this.loadOfflineQueue();
 
+            // Listen for connection status changes
             window.addEventListener('online', () => {
                 this.offline = false;
             });
@@ -27,14 +81,32 @@ export function erpPosTerminal(options) {
             });
         },
 
+        // ========== Storage Keys ==========
+        
+        /**
+         * Get the localStorage key for the cart
+         * Cart data is stored per branch to avoid conflicts
+         * @returns {string} Storage key
+         */
         get storageKey() {
             return `erp_pos_cart_branch_${this.branchId}`;
         },
 
+        /**
+         * Get the localStorage key for the offline queue
+         * Offline sales are queued per branch for later synchronization
+         * @returns {string} Storage key
+         */
         get offlineQueueKey() {
             return `erp_pos_offline_sales_branch_${this.branchId}`;
         },
 
+        // ========== Cart Persistence Methods ==========
+        
+        /**
+         * Load cart from localStorage
+         * Restores the cart state when the page is refreshed
+         */
         loadCart() {
             try {
                 const raw = window.localStorage.getItem(this.storageKey);
@@ -45,6 +117,10 @@ export function erpPosTerminal(options) {
             }
         },
 
+        /**
+         * Persist cart to localStorage
+         * Saves the current cart state for later retrieval
+         */
         persistCart() {
             try {
                 window.localStorage.setItem(this.storageKey, JSON.stringify(this.cart));
@@ -118,11 +194,13 @@ export function erpPosTerminal(options) {
         },
 
         async fetchProducts() {
+            // Validation: minimum search length
             if (!this.search || this.search.length < 2) {
                 this.products = [];
                 return;
             }
 
+            // Check online status
             if (!window.navigator.onLine) {
                 this.message = {
                     type: 'info',
@@ -131,31 +209,62 @@ export function erpPosTerminal(options) {
                 return;
             }
 
+            // Prevent concurrent searches
+            if (this.isSearching) {
+                return;
+            }
+
             this.isSearching = true;
             this.products = [];
+            this.clearMessage();
 
             try {
                 const response = await window.axios.get(`/api/v1/branches/${this.branchId}/products/search`, {
                     params: { q: this.search },
+                    timeout: CONFIG.SEARCH_TIMEOUT,
                 });
 
                 let data = response.data;
 
-                // Accept multiple possible API shapes: {data:[...]}, {data:{data:[...]}}, or plain array
-                if (Array.isArray(data)) {
+                // Handle standardized API response format
+                if (data && data.success === true && Array.isArray(data.data)) {
+                    this.products = data.data;
+                } else if (Array.isArray(data)) {
+                    // Fallback for direct array response
                     this.products = data;
                 } else if (data && Array.isArray(data.data)) {
+                    // Fallback for nested data
                     this.products = data.data;
-                } else if (data && data.data && Array.isArray(data.data.data)) {
-                    this.products = data.data.data;
                 } else {
                     this.products = [];
+                    console.warn('Unexpected API response format:', data);
                 }
             } catch (error) {
                 console.error('POS search error', error);
+                
+                // Handle specific error types
+                let errorMessage = 'حدث خطأ أثناء البحث عن المنتجات.';
+                if (error.code === 'ECONNABORTED') {
+                    errorMessage = 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.';
+                } else if (error.response) {
+                    // Server responded with error
+                    if (error.response.status === 401) {
+                        errorMessage = 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.';
+                    } else if (error.response.status === 403) {
+                        errorMessage = 'ليس لديك صلاحية للبحث عن المنتجات.';
+                    } else if (error.response.status >= 500) {
+                        errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً.';
+                    } else if (error.response.data?.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                } else if (error.request) {
+                    // Request made but no response
+                    errorMessage = 'لا يمكن الاتصال بالخادم. يرجى التحقق من الاتصال.';
+                }
+
                 this.message = {
                     type: 'error',
-                    text: error?.response?.data?.message ?? 'حدث خطأ أثناء البحث عن المنتجات.',
+                    text: errorMessage,
                 };
             } finally {
                 this.isSearching = false;
@@ -203,8 +312,23 @@ export function erpPosTerminal(options) {
             if (index < 0 || index >= this.cart.length) {
                 return;
             }
+            
+            // Parse and validate quantity
             const value = Number(qty ?? 0);
-            this.cart[index].qty = value > 0 ? value : 1;
+            
+            // Ensure positive quantity, minimum 0.01, maximum CONFIG.MAX_QUANTITY
+            if (isNaN(value) || value <= 0) {
+                this.cart[index].qty = 1;
+            } else if (value > CONFIG.MAX_QUANTITY) {
+                this.cart[index].qty = CONFIG.MAX_QUANTITY;
+                this.message = {
+                    type: 'warning',
+                    text: `الكمية القصوى المسموح بها هي ${CONFIG.MAX_QUANTITY}.`,
+                };
+            } else {
+                this.cart[index].qty = value;
+            }
+            
             this.persistCart();
         },
 
@@ -212,8 +336,24 @@ export function erpPosTerminal(options) {
             if (index < 0 || index >= this.cart.length) {
                 return;
             }
+            
+            // Parse and validate price
             const value = Number(price ?? 0);
-            this.cart[index].price = value >= 0 ? value : 0;
+            
+            // Ensure non-negative price, maximum CONFIG.MAX_PRICE
+            if (isNaN(value) || value < 0) {
+                this.cart[index].price = 0;
+            } else if (value > CONFIG.MAX_PRICE) {
+                this.cart[index].price = CONFIG.MAX_PRICE;
+                this.message = {
+                    type: 'warning',
+                    text: `السعر القصوى المسموح به هو ${CONFIG.MAX_PRICE}.`,
+                };
+            } else {
+                // Round to 2 decimal places
+                this.cart[index].price = Math.round(value * 100) / 100;
+            }
+            
             this.persistCart();
         },
 
@@ -229,10 +369,26 @@ export function erpPosTerminal(options) {
         },
 
         async checkout() {
+            // Validation: check cart has items
             if (!this.cart.length) {
                 this.message = {
                     type: 'info',
                     text: 'لا توجد عناصر في السلة.',
+                };
+                return;
+            }
+
+            // Prevent double submit
+            if (this.isCheckingOut) {
+                return;
+            }
+
+            // Validate cart items
+            const invalidItems = this.cart.filter(item => !item.product_id || Number(item.qty) <= 0);
+            if (invalidItems.length > 0) {
+                this.message = {
+                    type: 'error',
+                    text: 'بعض العناصر في السلة غير صالحة. يرجى التحقق من الكميات.',
                 };
                 return;
             }
@@ -257,7 +413,7 @@ export function erpPosTerminal(options) {
                 this.persistCart();
                 this.message = {
                     type: 'info',
-                    text: 'تم حفظ الطلب في وضع عدم الاتصال. سيتم مزامنته عند توفر الإنترنت (Skeleton).',
+                    text: 'تم حفظ الطلب في وضع عدم الاتصال. سيتم مزامنته عند توفر الإنترنت.',
                 };
                 return;
             }
@@ -266,12 +422,23 @@ export function erpPosTerminal(options) {
             this.clearMessage();
 
             try {
-                const response = await window.axios.post(`/api/v1/branches/${this.branchId}/pos/checkout`, payload);
+                const response = await window.axios.post(`/api/v1/branches/${this.branchId}/pos/checkout`, payload, {
+                    timeout: CONFIG.CHECKOUT_TIMEOUT,
+                });
 
-                // Try to extract a user-friendly message
+                // Extract message from standardized API response
                 const data = response.data ?? {};
-                let msg = data.message ?? data.status ?? 'تم تنفيذ عملية البيع بنجاح.';
+                let msg = 'تم تنفيذ عملية البيع بنجاح.';
+                
+                if (data.success === true && data.message) {
+                    msg = data.message;
+                } else if (data.message) {
+                    msg = data.message;
+                } else if (data.status) {
+                    msg = data.status;
+                }
 
+                // Clear cart on success
                 this.cart = [];
                 this.persistCart();
 
@@ -279,11 +446,45 @@ export function erpPosTerminal(options) {
                     type: 'success',
                     text: msg,
                 };
+
+                // Optional: Show sale details if available
+                if (data.data && data.data.code) {
+                    console.log('Sale created:', data.data.code);
+                }
             } catch (error) {
                 console.error('POS checkout error', error);
+                
+                // Handle specific error types
+                let errorMessage = 'فشل تنفيذ عملية البيع.';
+                if (error.code === 'ECONNABORTED') {
+                    errorMessage = 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى.';
+                } else if (error.response) {
+                    // Server responded with error
+                    if (error.response.status === 401) {
+                        errorMessage = 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.';
+                    } else if (error.response.status === 403) {
+                        errorMessage = 'ليس لديك صلاحية لإجراء عمليات البيع.';
+                    } else if (error.response.status === 422) {
+                        // Validation error
+                        if (error.response.data?.errors) {
+                            const errors = Object.values(error.response.data.errors).flat();
+                            errorMessage = errors.join(' ');
+                        } else if (error.response.data?.message) {
+                            errorMessage = error.response.data.message;
+                        }
+                    } else if (error.response.status >= 500) {
+                        errorMessage = 'خطأ في الخادم. يرجى المحاولة لاحقاً.';
+                    } else if (error.response.data?.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                } else if (error.request) {
+                    // Request made but no response
+                    errorMessage = 'لا يمكن الاتصال بالخادم. يرجى التحقق من الاتصال.';
+                }
+
                 this.message = {
                     type: 'error',
-                    text: error?.response?.data?.message ?? 'فشل تنفيذ عملية البيع.',
+                    text: errorMessage,
                 };
             } finally {
                 this.isCheckingOut = false;
