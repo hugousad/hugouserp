@@ -51,34 +51,13 @@ class CurrencyRate extends Model
 
     public static function getRate(string $from, string $to, $date = null): ?float
     {
-        if (strtoupper($from) === strtoupper($to)) {
-            return 1.0;
-        }
-
-        $rate = static::query()
-            ->active()
-            ->forPair($from, $to)
-            ->effectiveOn($date)
-            ->first();
-
-        return $rate ? (float) $rate->rate : null;
-    }
-
-    public static function convert(float $amount, string $from, string $to, $date = null): ?float
-    {
-        $rate = static::getRate($from, $to, $date);
-
-        if ($rate === null) {
-            return null;
-        }
-
-        return round($amount * $rate, 2);
-    }
-
-    public static function getRate(string $from, string $to, $date = null): ?float
-    {
         $from = strtoupper($from);
         $to = strtoupper($to);
+
+        // Same currency, no conversion needed
+        if ($from === $to) {
+            return 1.0;
+        }
 
         $dateKey = $date ? (is_string($date) ? $date : $date->format('Y-m-d')) : 'latest';
         $cacheKey = sprintf('currency_rate:%s:%s:%s', $from, $to, $dateKey);
@@ -86,7 +65,8 @@ class CurrencyRate extends Model
         return Cache::remember($cacheKey, 300, function () use ($from, $to, $date) {
             $query = static::query()
                 ->where('from_currency', $from)
-                ->where('to_currency', $to);
+                ->where('to_currency', $to)
+                ->where('is_active', true);
 
             if ($date) {
                 $query->whereDate('effective_date', '<=', is_string($date) ? $date : $date->format('Y-m-d'));
