@@ -22,7 +22,7 @@ class AuthController extends Controller
             return $this->fail(__('Invalid credentials'), 422);
         }
 
-        if (method_exists($user, 'is_active') && ! $user->is_active) {
+        if (property_exists($user, 'is_active') && ! $user->is_active) {
             return $this->fail(__('User disabled'), 403);
         }
 
@@ -54,6 +54,8 @@ class AuthController extends Controller
 
     public function impersonate(Request $request)
     {
+        $this->authorize('system.impersonate');
+
         $this->validate($request, [
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'abilities' => ['sometimes', 'array'],

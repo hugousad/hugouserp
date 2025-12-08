@@ -16,16 +16,9 @@ class AuthLoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:6'],
             'remember' => ['sometimes', 'boolean'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.exists' => __('This email is not registered.'),
         ];
     }
 }

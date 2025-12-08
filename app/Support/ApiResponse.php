@@ -86,11 +86,17 @@ class ApiResponse
 
     public static function fromException(\Throwable $e, int $status = 500): JsonResponse
     {
-        return self::error($e->getMessage(), $status, [], [
-            'exception' => class_basename($e),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ]);
+        $meta = [];
+        
+        if (config('app.debug')) {
+            $meta = [
+                'exception' => class_basename($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ];
+        }
+
+        return self::error($e->getMessage(), $status, [], $meta);
     }
 
     private static function toArray(array|Arrayable $data): array

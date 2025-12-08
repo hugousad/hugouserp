@@ -21,11 +21,16 @@ class Handler extends ExceptionHandler
             if ($request->is('api/*')) {
                 $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
 
-                return response()->json([
+                $response = [
                     'success' => false,
-                    'error' => class_basename($e),
-                    'message' => $e->getMessage(),
-                ], $status);
+                    'message' => config('app.debug') ? $e->getMessage() : 'An error occurred',
+                ];
+
+                if (config('app.debug')) {
+                    $response['error'] = class_basename($e);
+                }
+
+                return response()->json($response, $status);
             }
         });
     }
