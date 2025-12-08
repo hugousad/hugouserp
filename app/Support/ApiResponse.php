@@ -88,7 +88,7 @@ class ApiResponse
     {
         $meta = [];
         $message = config('app.debug') ? $e->getMessage() : __('Something went wrong.');
-        
+
         if (config('app.debug')) {
             $meta = [
                 'exception' => class_basename($e),

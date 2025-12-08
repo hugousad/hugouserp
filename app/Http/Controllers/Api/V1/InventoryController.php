@@ -24,7 +24,7 @@ class InventoryController extends BaseApiController
                 'products.sku',
                 'products.min_stock',
                 'products.branch_id',
-                DB::raw('COALESCE(SUM(CASE WHEN stock_movements.direction = "in" THEN stock_movements.qty ELSE 0 END) - SUM(CASE WHEN stock_movements.direction = "out" THEN stock_movements.qty ELSE 0 END), 0) as current_quantity')
+                DB::raw('COALESCE(SUM(CASE WHEN stock_movements.direction = "in" THEN stock_movements.qty ELSE 0 END) - SUM(CASE WHEN stock_movements.direction = "out" THEN stock_movements.qty ELSE 0 END), 0) as current_quantity'),
             ])
             ->leftJoin('stock_movements', 'products.id', '=', 'stock_movements.product_id')
             ->when($store?->branch_id, fn ($q) => $q->where('products.branch_id', $store->branch_id))
@@ -76,7 +76,7 @@ class InventoryController extends BaseApiController
 
         // Get current quantity using helper method
         $oldQuantity = $this->calculateCurrentStock($product->id);
-        
+
         // Calculate new quantity and direction
         if ($validated['direction'] === 'set') {
             $newQuantity = (float) $validated['qty'];
@@ -86,15 +86,15 @@ class InventoryController extends BaseApiController
         } else {
             $actualDirection = $validated['direction'];
             $actualQty = abs((float) $validated['qty']);
-            $newQuantity = $actualDirection === 'in' 
-                ? $oldQuantity + $actualQty 
+            $newQuantity = $actualDirection === 'in'
+                ? $oldQuantity + $actualQty
                 : $oldQuantity - $actualQty;
         }
 
         if ($actualQty > 0) {
             DB::transaction(function () use ($product, $actualDirection, $actualQty, $validated, $request) {
                 // Get warehouse_id from request, settings, or first available warehouse
-                $warehouseId = $request->input('warehouse_id') 
+                $warehouseId = $request->input('warehouse_id')
                     ?? settings('default_warehouse_id')
                     ?? \App\Models\Warehouse::first()?->id;
 
@@ -163,7 +163,7 @@ class InventoryController extends BaseApiController
             try {
                 // Get current quantity using helper method
                 $oldQuantity = $this->calculateCurrentStock($product->id);
-                
+
                 // Calculate new quantity and direction
                 if ($item['direction'] === 'set') {
                     $newQuantity = (float) $item['qty'];
@@ -173,14 +173,14 @@ class InventoryController extends BaseApiController
                 } else {
                     $actualDirection = $item['direction'];
                     $actualQty = abs((float) $item['qty']);
-                    $newQuantity = $actualDirection === 'in' 
-                        ? $oldQuantity + $actualQty 
+                    $newQuantity = $actualDirection === 'in'
+                        ? $oldQuantity + $actualQty
                         : $oldQuantity - $actualQty;
                 }
 
                 if ($actualQty > 0) {
                     // Get warehouse_id from item, request, settings, or first available warehouse
-                    $warehouseId = $item['warehouse_id'] ?? $request->input('warehouse_id') 
+                    $warehouseId = $item['warehouse_id'] ?? $request->input('warehouse_id')
                         ?? settings('default_warehouse_id')
                         ?? \App\Models\Warehouse::first()?->id;
 

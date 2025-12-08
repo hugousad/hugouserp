@@ -228,7 +228,7 @@ class StoreSyncService
                 request()->attributes->set('branch_id', $store->branch_id);
                 $currentQty = $this->inventory->currentQty($mapping->product->id);
                 $difference = $available - $currentQty;
-                
+
                 if ($difference != 0) {
                     $this->inventory->adjust(
                         $mapping->product->id,
