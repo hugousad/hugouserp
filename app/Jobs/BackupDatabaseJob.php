@@ -36,13 +36,9 @@ class BackupDatabaseJob implements ShouldQueue
             // Minimal portable fallback using mysqldump with environment variable for password
             $db = config('database.connections.mysql');
             
-            // Set password via environment variable to avoid exposure in process list
-            $env = [
-                'MYSQL_PWD' => $db['password'] ?? '',
-            ];
-            
             $cmd = sprintf(
-                'mysqldump -h%s -u%s %s | gzip > %s',
+                'MYSQL_PWD=%s mysqldump -h%s -u%s %s | gzip > %s',
+                escapeshellarg($db['password'] ?? ''),
                 escapeshellarg($db['host'] ?? '127.0.0.1'),
                 escapeshellarg($db['username'] ?? ''),
                 escapeshellarg($db['database'] ?? ''),
