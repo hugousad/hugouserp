@@ -565,6 +565,44 @@ Route::middleware('auth')->group(function () {
                 ->middleware('can:inventory.products.view');
         });
     });
+
+    // Helpdesk Routes
+    Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
+        Route::get('/', \App\Livewire\Helpdesk\Index::class)
+            ->name('index')
+            ->middleware('can:helpdesk.view');
+        
+        Route::get('/dashboard', \App\Livewire\Helpdesk\Dashboard::class)
+            ->name('dashboard')
+            ->middleware('can:helpdesk.view');
+        
+        Route::get('/create', \App\Livewire\Helpdesk\TicketForm::class)
+            ->name('create')
+            ->middleware('can:helpdesk.create');
+        
+        Route::get('/{ticket}', \App\Livewire\Helpdesk\TicketDetail::class)
+            ->name('show')
+            ->middleware('can:helpdesk.view');
+        
+        Route::get('/{ticket}/edit', \App\Livewire\Helpdesk\TicketForm::class)
+            ->name('edit')
+            ->middleware('can:helpdesk.edit');
+        
+        // Categories
+        Route::get('/settings/categories', \App\Livewire\Helpdesk\Categories\Index::class)
+            ->name('categories.index')
+            ->middleware('can:helpdesk.manage');
+        
+        // Priorities
+        Route::get('/settings/priorities', \App\Livewire\Helpdesk\Priorities\Index::class)
+            ->name('priorities.index')
+            ->middleware('can:helpdesk.manage');
+        
+        // SLA Policies
+        Route::get('/settings/sla-policies', \App\Livewire\Helpdesk\SLAPolicies\Index::class)
+            ->name('sla-policies.index')
+            ->middleware('can:helpdesk.manage');
+    });
 });
 
 // Scheduled reports manager
