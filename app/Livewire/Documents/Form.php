@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Documents;
 
-use App\Http\Requests\DocumentStoreRequest;
-use App\Http\Requests\DocumentUpdateRequest;
 use App\Models\Document;
 use App\Models\DocumentTag;
 use App\Services\DocumentService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\RedirectResponse;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -21,14 +20,21 @@ class Form extends Component
     use WithFileUploads;
 
     public ?Document $document = null;
+
     public bool $isEdit = false;
 
     public string $title = '';
+
     public string $description = '';
+
     public $file = null;
+
     public string $folder = '';
+
     public string $category = '';
+
     public bool $is_public = false;
+
     public array $selectedTags = [];
 
     protected DocumentService $documentService;
@@ -57,7 +63,7 @@ class Form extends Component
         }
     }
 
-    public function save()
+    public function save(): RedirectResponse
     {
         if ($this->isEdit) {
             $this->validate([

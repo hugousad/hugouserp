@@ -17,17 +17,25 @@ class Form extends Component
     use AuthorizesRequests;
 
     public ?PurchaseRequisition $requisition = null;
+
     public bool $isEdit = false;
 
     public string $subject = '';
+
     public string $priority = 'medium';
+
     public string $justification = '';
+
     public string $required_by = '';
+
     public string $notes = '';
+
     public ?int $department_id = null;
+
     public ?int $cost_center_id = null;
 
     public array $items = [];
+
     public array $products = [];
 
     protected array $rules = [
@@ -168,10 +176,41 @@ class Form extends Component
 
     public function submit(): RedirectResponse
     {
-        $this->save();
+        $this->validate();
 
-        if ($this->requisition) {
-            $this->requisition->update(['status' => 'pending_approval']);
+        $branchId = auth()->user()->branch_id;
+        $userId = auth()->id();
+
+        $data = [
+            'branch_id' => $branchId,
+            'employee_id' => $userId,
+            'subject' => $this->subject,
+            'priority' => $this->priority,
+            'justification' => $this->justification,
+            'required_by' => $this->required_by,
+            'notes' => $this->notes,
+            'department_id' => $this->department_id,
+            'cost_center_id' => $this->cost_center_id,
+            'status' => 'pending_approval',
+        ];
+
+        if ($this->isEdit && $this->requisition) {
+            $this->requisition->update($data);
+            // Delete existing items and recreate
+            $this->requisition->items()->delete();
+        } else {
+            $this->requisition = PurchaseRequisition::create($data);
+        }
+
+        // Create items
+        foreach ($this->items as $item) {
+            PurchaseRequisitionItem::create([
+                'purchase_requisition_id' => $this->requisition->id,
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'estimated_unit_price' => $item['unit_price'],
+                'specifications' => $item['specifications'] ?? null,
+            ]);
         }
 
         $this->dispatch('notify', [
