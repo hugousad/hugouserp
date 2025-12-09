@@ -1,6 +1,8 @@
 # HugousERP - Enterprise Resource Planning System
 
-A comprehensive, modern ERP system built with Laravel 12, Livewire 3, and Tailwind CSS. This system provides complete business management capabilities including inventory, sales, purchases, HRM, accounting, POS, and rental management.
+A comprehensive, modern ERP system built with Laravel 12, Livewire 3, and Tailwind CSS.
+This system provides complete business management capabilities including inventory, sales,
+purchases, HRM, accounting, POS, and rental management.
 
 ## 🚀 Features
 

@@ -16,10 +16,15 @@ class CustomersController extends BaseApiController
 
         $query = Customer::query()
             ->when($store?->branch_id, fn ($q) => $q->where('branch_id', $store->branch_id))
-            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->search.'%')
-                ->orWhere('email', 'like', '%'.$request->search.'%')
-                ->orWhere('phone', 'like', '%'.$request->search.'%')
-            )
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->string('search');
+                $q->where(function ($searchQuery) use ($search) {
+                    $searchQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
             ->orderBy($request->get('sort_by', 'created_at'), $request->get('sort_dir', 'desc'));
 
         $customers = $query->paginate($request->get('per_page', 50));

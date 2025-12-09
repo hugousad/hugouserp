@@ -15,10 +15,11 @@ If you discover a security vulnerability, please report it by emailing the devel
 ### 1. Authentication
 
 #### Password Security
-- **Hashing**: All passwords are hashed using bcrypt with a cost factor of 12 (configurable via `BCRYPT_ROUNDS`)
+- **Hashing**: All passwords are hashed using bcrypt with a cost factor of 12 (configurable via `BCRYPT_ROUNDS` in `.env`)
 - **Minimum Length**: 6 characters minimum (configurable)
 - **Password Reset**: Secure token-based password reset with expiration
 - **Session Management**: Configurable session lifetime and max sessions per user
+- **Configuration**: Bcrypt rounds can be configured in `config/hashing.php` or via the `BCRYPT_ROUNDS` environment variable
 
 #### Two-Factor Authentication (2FA)
 - **TOTP-based**: Time-based One-Time Password compatible with Google Authenticator

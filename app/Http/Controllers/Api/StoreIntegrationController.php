@@ -160,7 +160,7 @@ class StoreIntegrationController extends Controller
 
         $validated = $request->validate([
             'external_id' => ['required', 'string', 'max:191'],
-            'branch_id' => ['nullable', 'integer'],
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
             'currency' => ['nullable', 'string', 'max:10'],
             'total' => ['nullable', 'numeric'],
             'discount_total' => ['nullable', 'numeric'],
@@ -179,10 +179,12 @@ class StoreIntegrationController extends Controller
         ]);
 
         $order = StoreOrder::query()->updateOrCreate(
-            ['external_order_id' => $validated['external_id']],
+            [
+                'external_order_id' => $validated['external_id'],
+                'branch_id' => $validated['branch_id'],
+            ],
             [
                 'status' => 'pending',
-                'branch_id' => $validated['branch_id'] ?? null,
                 'currency' => $validated['currency'] ?? null,
                 'total' => $validated['total'] ?? 0,
                 'discount_total' => $validated['discount_total'] ?? 0,
