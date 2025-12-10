@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
+use App\Services\StockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -207,7 +208,7 @@ class Index extends Component
         $cacheKey = "{$this->getCachePrefix()}:low_stock";
 
         $this->lowStockProducts = Cache::remember($cacheKey, $this->cacheTtl, function () {
-            $stockExpr = \App\Services\StockService::getStockCalculationExpression();
+            $stockExpr = StockService::getStockCalculationExpression();
             
             return $this->scopeProductsQuery(Product::query())
                 ->select('products.*')

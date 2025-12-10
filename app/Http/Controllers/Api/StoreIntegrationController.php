@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\StoreOrder;
+use App\Services\StockService;
 use App\Services\Store\StoreOrderToSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,7 +61,7 @@ class StoreIntegrationController extends Controller
 
         $query = Product::query()
             ->select('products.id', 'products.sku', 'products.name')
-            ->selectRaw(\App\Services\StockService::getStockCalculationExpression().' as current_stock');
+            ->selectRaw(StockService::getStockCalculationExpression().' as current_stock');
 
         if (! empty($skus)) {
             $query->whereIn('sku', $skus);
