@@ -39,6 +39,13 @@ class SalesAnalytics extends Component
     public array $hourlyDistribution = [];
 
     public array $categoryPerformance = [];
+    
+    protected DatabaseCompatibilityService $dbService;
+    
+    public function boot(DatabaseCompatibilityService $dbService): void
+    {
+        $this->dbService = $dbService;
+    }
 
     public function mount(): void
     {
@@ -179,13 +186,11 @@ class SalesAnalytics extends Component
         $days = Carbon::parse($this->dateFrom)->diffInDays(Carbon::parse($this->dateTo));
         $groupBy = $days > 60 ? 'month' : ($days > 14 ? 'week' : 'day');
 
-        $dbService = app(DatabaseCompatibilityService::class);
-
         // Use database-portable date truncation
         $dateFormat = match ($groupBy) {
-            'month' => $dbService->monthTruncateExpression('created_at'),
-            'week' => $dbService->weekTruncateExpression('created_at'),
-            default => $dbService->dateExpression('created_at'),
+            'month' => $this->dbService->monthTruncateExpression('created_at'),
+            'week' => $this->dbService->weekTruncateExpression('created_at'),
+            default => $this->dbService->dateExpression('created_at'),
         };
 
         $query = Sale::query()
@@ -310,8 +315,7 @@ class SalesAnalytics extends Component
 
     protected function loadHourlyDistribution(): void
     {
-        $dbService = app(DatabaseCompatibilityService::class);
-        $hourExpr = $dbService->hourExpression('created_at');
+        $hourExpr = $this->dbService->hourExpression('created_at');
 
         $query = Sale::query()
             ->selectRaw("{$hourExpr} as hour")
