@@ -14,9 +14,7 @@ use App\Livewire\Admin\Reports\ReportTemplatesManager;
 use App\Livewire\Admin\Reports\ScheduledReportsManager;
 use App\Livewire\Admin\Roles\Form as RoleFormPage;
 use App\Livewire\Admin\Roles\Index as RolesIndexPage;
-use App\Livewire\Admin\Settings\BranchSettings as BranchSettingsPage;
-use App\Livewire\Admin\Settings\SystemSettings as SystemSettingsPage;
-use App\Livewire\Admin\Store\OrdersDashboard;
+use App\Livewire\Admin\Settings\UnifiedSettings;
 use App\Livewire\Admin\Users\Form as UserFormPage;
 use App\Livewire\Admin\Users\Index as UsersIndexPage;
 use App\Livewire\Auth\ForgotPassword;
@@ -54,14 +52,25 @@ use App\Livewire\Suppliers\Index as SuppliersIndexPage;
 use App\Livewire\Warehouse\Index as WarehouseIndexPage;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes - Modular Structure
+|--------------------------------------------------------------------------
+|
+| Routes organized under /app/{module} pattern for business modules
+| Admin, settings, and reports under /admin/*
+|
+*/
+
+// Root redirect
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
-
     return redirect()->route('login');
 });
 
+// Health check
 Route::get('/health', function () {
     return response()->json([
         'success' => true,
@@ -69,6 +78,12 @@ Route::get('/health', function () {
         'time' => now()->toIso8601String(),
     ]);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/login', LoginPage::class)
     ->middleware('guest')
@@ -86,7 +101,6 @@ Route::post('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-
     return redirect('/login');
 })->middleware('auth')->name('logout');
 
@@ -97,6 +111,12 @@ Route::get('/2fa/challenge', TwoFactorChallenge::class)
 Route::get('/2fa/setup', TwoFactorSetup::class)
     ->middleware('auth')
     ->name('2fa.setup');
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth')->group(function () {
 
@@ -109,30 +129,535 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', ProfileEditPage::class)
         ->name('profile.edit');
 
-    // POS Terminal
-    Route::get('/pos', PosTerminalPage::class)
-        ->name('pos.terminal')
-        ->middleware('can:'.config('screen_permissions.pos.terminal', 'pos.use'));
-
-    // POS Offline sales report
-    Route::get('/pos/offline-sales', PosOfflineSalesPage::class)
-        ->name('pos.offline.report')
-        ->middleware('can:pos.offline.report.view');
-
-    // POS Daily Report
-    Route::get('/pos/daily-report', \App\Livewire\Pos\DailyReport::class)
-        ->name('pos.daily.report')
-        ->middleware('can:pos.daily-report.view');
-
-    // Notifications center
+    // Notifications
     Route::get('/notifications', NotificationsCenter::class)
         ->name('notifications.center')
         ->middleware('can:'.config('screen_permissions.notifications.center', 'system.view-notifications'));
 
-    // Admin area
+    // POS Terminal (special case - not under /app since it's a cashier interface)
+    Route::get('/pos', PosTerminalPage::class)
+        ->name('pos.terminal')
+        ->middleware('can:'.config('screen_permissions.pos.terminal', 'pos.use'));
+
+    Route::get('/pos/offline-sales', PosOfflineSalesPage::class)
+        ->name('pos.offline.report')
+        ->middleware('can:pos.offline.report.view');
+
+    Route::get('/pos/daily-report', \App\Livewire\Pos\DailyReport::class)
+        ->name('pos.daily.report')
+        ->middleware('can:pos.daily-report.view');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Business Modules under /app/{module}
+    |--------------------------------------------------------------------------
+    */
+
+    // SALES MODULE
+    Route::prefix('app/sales')->name('app.sales.')->group(function () {
+        Route::get('/', SalesIndexPage::class)
+            ->name('index')
+            ->middleware('can:sales.view');
+
+        Route::get('/create', \App\Livewire\Sales\Form::class)
+            ->name('create')
+            ->middleware('can:sales.manage');
+
+        Route::get('/{sale}', \App\Livewire\Sales\Show::class)
+            ->name('show')
+            ->middleware('can:sales.view');
+
+        Route::get('/{sale}/edit', \App\Livewire\Sales\Form::class)
+            ->name('edit')
+            ->middleware('can:sales.manage');
+
+        Route::get('/returns', \App\Livewire\Sales\Returns\Index::class)
+            ->name('returns.index')
+            ->middleware('can:sales.return');
+
+        Route::get('/returns/create', \App\Livewire\Sales\Returns\Form::class)
+            ->name('returns.create')
+            ->middleware('can:sales.return');
+
+        Route::get('/analytics', \App\Livewire\Reports\SalesAnalytics::class)
+            ->name('analytics')
+            ->middleware('can:sales.view-reports');
+    });
+
+    // PURCHASES MODULE
+    Route::prefix('app/purchases')->name('app.purchases.')->group(function () {
+        Route::get('/', PurchasesIndexPage::class)
+            ->name('index')
+            ->middleware('can:purchases.view');
+
+        Route::get('/create', \App\Livewire\Purchases\Form::class)
+            ->name('create')
+            ->middleware('can:purchases.manage');
+
+        Route::get('/{purchase}', \App\Livewire\Purchases\Show::class)
+            ->name('show')
+            ->middleware('can:purchases.view');
+
+        Route::get('/{purchase}/edit', \App\Livewire\Purchases\Form::class)
+            ->name('edit')
+            ->middleware('can:purchases.manage');
+
+        Route::get('/returns', \App\Livewire\Purchases\Returns\Index::class)
+            ->name('returns.index')
+            ->middleware('can:purchases.return');
+
+        Route::get('/returns/create', \App\Livewire\Purchases\Returns\Form::class)
+            ->name('returns.create')
+            ->middleware('can:purchases.return');
+
+        // Purchase requisitions
+        Route::get('/requisitions', \App\Livewire\Purchases\Requisitions\Index::class)
+            ->name('requisitions.index')
+            ->middleware('can:purchases.requisitions.view');
+
+        Route::get('/requisitions/create', \App\Livewire\Purchases\Requisitions\Form::class)
+            ->name('requisitions.create')
+            ->middleware('can:purchases.requisitions.create');
+
+        // Quotations
+        Route::get('/quotations', \App\Livewire\Purchases\Quotations\Index::class)
+            ->name('quotations.index')
+            ->middleware('can:purchases.view');
+
+        Route::get('/quotations/create', \App\Livewire\Purchases\Quotations\Form::class)
+            ->name('quotations.create')
+            ->middleware('can:purchases.manage');
+
+        Route::get('/quotations/{quotation}/compare', \App\Livewire\Purchases\Quotations\Compare::class)
+            ->name('quotations.compare')
+            ->middleware('can:purchases.view');
+
+        // Goods Received Notes
+        Route::get('/grn', \App\Livewire\Purchases\GRN\Index::class)
+            ->name('grn.index')
+            ->middleware('can:purchases.view');
+
+        Route::get('/grn/create', \App\Livewire\Purchases\GRN\Form::class)
+            ->name('grn.create')
+            ->middleware('can:purchases.manage');
+    });
+
+    // INVENTORY MODULE
+    Route::prefix('app/inventory')->name('app.inventory.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('app.inventory.products.index');
+        })->name('index');
+
+        // Products
+        Route::get('/products', ProductsIndexPage::class)
+            ->name('products.index')
+            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
+
+        Route::get('/products/create', ProductFormPage::class)
+            ->name('products.create')
+            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
+
+        Route::get('/products/{product}', \App\Livewire\Inventory\Products\Show::class)
+            ->name('products.show')
+            ->middleware('can:inventory.products.view');
+
+        Route::get('/products/{product}/edit', ProductFormPage::class)
+            ->name('products.edit')
+            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
+
+        Route::get('/products/{product}/history', \App\Livewire\Inventory\ProductHistory::class)
+            ->name('products.history')
+            ->middleware('can:inventory.products.view');
+
+        Route::get('/products/{product}/store-mappings', \App\Livewire\Inventory\ProductStoreMappings::class)
+            ->name('products.store-mappings')
+            ->middleware('can:inventory.products.view');
+
+        Route::get('/products/{product}/compatibility', \App\Livewire\Inventory\ProductCompatibility::class)
+            ->name('products.compatibility')
+            ->middleware('can:inventory.products.view');
+
+        // Categories
+        Route::get('/categories', \App\Livewire\Admin\Categories\Index::class)
+            ->name('categories.index')
+            ->middleware('can:inventory.categories.view');
+
+        // Units
+        Route::get('/units', \App\Livewire\Admin\UnitsOfMeasure\Index::class)
+            ->name('units.index')
+            ->middleware('can:inventory.units.view');
+
+        // Stock Alerts
+        Route::get('/stock-alerts', \App\Livewire\Inventory\StockAlerts::class)
+            ->name('stock-alerts')
+            ->middleware('can:inventory.view');
+
+        // Batches
+        Route::get('/batches', \App\Livewire\Inventory\Batches\Index::class)
+            ->name('batches.index')
+            ->middleware('can:inventory.view');
+
+        Route::get('/batches/create', \App\Livewire\Inventory\Batches\Form::class)
+            ->name('batches.create')
+            ->middleware('can:inventory.manage');
+
+        // Serials
+        Route::get('/serials', \App\Livewire\Inventory\Serials\Index::class)
+            ->name('serials.index')
+            ->middleware('can:inventory.view');
+
+        Route::get('/serials/create', \App\Livewire\Inventory\Serials\Form::class)
+            ->name('serials.create')
+            ->middleware('can:inventory.manage');
+
+        // Barcode printing
+        Route::get('/barcodes', \App\Livewire\Inventory\BarcodePrint::class)
+            ->name('barcodes')
+            ->middleware('can:inventory.view');
+    });
+
+    // WAREHOUSE MODULE
+    Route::prefix('app/warehouse')->name('app.warehouse.')->group(function () {
+        Route::get('/', WarehouseIndexPage::class)
+            ->name('index')
+            ->middleware('can:warehouse.view');
+
+        Route::get('/locations', \App\Livewire\Warehouse\Locations\Index::class)
+            ->name('locations.index')
+            ->middleware('can:warehouse.view');
+
+        Route::get('/movements', \App\Livewire\Warehouse\Movements\Index::class)
+            ->name('movements.index')
+            ->middleware('can:warehouse.view');
+
+        Route::get('/transfers', \App\Livewire\Warehouse\Transfers\Index::class)
+            ->name('transfers.index')
+            ->middleware('can:warehouse.view');
+
+        Route::get('/transfers/create', \App\Livewire\Warehouse\Transfers\Form::class)
+            ->name('transfers.create')
+            ->middleware('can:warehouse.manage');
+
+        Route::get('/adjustments', \App\Livewire\Warehouse\Adjustments\Index::class)
+            ->name('adjustments.index')
+            ->middleware('can:warehouse.view');
+
+        Route::get('/adjustments/create', \App\Livewire\Warehouse\Adjustments\Form::class)
+            ->name('adjustments.create')
+            ->middleware('can:warehouse.manage');
+    });
+
+    // RENTAL MODULE
+    Route::prefix('app/rental')->name('app.rental.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('app.rental.units.index');
+        })->name('index');
+
+        // Units
+        Route::get('/units', RentalUnitsIndex::class)
+            ->name('units.index')
+            ->middleware('can:rental.units.view');
+
+        Route::get('/units/create', RentalUnitForm::class)
+            ->name('units.create')
+            ->middleware('can:rental.units.manage');
+
+        Route::get('/units/{unit}/edit', RentalUnitForm::class)
+            ->name('units.edit')
+            ->middleware('can:rental.units.manage');
+
+        // Properties
+        Route::get('/properties', \App\Livewire\Rental\Properties\Index::class)
+            ->name('properties.index')
+            ->middleware('can:rentals.view');
+
+        // Tenants
+        Route::get('/tenants', \App\Livewire\Rental\Tenants\Index::class)
+            ->name('tenants.index')
+            ->middleware('can:rentals.view');
+
+        // Contracts
+        Route::get('/contracts', RentalContractsIndex::class)
+            ->name('contracts.index')
+            ->middleware('can:rental.contracts.view');
+
+        Route::get('/contracts/create', RentalContractForm::class)
+            ->name('contracts.create')
+            ->middleware('can:rental.contracts.manage');
+
+        Route::get('/contracts/{contract}/edit', RentalContractForm::class)
+            ->name('contracts.edit')
+            ->middleware('can:rental.contracts.manage');
+
+        // Reports
+        Route::get('/reports', RentalReportsDashboard::class)
+            ->name('reports')
+            ->middleware('can:rental.view-reports');
+    });
+
+    // MANUFACTURING MODULE
+    Route::prefix('app/manufacturing')->name('app.manufacturing.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('app.manufacturing.boms.index');
+        })->name('index');
+
+        // Bills of Materials
+        Route::get('/boms', \App\Livewire\Manufacturing\BillsOfMaterials\Index::class)
+            ->name('boms.index')
+            ->middleware('can:manufacturing.view');
+
+        Route::get('/boms/create', \App\Livewire\Manufacturing\BillsOfMaterials\Form::class)
+            ->name('boms.create')
+            ->middleware('can:manufacturing.manage');
+
+        Route::get('/boms/{bom}/edit', \App\Livewire\Manufacturing\BillsOfMaterials\Form::class)
+            ->name('boms.edit')
+            ->middleware('can:manufacturing.manage');
+
+        // Production Orders
+        Route::get('/orders', \App\Livewire\Manufacturing\ProductionOrders\Index::class)
+            ->name('orders.index')
+            ->middleware('can:manufacturing.view');
+
+        Route::get('/orders/create', \App\Livewire\Manufacturing\ProductionOrders\Form::class)
+            ->name('orders.create')
+            ->middleware('can:manufacturing.manage');
+
+        Route::get('/orders/{order}/edit', \App\Livewire\Manufacturing\ProductionOrders\Form::class)
+            ->name('orders.edit')
+            ->middleware('can:manufacturing.manage');
+
+        // Work Centers
+        Route::get('/work-centers', \App\Livewire\Manufacturing\WorkCenters\Index::class)
+            ->name('work-centers.index')
+            ->middleware('can:manufacturing.view');
+
+        Route::get('/work-centers/create', \App\Livewire\Manufacturing\WorkCenters\Form::class)
+            ->name('work-centers.create')
+            ->middleware('can:manufacturing.manage');
+    });
+
+    // HRM MODULE
+    Route::prefix('app/hrm')->name('app.hrm.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('app.hrm.employees.index');
+        })->name('index');
+
+        // Employees
+        Route::get('/employees', HrmEmployeesIndex::class)
+            ->name('employees.index')
+            ->middleware('can:hrm.employees.view');
+
+        Route::get('/employees/create', HrmEmployeeForm::class)
+            ->name('employees.create')
+            ->middleware('can:hrm.employees.assign');
+
+        Route::get('/employees/{employee}/edit', HrmEmployeeForm::class)
+            ->name('employees.edit')
+            ->middleware('can:hrm.employees.assign');
+
+        // Attendance
+        Route::get('/attendance', HrmAttendanceIndex::class)
+            ->name('attendance.index')
+            ->middleware('can:hrm.attendance.view');
+
+        // Payroll
+        Route::get('/payroll', HrmPayrollIndex::class)
+            ->name('payroll.index')
+            ->middleware('can:hrm.payroll.view');
+
+        Route::get('/payroll/run', HrmPayrollRun::class)
+            ->name('payroll.run')
+            ->middleware('can:hrm.payroll.run');
+
+        // Shifts
+        Route::get('/shifts', \App\Livewire\Hrm\Shifts\Index::class)
+            ->name('shifts.index')
+            ->middleware('can:hrm.view');
+
+        // Reports
+        Route::get('/reports', HrmReportsDashboard::class)
+            ->name('reports')
+            ->middleware('can:hr.view-reports');
+    });
+
+    // BANKING MODULE
+    Route::prefix('app/banking')->name('app.banking.')->group(function () {
+        Route::get('/', \App\Livewire\Banking\Index::class)
+            ->name('index')
+            ->middleware('can:banking.view');
+
+        Route::get('/accounts', \App\Livewire\Banking\Accounts\Index::class)
+            ->name('accounts.index')
+            ->middleware('can:banking.view');
+
+        Route::get('/transactions', \App\Livewire\Banking\Transactions\Index::class)
+            ->name('transactions.index')
+            ->middleware('can:banking.view');
+
+        Route::get('/reconciliation', \App\Livewire\Banking\Reconciliation::class)
+            ->name('reconciliation')
+            ->middleware('can:banking.reconcile');
+    });
+
+    // FIXED ASSETS MODULE
+    Route::prefix('app/fixed-assets')->name('app.fixed-assets.')->group(function () {
+        Route::get('/', \App\Livewire\FixedAssets\Index::class)
+            ->name('index')
+            ->middleware('can:fixed-assets.view');
+
+        Route::get('/create', \App\Livewire\FixedAssets\Form::class)
+            ->name('create')
+            ->middleware('can:fixed-assets.manage');
+
+        Route::get('/{asset}/edit', \App\Livewire\FixedAssets\Form::class)
+            ->name('edit')
+            ->middleware('can:fixed-assets.manage');
+
+        Route::get('/depreciation', \App\Livewire\FixedAssets\Depreciation::class)
+            ->name('depreciation')
+            ->middleware('can:fixed-assets.view');
+    });
+
+    // PROJECTS MODULE
+    Route::prefix('app/projects')->name('app.projects.')->group(function () {
+        Route::get('/', \App\Livewire\Projects\Index::class)
+            ->name('index')
+            ->middleware('can:projects.view');
+
+        Route::get('/create', \App\Livewire\Projects\Form::class)
+            ->name('create')
+            ->middleware('can:projects.manage');
+
+        Route::get('/{project}', \App\Livewire\Projects\Show::class)
+            ->name('show')
+            ->middleware('can:projects.view');
+
+        Route::get('/{project}/edit', \App\Livewire\Projects\Form::class)
+            ->name('edit')
+            ->middleware('can:projects.manage');
+
+        // Tasks
+        Route::get('/{project}/tasks', \App\Livewire\Projects\Tasks\Index::class)
+            ->name('tasks.index')
+            ->middleware('can:projects.view');
+
+        // Expenses
+        Route::get('/{project}/expenses', \App\Livewire\Projects\Expenses\Index::class)
+            ->name('expenses.index')
+            ->middleware('can:projects.view');
+    });
+
+    // DOCUMENTS MODULE
+    Route::prefix('app/documents')->name('app.documents.')->group(function () {
+        Route::get('/', \App\Livewire\Documents\Index::class)
+            ->name('index')
+            ->middleware('can:documents.view');
+
+        Route::get('/create', \App\Livewire\Documents\Form::class)
+            ->name('create')
+            ->middleware('can:documents.manage');
+
+        Route::get('/{document}/edit', \App\Livewire\Documents\Form::class)
+            ->name('edit')
+            ->middleware('can:documents.manage');
+    });
+
+    // HELPDESK MODULE
+    Route::prefix('app/helpdesk')->name('app.helpdesk.')->group(function () {
+        Route::get('/', \App\Livewire\Helpdesk\Index::class)
+            ->name('index')
+            ->middleware('can:helpdesk.view');
+
+        Route::get('/tickets', \App\Livewire\Helpdesk\Tickets\Index::class)
+            ->name('tickets.index')
+            ->middleware('can:helpdesk.view');
+
+        Route::get('/tickets/create', \App\Livewire\Helpdesk\Tickets\Form::class)
+            ->name('tickets.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/tickets/{ticket}', \App\Livewire\Helpdesk\Tickets\Show::class)
+            ->name('tickets.show')
+            ->middleware('can:helpdesk.view');
+
+        Route::get('/categories', \App\Livewire\Helpdesk\Categories\Index::class)
+            ->name('categories.index')
+            ->middleware('can:helpdesk.manage');
+    });
+
+    // ACCOUNTING MODULE (kept separate as it's more complex)
+    Route::get('/app/accounting', AccountingIndexPage::class)
+        ->name('app.accounting.index')
+        ->middleware('can:accounting.view');
+
+    // EXPENSES & INCOME (financial transactions)
+    Route::prefix('app/expenses')->name('app.expenses.')->group(function () {
+        Route::get('/', ExpensesIndexPage::class)
+            ->name('index')
+            ->middleware('can:expenses.view');
+
+        Route::get('/create', ExpenseFormPage::class)
+            ->name('create')
+            ->middleware('can:expenses.manage');
+
+        Route::get('/{expense}/edit', ExpenseFormPage::class)
+            ->name('edit')
+            ->middleware('can:expenses.manage');
+
+        Route::get('/categories', \App\Livewire\Expenses\Categories\Index::class)
+            ->name('categories.index')
+            ->middleware('can:expenses.manage');
+    });
+
+    Route::prefix('app/income')->name('app.income.')->group(function () {
+        Route::get('/', IncomeIndexPage::class)
+            ->name('index')
+            ->middleware('can:income.view');
+
+        Route::get('/create', \App\Livewire\Income\Form::class)
+            ->name('create')
+            ->middleware('can:income.manage');
+
+        Route::get('/{income}/edit', \App\Livewire\Income\Form::class)
+            ->name('edit')
+            ->middleware('can:income.manage');
+    });
+
+    // CUSTOMERS & SUPPLIERS (business contacts)
+    Route::get('/customers', CustomersIndexPage::class)
+        ->name('customers.index')
+        ->middleware('can:customers.view');
+
+    Route::get('/customers/create', CustomerFormPage::class)
+        ->name('customers.create')
+        ->middleware('can:customers.manage');
+
+    Route::get('/customers/{customer}/edit', CustomerFormPage::class)
+        ->name('customers.edit')
+        ->middleware('can:customers.manage');
+
+    Route::get('/suppliers', SuppliersIndexPage::class)
+        ->name('suppliers.index')
+        ->middleware('can:suppliers.view');
+
+    Route::get('/suppliers/create', SupplierFormPage::class)
+        ->name('suppliers.create')
+        ->middleware('can:suppliers.manage');
+
+    Route::get('/suppliers/{supplier}/edit', SupplierFormPage::class)
+        ->name('suppliers.edit')
+        ->middleware('can:suppliers.manage');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Area
+    |--------------------------------------------------------------------------
+    */
+
     Route::prefix('admin')->name('admin.')->group(function () {
 
-        // Users
+        // Users Management
         Route::get('/users', UsersIndexPage::class)
             ->name('users.index')
             ->middleware('can:'.config('screen_permissions.admin.users.index', 'users.manage'));
@@ -145,7 +670,20 @@ Route::middleware('auth')->group(function () {
             ->name('users.edit')
             ->middleware('can:'.config('screen_permissions.admin.users.index', 'users.manage'));
 
-        // Branches
+        // Roles Management
+        Route::get('/roles', RolesIndexPage::class)
+            ->name('roles.index')
+            ->middleware('can:roles.manage');
+
+        Route::get('/roles/create', RoleFormPage::class)
+            ->name('roles.create')
+            ->middleware('can:roles.manage');
+
+        Route::get('/roles/{role}/edit', RoleFormPage::class)
+            ->name('roles.edit')
+            ->middleware('can:roles.manage');
+
+        // Branches Management
         Route::get('/branches', BranchesIndexPage::class)
             ->name('branches.index')
             ->middleware('can:'.config('screen_permissions.admin.branches.index', 'branches.view'));
@@ -162,639 +700,135 @@ Route::middleware('auth')->group(function () {
             ->name('branches.modules')
             ->middleware('can:branches.manage');
 
-        // Settings
-        Route::prefix('settings')->name('settings.')->group(function () {
+        // Modules Management
+        Route::get('/modules', ModulesIndexPage::class)
+            ->name('modules.index')
+            ->middleware('can:modules.manage');
 
-            // System settings
-            Route::get('/system', SystemSettingsPage::class)
-                ->name('system')
-                ->middleware('can:'.config('screen_permissions.admin.settings.system', 'settings.view'));
+        Route::get('/modules/create', ModuleFormPage::class)
+            ->name('modules.create')
+            ->middleware('can:modules.manage');
 
-            // Branch settings
-            Route::get('/branch', BranchSettingsPage::class)
-                ->name('branch')
-                ->middleware('can:'.config('screen_permissions.admin.settings.branch', 'settings.branch'));
+        Route::get('/modules/{module}/edit', ModuleFormPage::class)
+            ->name('modules.edit')
+            ->middleware('can:modules.manage');
 
-            // Translation Manager
-            Route::get('/translations', \App\Livewire\Admin\Settings\TranslationManager::class)
-                ->name('translations')
-                ->middleware('can:settings.translations.manage');
+        Route::get('/modules/{module}/fields', \App\Livewire\Admin\Modules\Fields::class)
+            ->name('modules.fields')
+            ->middleware('can:modules.manage');
 
-            // Advanced Settings (SMS, Security, Backup)
-            Route::get('/advanced', \App\Livewire\Admin\Settings\AdvancedSettings::class)
-                ->name('advanced')
-                ->middleware('can:settings.view');
-        });
+        Route::get('/modules/{module}/rental-periods', \App\Livewire\Admin\Modules\RentalPeriods::class)
+            ->name('modules.rental-periods')
+            ->middleware('can:modules.manage');
 
-        // Audit logs
+        Route::get('/modules/product-fields/{moduleId?}', \App\Livewire\Admin\Modules\ProductFields::class)
+            ->name('modules.product-fields')
+            ->middleware('can:modules.manage');
+
+        // Stores Management
+        Route::get('/stores', \App\Livewire\Admin\Store\Stores::class)
+            ->name('stores.index')
+            ->middleware('can:stores.view');
+
+        Route::get('/stores/orders', \App\Livewire\Admin\Store\OrdersDashboard::class)
+            ->name('stores.orders')
+            ->middleware('can:stores.view');
+
+        Route::get('/stores/orders/export', [StoreOrdersExportController::class, 'export'])
+            ->name('stores.orders.export')
+            ->middleware('can:stores.view');
+
+        // Currency Management
+        Route::get('/currencies', \App\Livewire\Admin\CurrencyManager::class)
+            ->name('currencies.index')
+            ->middleware('can:settings.view');
+
+        Route::get('/currency-rates', \App\Livewire\Admin\CurrencyRates::class)
+            ->name('currency-rates.index')
+            ->middleware('can:settings.view');
+
+        // Unified Settings (NEW)
+        Route::get('/settings', UnifiedSettings::class)
+            ->name('settings')
+            ->middleware('can:settings.view');
+
+        // Redirects from old settings routes
+        Route::redirect('/settings/system', '/admin/settings?tab=general');
+        Route::redirect('/settings/branch', '/admin/settings?tab=branch');
+        Route::redirect('/settings/translations', '/admin/settings?tab=translations');
+        Route::redirect('/settings/advanced', '/admin/settings?tab=advanced');
+
+        // Audit Logs
         Route::get('/logs/audit', AuditLogPage::class)
             ->name('logs.audit')
             ->middleware('can:'.config('screen_permissions.logs.audit', 'logs.audit.view'));
-    });
 
-    // Roles management
-    Route::get('/admin/roles', RolesIndexPage::class)
-        ->name('admin.roles.index')
-        ->middleware('can:roles.manage');
-
-    Route::get('/admin/roles/create', RoleFormPage::class)
-        ->name('admin.roles.create')
-        ->middleware('can:roles.manage');
-
-    Route::get('/admin/roles/{role}/edit', RoleFormPage::class)
-        ->name('admin.roles.edit')
-        ->middleware('can:roles.manage');
-
-    // Modules management
-    Route::get('/admin/modules', ModulesIndexPage::class)
-        ->name('admin.modules.index')
-        ->middleware('can:modules.manage');
-
-    Route::get('/admin/modules/create', ModuleFormPage::class)
-        ->name('admin.modules.create')
-        ->middleware('can:modules.manage');
-
-    Route::get('/admin/modules/{module}/edit', ModuleFormPage::class)
-        ->name('admin.modules.edit')
-        ->middleware('can:modules.manage');
-
-    Route::get('/admin/modules/{module}/fields', \App\Livewire\Admin\Modules\Fields::class)
-        ->name('admin.modules.fields')
-        ->middleware('can:modules.manage');
-
-    Route::get('/admin/modules/{module}/rental-periods', \App\Livewire\Admin\Modules\RentalPeriods::class)
-        ->name('admin.modules.rental-periods')
-        ->middleware('can:modules.manage');
-
-    Route::get('/admin/modules/product-fields/{moduleId?}', \App\Livewire\Admin\Modules\ProductFields::class)
-        ->name('admin.modules.product-fields')
-        ->middleware('can:modules.manage');
-
-    // Reports Center
-    Route::get('/reports', \App\Livewire\Admin\Reports\Index::class)
-        ->name('reports.index')
-        ->middleware('can:reports.view');
-
-    Route::get('/reports/aggregate', \App\Livewire\Admin\Reports\Aggregate::class)
-        ->name('reports.aggregate')
-        ->middleware('can:reports.aggregate');
-
-    Route::get('/reports/module/{module}', \App\Livewire\Admin\Reports\ModuleReport::class)
-        ->name('reports.module')
-        ->middleware('can:reports.view');
-
-    // Export Management
-    Route::get('/export/customize', \App\Livewire\Admin\Export\CustomizeExport::class)
-        ->name('export.customize')
-        ->middleware('can:reports.export');
-
-    // Customers
-    Route::get('/customers', CustomersIndexPage::class)
-        ->name('customers.index')
-        ->middleware('can:customers.view');
-
-    Route::get('/customers/create', CustomerFormPage::class)
-        ->name('customers.create')
-        ->middleware('can:customers.manage');
-
-    Route::get('/customers/{customer}/edit', CustomerFormPage::class)
-        ->name('customers.edit')
-        ->middleware('can:customers.manage');
-
-    // Suppliers
-    Route::get('/suppliers', SuppliersIndexPage::class)
-        ->name('suppliers.index')
-        ->middleware('can:suppliers.view');
-
-    Route::get('/suppliers/create', SupplierFormPage::class)
-        ->name('suppliers.create')
-        ->middleware('can:suppliers.manage');
-
-    Route::get('/suppliers/{supplier}/edit', SupplierFormPage::class)
-        ->name('suppliers.edit')
-        ->middleware('can:suppliers.manage');
-
-    // Sales
-    Route::get('/sales', SalesIndexPage::class)
-        ->name('sales.index')
-        ->middleware('can:sales.view');
-
-    Route::get('/sales/returns', \App\Livewire\Sales\Returns\Index::class)
-        ->name('sales.returns')
-        ->middleware('can:sales.return');
-
-    // Purchases
-    Route::get('/purchases', PurchasesIndexPage::class)
-        ->name('purchases.index')
-        ->middleware('can:purchases.view');
-
-    Route::get('/purchases/returns', \App\Livewire\Purchases\Returns\Index::class)
-        ->name('purchases.returns')
-        ->middleware('can:purchases.return');
-
-    Route::get('/purchases/create', \App\Livewire\Purchases\Form::class)
-        ->name('purchases.create')
-        ->middleware('can:purchases.manage');
-
-    Route::get('/purchases/{purchase}/edit', \App\Livewire\Purchases\Form::class)
-        ->name('purchases.edit')
-        ->middleware('can:purchases.manage');
-
-    // Expenses
-    Route::get('/expenses', ExpensesIndexPage::class)
-        ->name('expenses.index')
-        ->middleware('can:expenses.view');
-
-    Route::get('/expenses/create', ExpenseFormPage::class)
-        ->name('expenses.create')
-        ->middleware('can:expenses.manage');
-
-    Route::get('/expenses/{expense}/edit', ExpenseFormPage::class)
-        ->name('expenses.edit')
-        ->middleware('can:expenses.manage');
-
-    // Income
-    Route::get('/income', IncomeIndexPage::class)
-        ->name('income.index')
-        ->middleware('can:income.view');
-
-    Route::get('/income/create', \App\Livewire\Income\Form::class)
-        ->name('income.create')
-        ->middleware('can:income.manage');
-
-    Route::get('/income/{income}/edit', \App\Livewire\Income\Form::class)
-        ->name('income.edit')
-        ->middleware('can:income.manage');
-
-    // Accounting
-    Route::get('/accounting', AccountingIndexPage::class)
-        ->name('accounting.index')
-        ->middleware('can:accounting.view');
-
-    // Warehouse
-    Route::get('/warehouse', WarehouseIndexPage::class)
-        ->name('warehouse.index')
-        ->middleware('can:warehouse.view');
-
-    // Inventory
-    Route::prefix('inventory')->name('inventory.')->group(function () {
-        Route::get('/products', ProductsIndexPage::class)
-            ->name('products.index')
-            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
-
-        Route::get('/products/create', ProductFormPage::class)
-            ->name('products.create')
-            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
-
-        Route::get('/products/{product}/edit', ProductFormPage::class)
-            ->name('products.edit')
-            ->middleware('can:'.config('screen_permissions.inventory.products.index', 'inventory.products.view'));
-
-        Route::get('/products/{product}/store-mappings', \App\Livewire\Inventory\ProductStoreMappings::class)
-            ->name('products.store-mappings')
-            ->middleware('can:inventory.products.view');
-    });
-
-    // HRM: Employees, Attendance, Payroll & Reports
-    Route::prefix('hrm')->name('hrm.')->group(function () {
-        // Employees list
-        Route::get('/employees', HrmEmployeesIndex::class)
-            ->name('employees.index')
-            ->middleware('can:hrm.employees.view');
-
-        // Create employee
-        Route::get('/employees/create', HrmEmployeeForm::class)
-            ->name('employees.create')
-            ->middleware('can:hrm.employees.assign');
-
-        // Edit employee
-        Route::get('/employees/{employee}/edit', HrmEmployeeForm::class)
-            ->name('employees.edit')
-            ->middleware('can:hrm.employees.assign');
-
-        // Attendance list
-        Route::get('/attendance', HrmAttendanceIndex::class)
-            ->name('attendance.index')
-            ->middleware('can:hrm.attendance.view');
-
-        // Payroll runs list
-        Route::get('/payroll', HrmPayrollIndex::class)
-            ->name('payroll.index')
-            ->middleware('can:hrm.payroll.view');
-
-        // Run payroll
-        Route::get('/payroll/run', HrmPayrollRun::class)
-            ->name('payroll.run')
-            ->middleware('can:hrm.payroll.run');
-
-        // HRM reports dashboard
-        Route::get('/reports', HrmReportsDashboard::class)
-            ->name('reports.dashboard')
-            ->middleware('can:hr.view-reports');
-    });
-
-    // Rental: Units, Contracts, Properties, Tenants & Reports
-    Route::prefix('rental')->name('rental.')->group(function () {
-        // Rental units list
-        Route::get('/units', RentalUnitsIndex::class)
-            ->name('units.index')
-            ->middleware('can:rental.units.view');
-
-        // Create rental unit
-        Route::get('/units/create', RentalUnitForm::class)
-            ->name('units.create')
-            ->middleware('can:rental.units.manage');
-
-        // Edit rental unit
-        Route::get('/units/{unit}/edit', RentalUnitForm::class)
-            ->name('units.edit')
-            ->middleware('can:rental.units.manage');
-
-        // Rental contracts list
-        Route::get('/contracts', RentalContractsIndex::class)
-            ->name('contracts.index')
-            ->middleware('can:rental.contracts.view');
-
-        // Create rental contract
-        Route::get('/contracts/create', RentalContractForm::class)
-            ->name('contracts.create')
-            ->middleware('can:rental.contracts.manage');
-
-        // Edit rental contract
-        Route::get('/contracts/{contract}/edit', RentalContractForm::class)
-            ->name('contracts.edit')
-            ->middleware('can:rental.contracts.manage');
-
-        // Properties management
-        Route::get('/properties', \App\Livewire\Rental\Properties\Index::class)
-            ->name('properties.index')
-            ->middleware('can:rentals.view');
-
-        // Tenants management
-        Route::get('/tenants', \App\Livewire\Rental\Tenants\Index::class)
-            ->name('tenants.index')
-            ->middleware('can:rentals.view');
-
-        // Rental reports dashboard
-        Route::get('/reports', RentalReportsDashboard::class)
-            ->name('reports.dashboard')
-            ->middleware('can:rental.view-reports');
-    });
-
-    // Manufacturing: BOMs, Production Orders, Work Centers
-    Route::prefix('manufacturing')->name('manufacturing.')->group(function () {
-        // Bills of Materials
-        Route::get('/boms', \App\Livewire\Manufacturing\BillsOfMaterials\Index::class)
-            ->name('boms.index')
-            ->middleware('can:manufacturing.view');
-
-        Route::get('/boms/create', \App\Livewire\Manufacturing\BillsOfMaterials\Form::class)
-            ->name('boms.create')
-            ->middleware('can:manufacturing.create');
-
-        Route::get('/boms/{bom}/edit', \App\Livewire\Manufacturing\BillsOfMaterials\Form::class)
-            ->name('boms.edit')
-            ->middleware('can:manufacturing.edit');
-
-        // TODO: Add Show component later
-        // Route::get('/boms/{bom}', \App\Livewire\Manufacturing\BillsOfMaterials\Show::class)
-        //     ->name('boms.show')
-        //     ->middleware('can:manufacturing.view');
-
-        // Production Orders
-        Route::get('/production-orders', \App\Livewire\Manufacturing\ProductionOrders\Index::class)
-            ->name('production-orders.index')
-            ->middleware('can:manufacturing.view');
-
-        Route::get('/production-orders/create', \App\Livewire\Manufacturing\ProductionOrders\Form::class)
-            ->name('production-orders.create')
-            ->middleware('can:manufacturing.create');
-
-        Route::get('/production-orders/{productionOrder}/edit', \App\Livewire\Manufacturing\ProductionOrders\Form::class)
-            ->name('production-orders.edit')
-            ->middleware('can:manufacturing.edit');
-
-        // TODO: Add Show component later
-        // Route::get('/production-orders/{productionOrder}', \App\Livewire\Manufacturing\ProductionOrders\Show::class)
-        //     ->name('production-orders.show')
-        //     ->middleware('can:manufacturing.view');
-
-        // Work Centers
-        Route::get('/work-centers', \App\Livewire\Manufacturing\WorkCenters\Index::class)
-            ->name('work-centers.index')
-            ->middleware('can:manufacturing.view');
-
-        Route::get('/work-centers/create', \App\Livewire\Manufacturing\WorkCenters\Form::class)
-            ->name('work-centers.create')
-            ->middleware('can:manufacturing.create');
-
-        Route::get('/work-centers/{workCenter}/edit', \App\Livewire\Manufacturing\WorkCenters\Form::class)
-            ->name('work-centers.edit')
-            ->middleware('can:manufacturing.edit');
-
-        // TODO: Add Show component later
-        // Route::get('/work-centers/{workCenter}', \App\Livewire\Manufacturing\WorkCenters\Show::class)
-        //     ->name('work-centers.show')
-        //     ->middleware('can:manufacturing.view');
-
-        // TODO: Add Dashboard component later
-        // Route::get('/dashboard', \App\Livewire\Manufacturing\Dashboard\Index::class)
-        //     ->name('dashboard')
-        //     ->middleware('can:manufacturing.view');
-    });
-
-    // Fixed Assets: Asset Management & Depreciation
-    Route::prefix('fixed-assets')->name('fixed-assets.')->group(function () {
-        Route::get('/', \App\Livewire\FixedAssets\Index::class)
-            ->name('index')
-            ->middleware('can:fixed-assets.view');
-
-        Route::get('/create', \App\Livewire\FixedAssets\Form::class)
-            ->name('create')
-            ->middleware('can:fixed-assets.create');
-
-        Route::get('/{asset}/edit', \App\Livewire\FixedAssets\Form::class)
-            ->name('edit')
-            ->middleware('can:fixed-assets.edit');
-    });
-
-    // Banking: Bank Accounts & Transactions
-    Route::prefix('banking')->name('banking.')->group(function () {
-        Route::prefix('accounts')->name('accounts.')->group(function () {
-            Route::get('/', \App\Livewire\Banking\Accounts\Index::class)
+        /*
+        |--------------------------------------------------------------------------
+        | Admin Reports
+        |--------------------------------------------------------------------------
+        */
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', \App\Livewire\Admin\Reports\Index::class)
                 ->name('index')
-                ->middleware('can:banking.view');
+                ->middleware('can:reports.view');
 
-            Route::get('/create', \App\Livewire\Banking\Accounts\Form::class)
-                ->name('create')
-                ->middleware('can:banking.create');
+            Route::get('/aggregate', \App\Livewire\Admin\Reports\Aggregate::class)
+                ->name('aggregate')
+                ->middleware('can:reports.aggregate');
 
-            Route::get('/{account}/edit', \App\Livewire\Banking\Accounts\Form::class)
-                ->name('edit')
-                ->middleware('can:banking.edit');
-        });
-    });
+            Route::get('/module/{module}', \App\Livewire\Admin\Reports\ModuleReport::class)
+                ->name('module')
+                ->middleware('can:reports.view');
 
-    // Inventory: Batch & Serial Tracking
-    Route::prefix('inventory')->name('inventory.')->group(function () {
-        Route::prefix('batches')->name('batches.')->group(function () {
-            Route::get('/', \App\Livewire\Inventory\Batches\Index::class)
-                ->name('index')
-                ->middleware('can:inventory.products.view');
+            Route::get('/sales', \App\Livewire\Reports\SalesAnalytics::class)
+                ->name('sales')
+                ->middleware('can:sales.view-reports');
 
-            Route::get('/create', \App\Livewire\Inventory\Batches\Form::class)
-                ->name('create')
-                ->middleware('can:inventory.products.view');
+            Route::get('/inventory', InventoryChartsDashboard::class)
+                ->name('inventory')
+                ->middleware('can:inventory.view-reports');
 
-            Route::get('/{batch}/edit', \App\Livewire\Inventory\Batches\Form::class)
-                ->name('edit')
-                ->middleware('can:inventory.products.view');
+            Route::get('/pos', PosChartsDashboard::class)
+                ->name('pos')
+                ->middleware('can:pos.view-reports');
+
+            Route::get('/scheduled', ScheduledReportsManager::class)
+                ->name('scheduled')
+                ->middleware('can:reports.schedule');
+
+            Route::get('/templates', ReportTemplatesManager::class)
+                ->name('templates')
+                ->middleware('can:reports.templates');
         });
 
-        Route::prefix('serials')->name('serials.')->group(function () {
-            Route::get('/', \App\Livewire\Inventory\Serials\Index::class)
-                ->name('index')
-                ->middleware('can:inventory.products.view');
-
-            Route::get('/create', \App\Livewire\Inventory\Serials\Form::class)
-                ->name('create')
-                ->middleware('can:inventory.products.view');
-
-            Route::get('/{serial}/edit', \App\Livewire\Inventory\Serials\Form::class)
-                ->name('edit')
-                ->middleware('can:inventory.products.view');
-        });
+        // Export customization
+        Route::get('/export/customize', \App\Livewire\Admin\Export\CustomizeExport::class)
+            ->name('export.customize')
+            ->middleware('can:reports.export');
     });
 
-    // Helpdesk Routes
-    Route::prefix('helpdesk')->name('helpdesk.')->group(function () {
-        Route::get('/', \App\Livewire\Helpdesk\Index::class)
-            ->name('index')
-            ->middleware('can:helpdesk.view');
-        
-        Route::get('/dashboard', \App\Livewire\Helpdesk\Dashboard::class)
-            ->name('dashboard')
-            ->middleware('can:helpdesk.view');
-        
-        Route::get('/create', \App\Livewire\Helpdesk\TicketForm::class)
-            ->name('create')
-            ->middleware('can:helpdesk.create');
-        
-        Route::get('/{ticket}', \App\Livewire\Helpdesk\TicketDetail::class)
-            ->name('show')
-            ->middleware('can:helpdesk.view');
-        
-        Route::get('/{ticket}/edit', \App\Livewire\Helpdesk\TicketForm::class)
-            ->name('edit')
-            ->middleware('can:helpdesk.edit');
-        
-        // Categories
-        Route::get('/settings/categories', \App\Livewire\Helpdesk\Categories\Index::class)
-            ->name('categories.index')
-            ->middleware('can:helpdesk.manage');
-        
-        // Priorities
-        Route::get('/settings/priorities', \App\Livewire\Helpdesk\Priorities\Index::class)
-            ->name('priorities.index')
-            ->middleware('can:helpdesk.manage');
-        
-        // SLA Policies
-        Route::get('/settings/sla-policies', \App\Livewire\Helpdesk\SLAPolicies\Index::class)
-            ->name('sla-policies.index')
-            ->middleware('can:helpdesk.manage');
-    });
-
-    // Projects Routes
-    Route::prefix('projects')->name('projects.')->group(function () {
-        Route::get('/', \App\Livewire\Projects\Index::class)
-            ->name('index')
-            ->middleware('can:projects.view');
-        
-        Route::get('/create', \App\Livewire\Projects\Form::class)
-            ->name('create')
-            ->middleware('can:projects.create');
-        
-        Route::get('/{project}', \App\Livewire\Projects\Show::class)
-            ->name('show')
-            ->middleware('can:projects.view');
-        
-        Route::get('/{project}/edit', \App\Livewire\Projects\Form::class)
-            ->name('edit')
-            ->middleware('can:projects.edit');
-        
-        Route::get('/{project}/tasks', \App\Livewire\Projects\Tasks::class)
-            ->name('tasks')
-            ->middleware('can:projects.tasks.view');
-        
-        Route::get('/{project}/time-logs', \App\Livewire\Projects\TimeLogs::class)
-            ->name('time-logs')
-            ->middleware('can:projects.timelogs.view');
-        
-        Route::get('/{project}/expenses', \App\Livewire\Projects\Expenses::class)
-            ->name('expenses')
-            ->middleware('can:projects.expenses.view');
-    });
-
-    // Documents Routes
-    Route::prefix('documents')->name('documents.')->group(function () {
-        Route::get('/', \App\Livewire\Documents\Index::class)
-            ->name('index')
-            ->middleware('can:documents.view');
-        
-        Route::get('/create', \App\Livewire\Documents\Form::class)
-            ->name('create')
-            ->middleware('can:documents.create');
-        
-        Route::get('/{document}', \App\Livewire\Documents\Show::class)
-            ->name('show')
-            ->middleware('can:documents.view');
-        
-        Route::get('/{document}/edit', \App\Livewire\Documents\Form::class)
-            ->name('edit')
-            ->middleware('can:documents.edit');
-        
-        Route::get('/{document}/versions', \App\Livewire\Documents\Versions::class)
-            ->name('versions')
-            ->middleware('can:documents.versions.view');
-        
-        Route::get('/{document}/download', [\App\Http\Controllers\Documents\DownloadController::class, '__invoke'])
-            ->name('download')
-            ->middleware('can:documents.view');
-        
-        // Tags
-        Route::get('/settings/tags', \App\Livewire\Documents\Tags\Index::class)
-            ->name('tags.index')
-            ->middleware('can:documents.tags.manage');
-    });
+    // Legacy route redirects (for backward compatibility)
+    Route::redirect('/sales', '/app/sales');
+    Route::redirect('/sales/returns', '/app/sales/returns');
+    Route::redirect('/purchases', '/app/purchases');
+    Route::redirect('/purchases/returns', '/app/purchases/returns');
+    Route::redirect('/inventory/products', '/app/inventory/products');
+    Route::redirect('/inventory/categories', '/app/inventory/categories');
+    Route::redirect('/inventory/units', '/app/inventory/units');
+    Route::redirect('/warehouse', '/app/warehouse');
+    Route::redirect('/accounting', '/app/accounting');
+    Route::redirect('/expenses', '/app/expenses');
+    Route::redirect('/income', '/app/income');
+    Route::redirect('/hrm/employees', '/app/hrm/employees');
+    Route::redirect('/hrm/attendance', '/app/hrm/attendance');
+    Route::redirect('/hrm/payroll', '/app/hrm/payroll');
+    Route::redirect('/rental/units', '/app/rental/units');
+    Route::redirect('/rental/contracts', '/app/rental/contracts');
+    Route::redirect('/rental/properties', '/app/rental/properties');
+    Route::redirect('/rental/tenants', '/app/rental/tenants');
+    Route::redirect('/manufacturing/boms', '/app/manufacturing/boms');
+    Route::redirect('/manufacturing/orders', '/app/manufacturing/orders');
+    Route::redirect('/reports', '/admin/reports');
 });
-
-// Scheduled reports manager
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/reports/scheduled', ScheduledReportsManager::class)
-        ->name('admin.reports.scheduled')
-        ->middleware('can:reports.scheduled.manage');
-});
-
-// Report templates manager
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/reports/templates', ReportTemplatesManager::class)
-        ->name('admin.reports.templates')
-        ->middleware('can:reports.templates.manage');
-});
-
-// Store dashboards & exports
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/store/dashboard', OrdersDashboard::class)
-        ->name('admin.store.dashboard')
-        ->middleware('can:store.reports.dashboard');
-
-    Route::get('/admin/stores', \App\Livewire\Admin\Store\Stores::class)
-        ->name('admin.stores.index')
-        ->middleware('can:stores.view');
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/store/orders/export', StoreOrdersExportController::class)
-        ->name('admin.store.orders.export')
-        ->middleware('can:store.reports.dashboard');
-});
-
-// POS reports (charts)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/reports/pos-charts', PosChartsDashboard::class)
-        ->name('admin.reports.pos.charts')
-        ->middleware('can:reports.pos.charts');
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/reports/inventory-charts', InventoryChartsDashboard::class)
-        ->name('admin.reports.inventory.charts')
-        ->middleware('can:reports.inventory.charts');
-});
-
-// Reports hub & exports
-Route::middleware(['auth', 'can:reports.hub.view'])
-    ->get('/admin/reports/hub', ReportsHub::class)
-    ->name('admin.reports.hub');
-
-Route::middleware(['auth', 'can:reports.pos.export'])
-    ->get('/admin/reports/pos/export', \App\Http\Controllers\Admin\Reports\PosReportsExportController::class)
-    ->name('admin.reports.pos.export');
-
-Route::middleware(['auth', 'can:reports.inventory.export'])
-    ->get('/admin/reports/inventory/export', \App\Http\Controllers\Admin\Reports\InventoryReportsExportController::class)
-    ->name('admin.reports.inventory.export');
-
-Route::middleware(['auth', 'can:reports.sales.view'])
-    ->get('/reports/sales-analytics', \App\Livewire\Reports\SalesAnalytics::class)
-    ->name('reports.sales-analytics');
-
-// Low Stock Alerts
-Route::middleware(['auth', 'can:inventory.stock.alerts.view'])
-    ->get('/inventory/stock-alerts', \App\Livewire\Admin\Stock\LowStockAlerts::class)
-    ->name('inventory.stock-alerts');
-
-// Loyalty Program
-Route::middleware(['auth', 'can:customers.loyalty.manage'])
-    ->get('/loyalty', \App\Livewire\Admin\Loyalty\Index::class)
-    ->name('loyalty.index');
-
-// Installment Plans
-Route::middleware(['auth', 'can:sales.installments.view'])
-    ->get('/installments', \App\Livewire\Admin\Installments\Index::class)
-    ->name('installments.index');
-
-// Login Activity
-Route::middleware(['auth', 'can:logs.login.view'])
-    ->get('/admin/logs/login-activity', \App\Livewire\Admin\LoginActivity\Index::class)
-    ->name('admin.logs.login-activity');
-
-// User Preferences
-Route::middleware(['auth'])
-    ->get('/preferences', \App\Livewire\Admin\Settings\UserPreferences::class)
-    ->name('preferences');
-
-// Currency Rates Management
-Route::middleware(['auth', 'can:settings.currency.manage'])
-    ->get('/admin/settings/currency-rates', \App\Livewire\Admin\CurrencyRates::class)
-    ->name('admin.settings.currency-rates');
-
-// Currency Management (Add/Edit/Delete currencies)
-Route::middleware(['auth', 'can:settings.currency.manage'])
-    ->get('/admin/settings/currencies', \App\Livewire\Admin\CurrencyManager::class)
-    ->name('admin.settings.currencies');
-
-// Product Compatibility (Spare Parts)
-Route::middleware(['auth', 'can:inventory.products.view'])
-    ->get('/inventory/products/{product}/compatibility', \App\Livewire\Inventory\ProductCompatibility::class)
-    ->name('inventory.products.compatibility');
-
-// Scheduled Reports (new UI)
-Route::middleware(['auth', 'can:reports.scheduled.manage'])
-    ->get('/admin/reports/schedules', \App\Livewire\Reports\ScheduledReports::class)
-    ->name('admin.reports.schedules');
-
-// Vehicle Models Management (Spare Parts)
-Route::middleware(['auth', 'can:spares.compatibility.manage'])
-    ->get('/inventory/vehicle-models', \App\Livewire\Inventory\VehicleModels::class)
-    ->name('inventory.vehicle-models');
-
-// Product Categories Management
-Route::middleware(['auth', 'can:inventory.categories.view'])
-    ->get('/inventory/categories', \App\Livewire\Admin\Categories\Index::class)
-    ->name('inventory.categories.index');
-
-// Units of Measure Management
-Route::middleware(['auth', 'can:inventory.units.view'])
-    ->get('/inventory/units', \App\Livewire\Admin\UnitsOfMeasure\Index::class)
-    ->name('inventory.units.index');
-
-// Barcode/QR Printing
-Route::middleware(['auth', 'can:inventory.products.view'])
-    ->get('/inventory/barcode-print', \App\Livewire\Inventory\BarcodePrint::class)
-    ->name('inventory.barcode-print');
-
-// Item History
-Route::middleware(['auth', 'can:inventory.products.view'])
-    ->get('/inventory/products/{product}/history', \App\Livewire\Inventory\ProductHistory::class)
-    ->name('inventory.products.history');
