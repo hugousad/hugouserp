@@ -6,6 +6,7 @@ namespace App\Livewire\Admin\UnitsOfMeasure;
 
 use App\Models\UnitOfMeasure;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -145,16 +146,32 @@ class Index extends Component
 
     public function save(): void
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
+        $rules = [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                $this->editingId 
+                    ? Rule::unique('units_of_measure', 'name')->ignore($this->editingId) 
+                    : Rule::unique('units_of_measure', 'name'),
+            ],
             'nameAr' => 'nullable|string|max:255',
-            'symbol' => 'required|string|max:20',
+            'symbol' => [
+                'required',
+                'string',
+                'max:20',
+                $this->editingId 
+                    ? Rule::unique('units_of_measure', 'symbol')->ignore($this->editingId) 
+                    : Rule::unique('units_of_measure', 'symbol'),
+            ],
             'type' => 'required|string|in:unit,weight,length,volume,area,time,other',
             'baseUnitId' => 'nullable|exists:units_of_measure,id',
             'conversionFactor' => 'required|numeric|min:0.000001',
             'decimalPlaces' => 'integer|min:0|max:6',
             'sortOrder' => 'integer|min:0',
-        ]);
+        ];
+
+        $this->validate($rules);
 
         $user = Auth::user();
 
@@ -172,19 +189,22 @@ class Index extends Component
             'updated_by' => $user?->id,
         ];
 
-        if ($this->editingId) {
-            $unit = UnitOfMeasure::find($this->editingId);
-            if ($unit) {
+        try {
+            if ($this->editingId) {
+                $unit = UnitOfMeasure::findOrFail($this->editingId);
                 $unit->update($data);
                 session()->flash('success', __('Unit updated successfully'));
+            } else {
+                $data['created_by'] = $user?->id;
+                UnitOfMeasure::create($data);
+                session()->flash('success', __('Unit created successfully'));
             }
-        } else {
-            $data['created_by'] = $user?->id;
-            UnitOfMeasure::create($data);
-            session()->flash('success', __('Unit created successfully'));
-        }
 
-        $this->closeModal();
+            $this->closeModal();
+            $this->resetPage();
+        } catch (\Exception $e) {
+            $this->addError('name', __('Failed to save unit. Please try again.'));
+        }
     }
 
     public function delete(int $id): void

@@ -39,6 +39,7 @@ class Index extends Component
         $branchId = $user?->branch_id;
 
         $query = Product::query()
+            ->with(['category', 'unit', 'module', 'branch'])
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($this->search !== '', function ($q) {
                 $term = '%'.$this->search.'%';
@@ -53,7 +54,7 @@ class Index extends Component
             ->when($this->type !== null && $this->type !== '', fn ($q) => $q->where('type', $this->type))
             ->orderByDesc('id');
 
-        $products = $query->paginate(15);
+        $products = $query->paginate(20);
 
         return view('livewire.inventory.products.index', [
             'products' => $products,
