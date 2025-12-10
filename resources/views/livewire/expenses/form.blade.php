@@ -12,7 +12,7 @@
                 <div class="flex items-center justify-between">
                     <label class="erp-label">{{ __('Category') }}</label>
                     <x-quick-add-link 
-                        route="admin.expense-categories.index" 
+                        :route="route('app.expenses.categories.index')" 
                         label="{{ __('Add Category') }}"
                         tooltip="{{ __('Create new expense category') }}" />
                 </div>

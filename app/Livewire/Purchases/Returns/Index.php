@@ -230,13 +230,8 @@ class Index extends Component
             ->orderByDesc('created_at')
             ->paginate($this->perPage);
 
-        $purchases = Purchase::query()
-            ->with('supplier')
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->whereNotIn('status', ['returned', 'cancelled'])
-            ->orderByDesc('created_at')
-            ->limit(50)
-            ->get();
+        // Only load purchases for the return modal (lazy load)
+        $purchases = collect();
 
         return view('livewire.purchases.returns.index', [
             'returns' => $returns,
