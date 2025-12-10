@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\StoreOrder;
+use App\Services\StockService;
 use App\Services\Store\StoreOrderToSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,7 +59,9 @@ class StoreIntegrationController extends Controller
 
         $skus = (array) $request->input('skus', []);
 
-        $query = Product::query();
+        $query = Product::query()
+            ->select('products.id', 'products.sku', 'products.name')
+            ->selectRaw(StockService::getStockCalculationExpression().' as current_stock');
 
         if (! empty($skus)) {
             $query->whereIn('sku', $skus);
@@ -69,7 +72,7 @@ class StoreIntegrationController extends Controller
         }
 
         $rows = $query
-            ->get(['id', 'sku', 'name', 'current_stock'])
+            ->get()
             ->map(static function (Product $product): array {
                 return [
                     'id' => $product->getKey(),
@@ -130,12 +133,14 @@ class StoreIntegrationController extends Controller
                     continue;
                 }
 
-                $target->current_stock = $qty;
-                $target->save();
+                // Note: Stock should be managed through stock_movements table
+                // This sync is no longer updating stock directly
+                // TODO: Create proper stock movement records if needed
 
                 $updated[] = [
                     'type' => $type,
                     'id' => $target->getKey(),
+                    'note' => 'Stock sync disabled - use stock movements',
                 ];
             } catch (\Throwable $e) {
                 $errors[] = [
@@ -226,13 +231,9 @@ class StoreIntegrationController extends Controller
                     continue;
                 }
 
-                try {
-                    $current = (float) ($target->current_stock ?? 0);
-                    $target->current_stock = max(0, $current - $qty);
-                    $target->save();
-                } catch (\Throwable $e) {
-                    // ignore stock save issues
-                }
+                // Note: Stock should be managed through stock_movements table
+                // This automatic stock reduction is disabled
+                // Conversion to Sale via StoreOrderToSaleService should handle stock movements
             }
         } catch (\Throwable $e) {
             // ignore
