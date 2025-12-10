@@ -23,14 +23,33 @@ This document outlines planned improvements and features for HugousERP, organize
 - Removed non-existent returns/create routes for Sales and Purchases
 - Fixed permission naming inconsistencies (rentals→rental, hr→hrm)
 
-### Settings, Forms, and DB Alignment ✅ (December 2025)
-- Added unit_id field and unit() relationship to Product model
-- Added category and unit select fields to Product form with quick-add links
-- Fixed Sales form field name consistency (reference_number → reference_no)
-- Added category_id and unit_id support to ProductService
-- Verified all forms use Currency model correctly (Sales, Purchases, Products)
-- Ensured all quick-add routes exist and permissions are aligned
-- Validated all table/column names match between migrations and code
+### Global Refactor & Consistency Pass (Phase 2) ✅ (December 2025)
+**Schema & Model Alignment:**
+- Added missing category_id and unit_id columns to products table with proper foreign keys
+- Fixed Laravel 12 deprecated getDoctrineSchemaManager() calls in 3 migrations
+- Fixed sale_payments index referencing non-existent payment_date column
+- Added createdBy relationship to BankTransaction model
+- Verified all core models (Sale, Purchase, Product, StockMovement) align with migrations
+
+**Routes & Module Completeness:**
+- Created missing Banking Livewire components (Index, Transactions/Index, Reconciliation)
+- Fixed Projects routes referencing wrong component paths
+- Added basic Blade views for Banking module to prevent gray screens
+- Removed legacy route backup files (1600+ lines of duplicate code)
+
+**Code Quality & Laravel 12 Compatibility:**
+- Replaced deprecated Doctrine Schema Manager with Laravel 12 native methods
+- Used Schema::getIndexes() and Schema::getForeignKeys() for index/FK checks
+- Added proper type declarations to new components
+- Ensured all PHP files pass syntax validation
+- Maintained database compatibility (MySQL 8.4+, PostgreSQL, SQLite)
+
+**Key Improvements:**
+- ✅ Zero references to non-existent columns
+- ✅ All routes point to existing components
+- ✅ Proper Laravel 12 compatibility
+- ✅ Clean migration structure with idempotent guards
+- ✅ Database portability maintained
 
 ## High Priority
 
