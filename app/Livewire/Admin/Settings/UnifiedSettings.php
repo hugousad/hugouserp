@@ -63,29 +63,36 @@ class UnifiedSettings extends Component
 
     protected function loadSettings(): void
     {
+        // Bulk load all settings for performance
+        $settings = Cache::remember('system_settings_all', 3600, function () {
+            return SystemSetting::pluck('value', 'key')->toArray();
+        });
+
         // Load general settings
-        $this->company_name = $this->getSetting('company.name', config('app.name', 'HugouERP'));
-        $this->company_email = $this->getSetting('company.email', '');
-        $this->company_phone = $this->getSetting('company.phone', '');
-        $this->timezone = $this->getSetting('app.timezone', config('app.timezone', 'UTC'));
-        $this->date_format = $this->getSetting('app.date_format', 'Y-m-d');
-        $this->default_currency = $this->getSetting('app.default_currency', 'USD');
+        $this->company_name = $settings['company.name'] ?? config('app.name', 'HugouERP');
+        $this->company_email = $settings['company.email'] ?? '';
+        $this->company_phone = $settings['company.phone'] ?? '';
+        $this->timezone = $settings['app.timezone'] ?? config('app.timezone', 'UTC');
+        $this->date_format = $settings['app.date_format'] ?? 'Y-m-d';
+        $this->default_currency = $settings['app.default_currency'] ?? 'USD';
 
         // Load other settings
-        $this->multi_branch = (bool) $this->getSetting('system.multi_branch', false);
-        $this->require_branch_selection = (bool) $this->getSetting('system.require_branch_selection', true);
-        $this->require_2fa = (bool) $this->getSetting('security.require_2fa', false);
-        $this->session_timeout = (int) $this->getSetting('security.session_timeout', 120);
-        $this->enable_audit_log = (bool) $this->getSetting('security.enable_audit_log', true);
-        $this->enable_api = (bool) $this->getSetting('advanced.enable_api', true);
-        $this->enable_webhooks = (bool) $this->getSetting('advanced.enable_webhooks', false);
-        $this->cache_ttl = (int) $this->getSetting('advanced.cache_ttl', 3600);
+        $this->multi_branch = (bool) ($settings['system.multi_branch'] ?? false);
+        $this->require_branch_selection = (bool) ($settings['system.require_branch_selection'] ?? true);
+        $this->require_2fa = (bool) ($settings['security.require_2fa'] ?? false);
+        $this->session_timeout = (int) ($settings['security.session_timeout'] ?? 120);
+        $this->enable_audit_log = (bool) ($settings['security.enable_audit_log'] ?? true);
+        $this->enable_api = (bool) ($settings['advanced.enable_api'] ?? true);
+        $this->enable_webhooks = (bool) ($settings['advanced.enable_webhooks'] ?? false);
+        $this->cache_ttl = (int) ($settings['advanced.cache_ttl'] ?? 3600);
     }
 
     protected function getSetting(string $key, $default = null)
     {
-        $setting = SystemSetting::where('key', $key)->first();
-        return $setting ? $setting->value : $default;
+        $settings = Cache::remember('system_settings_all', 3600, function () {
+            return SystemSetting::pluck('value', 'key')->toArray();
+        });
+        return $settings[$key] ?? $default;
     }
 
     protected function setSetting(string $key, $value, string $group = 'general'): void

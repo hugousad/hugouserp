@@ -164,7 +164,11 @@
             @elseif($activeTab === 'translations')
                 <div>
                     <p class="text-gray-600 dark:text-gray-400 mb-4">{{ __('Translation management') }}</p>
-                    <livewire:admin.settings.translation-manager />
+                    @if(class_exists('\App\Livewire\Admin\Settings\TranslationManager'))
+                        <livewire:admin.settings.translation-manager />
+                    @else
+                        <p class="text-red-600">{{ __('Translation manager component not available') }}</p>
+                    @endif
                 </div>
 
             @elseif($activeTab === 'security')

@@ -8,6 +8,7 @@
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <p class="text-gray-600 dark:text-gray-400">
             {{ __('Sale form will be implemented here. For now, use the existing POS interface.') }}
+            <!-- TODO: Implement full sales form with line items, customer selection, payment processing -->
         </p>
         
         <div class="mt-6">
