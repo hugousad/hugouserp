@@ -50,6 +50,8 @@ class Form extends Component
     public array $dynamicSchema = [];
 
     public array $dynamicData = [];
+    
+    public array $availableCurrencies = [];
 
     protected ModuleProductService $moduleProductService;
     protected ProductService $productService;
@@ -67,6 +69,9 @@ class Form extends Component
         $user = Auth::user();
         $this->productId = $product;
         $this->form['branch_id'] = (int) ($user?->branch_id ?? 1);
+        
+        // Load currencies once and cache in component property
+        $this->availableCurrencies = Currency::active()->ordered()->get(['code', 'name', 'symbol']);
         
         // Set default currency from base currency
         $baseCurrency = Currency::getBaseCurrency();
@@ -178,8 +183,8 @@ class Form extends Component
     {
         $id = $this->productId;
         
-        // Get valid currency codes from database
-        $validCurrencies = Currency::active()->pluck('code')->toArray();
+        // Use cached currencies from mount
+        $validCurrencies = $this->availableCurrencies->pluck('code')->toArray();
         if (empty($validCurrencies)) {
             $validCurrencies = ['USD', 'EUR', 'GBP']; // Fallback if no currencies in DB
         }
@@ -325,12 +330,10 @@ class Form extends Component
                 ->get();
         }
         
-        // Load currencies from database
-        $currencies = Currency::active()->ordered()->get(['code', 'name', 'symbol']);
-
+        // Use cached currencies loaded in mount()
         return view('livewire.inventory.products.form', [
             'modules' => $modules,
-            'currencies' => $currencies,
+            'currencies' => $this->availableCurrencies,
         ]);
     }
 }
