@@ -217,7 +217,7 @@
             </a>
 
             <a href="{{ route('app.inventory.barcodes') }}"
-               class="sidebar-link-secondary ms-4 {{ $isActive('inventory.barcode-print') ? 'active' : '' }}">
+               class="sidebar-link-secondary ms-4 {{ $isActive('app.inventory.barcodes') ? 'active' : '' }}">
                 <span class="text-base">🏷️</span>
                 <span class="text-sm">{{ __('Print Barcodes') }}</span>
             </a>

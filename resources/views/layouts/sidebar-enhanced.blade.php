@@ -132,13 +132,13 @@
                 ],
                 [
                     'label' => __('Vehicle Models'),
-                    'route' => 'inventory.vehicle-models',
+                    'route' => 'app.inventory.vehicle-models',
                     'permission' => 'spares.compatibility.manage',
                     'icon' => '🚗',
                 ],
                 [
                     'label' => __('Print Barcodes'),
-                    'route' => 'inventory.barcode-print',
+                    'route' => 'app.inventory.barcodes',
                     'permission' => 'inventory.products.view',
                     'icon' => '🏷️',
                 ],
