@@ -159,7 +159,7 @@
                     @empty
                         <tr>
                             <td colspan="4" class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                No attendance records found.
+                                {{ __('No attendance records found.') }}
                             </td>
                         </tr>
                     @endforelse

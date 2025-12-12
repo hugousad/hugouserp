@@ -144,12 +144,12 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">App Key</label>
-                                <input type="password" wire:model="sms.3shm.appkey" class="erp-input w-full" placeholder="Enter App Key">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('App Key') }}</label>
+                                <input type="password" wire:model="sms.3shm.appkey" class="erp-input w-full" placeholder="{{ __('Enter App Key') }}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Auth Key</label>
-                                <input type="password" wire:model="sms.3shm.authkey" class="erp-input w-full" placeholder="Enter Auth Key">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Auth Key') }}</label>
+                                <input type="password" wire:model="sms.3shm.authkey" class="erp-input w-full" placeholder="{{ __('Enter Auth Key') }}">
                             </div>
                         </div>
                         <label class="flex items-center gap-2 mt-3 cursor-pointer">
@@ -178,7 +178,7 @@
                                 <input type="password" wire:model="sms.smsmisr.password" class="erp-input w-full">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Sender ID</label>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Sender ID') }}</label>
                                 <input type="text" wire:model="sms.smsmisr.sender_id" class="erp-input w-full">
                             </div>
                         </div>
@@ -230,11 +230,11 @@
                             @if ($security['recaptcha_enabled'])
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Site Key</label>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Site Key') }}</label>
                                         <input type="text" wire:model="security.recaptcha_site_key" class="erp-input w-full">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Secret Key</label>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Secret Key') }}</label>
                                         <input type="password" wire:model="security.recaptcha_secret_key" class="erp-input w-full">
                                     </div>
                                 </div>

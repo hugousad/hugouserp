@@ -166,7 +166,7 @@
                     @empty
                         <tr>
                             <td colspan="5" class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                No expiring contracts found.
+                                {{ __('No expiring contracts found.') }}
                             </td>
                         </tr>
                     @endforelse

@@ -110,7 +110,7 @@
                 </div>
             @empty
                 <p class="py-4 text-sm text-slate-500 dark:text-slate-400">
-                    No notifications found.
+                    {{ __('No notifications found.') }}
                 </p>
             @endforelse
         </div>

@@ -1,7 +1,7 @@
 {{-- resources/views/components/ui/empty-state.blade.php --}}
 @props([
     'icon' => '📭',
-    'title' => 'No data found',
+    'title' => __('No data found'),
     'description' => null,
     'action' => null,
     'actionLabel' => null,
