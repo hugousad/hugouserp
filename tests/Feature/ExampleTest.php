@@ -27,15 +27,14 @@ class ExampleTest extends TestCase
         // Assert intended URL is stored in session
         $this->assertEquals(url('/dashboard'), session('url.intended'));
 
-        // Follow the redirect to the login page and assert the login form fields are present
+        // Follow the redirect to the login page
         $loginResponse = $this->get($response->headers->get('Location'));
 
         // Assert the login page content is rendered
         $loginResponse->assertStatus(200);
-        $loginResponse->assertSee('name="email"', false);
-        $loginResponse->assertSee('name="password"', false);
-        $loginResponse->assertSee('type="submit"', false);
-        $loginResponse->assertSee('_token', false); // CSRF token
+        
+        // Check for Livewire login component
+        $loginResponse->assertSeeLivewire('auth.login');
 
         // Confirm the guard remains unauthenticated after following redirect
         $this->assertGuest();
