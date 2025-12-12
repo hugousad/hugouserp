@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentService
 {
+    public function __construct(
+        protected UIHelperService $uiHelper
+    ) {
+    }
     /**
      * Upload a new document
      */
@@ -233,7 +237,7 @@ class DocumentService
         return [
             'total_documents' => $query->count(),
             'total_size' => $totalSize,
-            'total_size_formatted' => $this->formatBytes($totalSize),
+            'total_size_formatted' => $this->uiHelper->formatBytes((int) $totalSize),
             'by_category' => $query->select('category', DB::raw('count(*) as count'))
                 ->whereNotNull('category')
                 ->groupBy('category')
@@ -246,19 +250,5 @@ class DocumentService
                 ->limit(5)
                 ->get(),
         ];
-    }
-
-    /**
-     * Format bytes to human readable format
-     */
-    protected function formatBytes(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
-        for ($i = 0; $bytes >= 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
     }
 }
