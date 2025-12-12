@@ -11,18 +11,19 @@ use Illuminate\Support\Arrayable;
 
 class ApiResponse
 {
-    public static function success(array|Arrayable $data = [], int $status = 200, array $meta = []): JsonResponse
+    public static function success(array|Arrayable $data = [], string $message = 'OK', int $status = 200, array $meta = []): JsonResponse
     {
         return response()->json([
             'success' => true,
+            'message' => $message,
             'data' => self::toArray($data),
             'meta' => (object) $meta,
         ], $status);
     }
 
-    public static function created(array|Arrayable $data = [], array $meta = []): JsonResponse
+    public static function created(array|Arrayable $data = [], string $message = 'Created', array $meta = []): JsonResponse
     {
-        return self::success($data, 201, $meta);
+        return self::success($data, $message, 201, $meta);
     }
 
     public static function noContent(): JsonResponse

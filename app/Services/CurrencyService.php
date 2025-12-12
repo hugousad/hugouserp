@@ -99,20 +99,16 @@ class CurrencyService
                     return 1.0;
                 }
 
-                $cacheKey = "currency_rate:{$from}:{$to}:".($date ?? 'current');
+                $rate = CurrencyRate::getRate($from, $to, $date);
 
-                return Cache::remember($cacheKey, 3600, function () use ($from, $to, $date) {
-                    $rate = CurrencyRate::getRate($from, $to, $date);
-
-                    if ($rate === null) {
-                        $reverseRate = CurrencyRate::getRate($to, $from, $date);
-                        if ($reverseRate !== null && $reverseRate > 0) {
-                            return 1 / $reverseRate;
-                        }
+                if ($rate === null) {
+                    $reverseRate = CurrencyRate::getRate($to, $from, $date);
+                    if ($reverseRate !== null && $reverseRate > 0) {
+                        return 1 / $reverseRate;
                     }
+                }
 
-                    return $rate;
-                });
+                return $rate;
             },
             operation: 'getRate',
             context: ['from' => $from, 'to' => $to, 'date' => $date],
@@ -175,12 +171,16 @@ class CurrencyService
 
     protected function clearRateCache(string $from, string $to, $effectiveDate = null): void
     {
-        Cache::forget("currency_rate:{$from}:{$to}:current");
-        Cache::forget("currency_rate:{$to}:{$from}:current");
+        $from = strtoupper($from);
+        $to = strtoupper($to);
 
-        if ($effectiveDate) {
-            Cache::forget("currency_rate:{$from}:{$to}:{$effectiveDate}");
-            Cache::forget("currency_rate:{$to}:{$from}:{$effectiveDate}");
+        $dateKey = $effectiveDate
+            ? (is_string($effectiveDate) ? $effectiveDate : $effectiveDate->format('Y-m-d'))
+            : 'latest';
+
+        foreach ([$dateKey, 'latest'] as $key) {
+            Cache::forget(sprintf('currency_rate:%s:%s:%s', $from, $to, $key));
+            Cache::forget(sprintf('currency_rate:%s:%s:%s', $to, $from, $key));
         }
     }
 

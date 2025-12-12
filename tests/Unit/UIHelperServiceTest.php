@@ -93,7 +93,7 @@ class UIHelperServiceTest extends TestCase
     /** @test */
     public function it_formats_bytes(): void
     {
-        $this->assertEquals('1024 B', $this->service->formatBytes(1024));
+        $this->assertEquals('1 KB', $this->service->formatBytes(1024));
         $this->assertEquals('1 KB', $this->service->formatBytes(1025));
         $this->assertEquals('1 MB', $this->service->formatBytes(1024 * 1024 + 1));
         $this->assertEquals('1 GB', $this->service->formatBytes(1024 * 1024 * 1024 + 1));

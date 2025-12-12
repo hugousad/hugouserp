@@ -19,8 +19,8 @@ class Controller extends BaseController
         return R::success($data, $message, $status);
     }
 
-    protected function fail(string $message = 'Error', int $status = 400, array $meta = [])
+    protected function fail(string $message = 'Error', int $status = 400, array $errors = [], array $meta = [])
     {
-        return R::error($message, $status, $meta);
+        return R::error($message, $status, $errors, $meta);
     }
 }

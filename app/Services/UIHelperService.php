@@ -181,7 +181,7 @@ class UIHelperService
         $i = 0;
         $value = $bytes;
 
-        while ($value > 1024 && $i < count($units) - 1) {
+        while ($value >= 1024 && $i < count($units) - 1) {
             $value = $value / 1024.0;
             $i++;
         }
