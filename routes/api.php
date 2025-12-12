@@ -39,8 +39,8 @@ Route::prefix('v1')->group(function () {
         Route::prefix('pos')->group(function () {
             Route::get('/session', [POSController::class, 'getCurrentSession']);
             Route::post('/session/open', [POSController::class, 'openSession']);
-            Route::post('/session/{sessionId}/close', [POSController::class, 'closeSession']);
-            Route::get('/session/{sessionId}/report', [POSController::class, 'getSessionReport']);
+            Route::post('/session/{session}/close', [POSController::class, 'closeSession']);
+            Route::get('/session/{session}/report', [POSController::class, 'getSessionReport']);
         });
     });
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\PosSession;
 use App\Services\POSService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -187,7 +188,7 @@ class POSController extends Controller
         }
     }
 
-    public function closeSession(Request $request, int $sessionId): JsonResponse
+    public function closeSession(Request $request, Branch $branch, PosSession $session): JsonResponse
     {
         $this->authorize('pos.session.manage');
 
@@ -196,9 +197,11 @@ class POSController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        abort_if($session->branch_id !== $branch->id, 404, __('POS session not found for this branch'));
+
         try {
             $session = $this->posService->closeSession(
-                $sessionId,
+                $session->id,
                 (float) $request->input('closing_cash'),
                 $request->input('notes')
             );
@@ -227,12 +230,14 @@ class POSController extends Controller
         }
     }
 
-    public function getSessionReport(int $sessionId): JsonResponse
+    public function getSessionReport(Branch $branch, PosSession $session): JsonResponse
     {
         $this->authorize('pos.daily-report.view');
 
+        abort_if($session->branch_id !== $branch->id, 404, __('POS session not found for this branch'));
+
         try {
-            $report = $this->posService->getSessionReport($sessionId);
+            $report = $this->posService->getSessionReport($session->id);
 
             return response()->json([
                 'success' => true,
