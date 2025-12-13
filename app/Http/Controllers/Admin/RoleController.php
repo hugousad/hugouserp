@@ -37,7 +37,7 @@ class RoleController extends Controller
             'guard_name' => 'web',
         ]);
 
-        return $this->ok($role, __('Created'), 201);
+        return $this->ok($role->toArray(), __('Created'), 201);
     }
 
     public function update(Request $request, int $id)
@@ -55,13 +55,13 @@ class RoleController extends Controller
 
         $role->update(['name' => $request->input('name')]);
 
-        return $this->ok($role, __('Updated'));
+        return $this->ok($role->toArray(), __('Updated'));
     }
 
     public function destroy(int $id)
     {
         Role::where('guard_name', 'web')->whereKey($id)->delete();
 
-        return $this->ok(null, __('Deleted'));
+        return $this->ok([], __('Deleted'));
     }
 }
