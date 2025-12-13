@@ -227,7 +227,7 @@ class DepreciationService
      */
     public function getDepreciationSchedule(FixedAsset $asset): array
     {
-        if (!$asset->depreciation_start_date) {
+        if ($asset->depreciation_start_date === null) {
             return [];
         }
 
