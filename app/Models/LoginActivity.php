@@ -109,7 +109,11 @@ class LoginActivity extends Model
             $deviceType = 'Tablet';
         }
 
-        return compact('browser', 'platform', 'deviceType');
+        return [
+            'browser' => $browser,
+            'platform' => $platform,
+            'device_type' => $deviceType,
+        ];
     }
 
     public function scopeRecent(Builder $query, int $days = 30): Builder

@@ -175,14 +175,6 @@ Route::middleware('auth')->group(function () {
             ->name('create')
             ->middleware('can:sales.manage');
 
-        Route::get('/{sale}', \App\Livewire\Sales\Show::class)
-            ->name('show')
-            ->middleware('can:sales.view');
-
-        Route::get('/{sale}/edit', \App\Livewire\Sales\Form::class)
-            ->name('edit')
-            ->middleware('can:sales.manage');
-
         Route::get('/returns', \App\Livewire\Sales\Returns\Index::class)
             ->name('returns.index')
             ->middleware('can:sales.return');
@@ -190,6 +182,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/analytics', \App\Livewire\Reports\SalesAnalytics::class)
             ->name('analytics')
             ->middleware('can:sales.view-reports');
+
+        Route::get('/{sale}', \App\Livewire\Sales\Show::class)
+            ->name('show')
+            ->middleware('can:sales.view');
+
+        Route::get('/{sale}/edit', \App\Livewire\Sales\Form::class)
+            ->name('edit')
+            ->middleware('can:sales.manage');
     });
 
     // PURCHASES MODULE
