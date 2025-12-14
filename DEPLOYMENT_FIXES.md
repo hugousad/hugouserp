@@ -83,7 +83,7 @@ php artisan route:list | grep "stores.orders.export"
 ```
 
 **التحقق | Verification:**
-زر على زر Export في صفحة Orders Dashboard - يجب أن يعمل بدون أخطاء.
+اضغط على زر Export في صفحة Orders Dashboard - يجب أن يعمل بدون أخطاء.
 
 ---
 
@@ -162,7 +162,7 @@ curl http://your-domain.com/app/expenses
 
 ```bash
 # 1. سحب آخر تحديثات من Git
-git pull origin copilot/fix-device-type-parsing-error
+git pull origin {branch-name}  # استبدل {branch-name} باسم الفرع المناسب
 
 # 2. تحديث dependencies (إذا لزم الأمر)
 composer install --no-dev --optimize-autoloader
@@ -219,7 +219,7 @@ tail -20 storage/logs/laravel.log
 ```bash
 # تأكد من أن الكود محدّث
 git log --oneline -1 app/Models/LoginActivity.php
-# يجب أن ترى commit: "Fix device_type parsing..."
+# يجب أن ترى commit يحتوي على تعديلات LoginActivity
 
 # تأكد من عدم وجود opcache
 php artisan optimize:clear
