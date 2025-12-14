@@ -206,7 +206,7 @@
                 <h2 class="text-sm font-semibold text-slate-800 mb-3">
                     {{ __('Export') }}
                 </h2>
-                <form method="GET" action="{{ route('admin.store.orders.export') }}" class="space-y-3 text-[11px]">
+                <form method="GET" action="{{ route('admin.stores.orders.export') }}" class="space-y-3 text-[11px]">
                     <input type="hidden" name="from" value="{{ $dateFrom }}">
                     <input type="hidden" name="to" value="{{ $dateTo }}">
                     <input type="hidden" name="status" value="{{ $statusFilter }}">

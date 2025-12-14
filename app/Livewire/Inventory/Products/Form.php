@@ -73,7 +73,7 @@ class Form extends Component
         $this->form['branch_id'] = (int) ($user?->branch_id ?? 1);
         
         // Load currencies once and cache in component property
-        $this->availableCurrencies = Currency::active()->ordered()->get(['code', 'name', 'symbol']);
+        $this->availableCurrencies = Currency::active()->ordered()->get(['code', 'name', 'symbol'])->toArray();
         
         // Set default currency from base currency
         $baseCurrency = Currency::getBaseCurrency();
@@ -188,7 +188,7 @@ class Form extends Component
         $id = $this->productId;
         
         // Use cached currencies from mount
-        $validCurrencies = $this->availableCurrencies->pluck('code')->toArray();
+        $validCurrencies = array_column($this->availableCurrencies, 'code');
         if (empty($validCurrencies)) {
             $validCurrencies = ['USD', 'EUR', 'GBP']; // Fallback if no currencies in DB
         }
