@@ -255,9 +255,15 @@ class BankingService
 
     /**
      * Record a withdrawal transaction
+     * @throws \Exception if insufficient balance
      */
     public function recordWithdrawal(array $data): BankTransaction
     {
+        // Check for sufficient balance before withdrawal
+        if (!$this->hasSufficientBalance($data['account_id'], $data['amount'])) {
+            throw new \Exception('Insufficient balance for withdrawal. Available: ' . $this->getAccountBalance($data['account_id']));
+        }
+
         return $this->recordTransaction([
             'bank_account_id' => $data['account_id'],
             'branch_id' => $data['branch_id'],

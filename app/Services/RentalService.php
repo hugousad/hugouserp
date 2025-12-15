@@ -198,6 +198,18 @@ class RentalService implements RentalServiceInterface
                 $invoiceBranchId = $i->contract->branch_id ?? null;
                 abort_if(! $invoiceBranchId, 422, __('Branch context is required'));
 
+                // Validate payment amount
+                $remainingDue = max(0, ($i->amount ?? 0) - ($i->paid_total ?? 0));
+                if ($amount <= 0) {
+                    abort(422, __('Payment amount must be positive'));
+                }
+                if ($amount > $remainingDue) {
+                    abort(422, __('Payment amount (:amount) exceeds remaining due (:due)', [
+                        'amount' => number_format($amount, 2),
+                        'due' => number_format($remainingDue, 2),
+                    ]));
+                }
+
                 // Create payment record
                 \App\Models\RentalPayment::create([
                     'invoice_id' => $i->id,

@@ -84,6 +84,19 @@ class POSService implements POSServiceInterface
                     $qty = (float) ($it['qty'] ?? 1);
                     $price = isset($it['price']) ? (float) $it['price'] : (float) ($product->default_price ?? 0);
 
+                    // Check stock availability for physical products (not services)
+                    if ($product->type !== 'service' && $product->product_type !== 'service') {
+                        $warehouseId = $payload['warehouse_id'] ?? null;
+                        $availableStock = StockService::getCurrentStock($product->getKey(), $warehouseId);
+                        if ($availableStock < $qty) {
+                            abort(422, __('Insufficient stock for :product. Available: :available, Requested: :requested', [
+                                'product' => $product->name,
+                                'available' => number_format($availableStock, 2),
+                                'requested' => number_format($qty, 2),
+                            ]));
+                        }
+                    }
+
                     if ($user && ! $user->can_modify_price && $price != (float) ($product->default_price ?? 0)) {
                         abort(422, __('You are not allowed to modify prices'));
                     }

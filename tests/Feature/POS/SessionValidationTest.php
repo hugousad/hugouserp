@@ -7,6 +7,7 @@ namespace Tests\Feature\POS;
 use App\Models\Branch;
 use App\Models\PosSession;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\POSService;
@@ -57,6 +58,16 @@ class SessionValidationTest extends TestCase
             'default_price' => 100,
             'standard_cost' => 50,
             'branch_id' => $this->branch->id,
+        ]);
+
+        // Add stock for the product
+        StockMovement::create([
+            'branch_id' => $this->branch->id,
+            'product_id' => $this->product->id,
+            'warehouse_id' => $this->warehouse->id,
+            'qty' => 100,
+            'direction' => 'in',
+            'reason' => 'initial_stock',
         ]);
 
         // Authenticate as user
