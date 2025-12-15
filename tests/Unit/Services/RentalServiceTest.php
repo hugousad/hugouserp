@@ -33,11 +33,8 @@ class RentalServiceTest extends TestCase
 
         $this->property = Property::create([
             'branch_id' => $this->branch->id,
-            'code' => 'PROP-001',
             'name' => 'Test Property',
             'address' => '123 Test Street',
-            'property_type' => 'residential',
-            'status' => 'active',
         ]);
     }
 

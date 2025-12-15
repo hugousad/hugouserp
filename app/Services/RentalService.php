@@ -37,8 +37,10 @@ class RentalService implements RentalServiceInterface
             callback: fn () => RentalUnit::create([
                 'property_id' => $propertyId,
                 'code' => $payload['code'],
-                'status' => $payload['status'] ?? 'vacant',
-                'area' => $payload['area'] ?? null,
+                'type' => $payload['type'] ?? $payload['unit_type'] ?? null,
+                'status' => $payload['status'] ?? 'available',
+                'rent' => $payload['rent'] ?? $payload['monthly_rent'] ?? 0,
+                'deposit' => $payload['deposit'] ?? 0,
             ]),
             operation: 'createUnit',
             context: ['property_id' => $propertyId, 'payload' => $payload]
