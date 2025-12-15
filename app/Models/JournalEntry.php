@@ -22,7 +22,6 @@ class JournalEntry extends Model
         'source_type',
         'source_id',
         'created_by',
-        'approved_by',
         'approved_at',
         'fiscal_year',
         'fiscal_period',
@@ -30,6 +29,12 @@ class JournalEntry extends Model
         'is_reversible',
         'reversed_by_entry_id',
     ];
+
+    /**
+     * Sensitive columns that should not be mass-assignable.
+     * 'approved_by' should only be set through approval workflow.
+     */
+    protected $guarded = ['approved_by'];
 
     protected $casts = [
         'entry_date' => 'date',

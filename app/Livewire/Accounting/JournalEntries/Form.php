@@ -142,6 +142,14 @@ class Form extends Component
                     ])
                 );
             }
+
+            // Reject zero-sum entries (0 = 0 is not a valid journal entry)
+            if ($totalDebit <= 0 && $totalCredit <= 0) {
+                $validator->errors()->add(
+                    'lines',
+                    __('Journal entry must have amounts greater than zero.')
+                );
+            }
         });
     }
 

@@ -23,12 +23,17 @@ class Account extends Model
         'account_category',
         'sub_category',
         'parent_id',
-        'balance',
         'is_active',
-        'is_system_account',
         'description',
         'metadata',
     ];
+
+    /**
+     * Sensitive columns that should not be mass-assignable.
+     * 'balance' should only be updated through journal entries.
+     * 'is_system_account' should only be set by system/seeder.
+     */
+    protected $guarded = ['balance', 'is_system_account'];
 
     protected $casts = [
         'balance' => 'decimal:2',
