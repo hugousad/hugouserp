@@ -112,6 +112,13 @@
                     </p>
                 </template>
 
+                <template x-if="isSearching && search.length >= 2">
+                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                        <span class="h-4 w-4 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-500"></span>
+                        <span>{{ __('Loading products...') }}</span>
+                    </div>
+                </template>
+
                 <template x-if="!products.length && search.length >= 2 && !isSearching">
                     <p class="text-xs text-slate-500">
                         {{ __('No products found for this search.') }}

@@ -48,13 +48,17 @@ class Form extends Component
 
         $this->branchId = $branch?->id;
 
+        // Get available timezones and currencies for dropdowns
+        $timezones = \DateTimeZone::listIdentifiers();
+        $currencies = \App\Models\Currency::active()->ordered()->pluck('code', 'code')->toArray();
+
         $this->schema = [
             ['name' => 'name',      'label' => __('Name'),      'type' => 'text'],
             ['name' => 'code',      'label' => __('Code'),      'type' => 'text'],
             ['name' => 'address',   'label' => __('Address'),   'type' => 'textarea'],
             ['name' => 'phone',     'label' => __('Phone'),     'type' => 'text'],
-            ['name' => 'timezone',  'label' => __('Timezone'),  'type' => 'text'],
-            ['name' => 'currency',  'label' => __('Currency'),  'type' => 'text'],
+            ['name' => 'timezone',  'label' => __('Timezone'),  'type' => 'select', 'options' => array_combine($timezones, $timezones)],
+            ['name' => 'currency',  'label' => __('Currency'),  'type' => 'select', 'options' => $currencies],
         ];
 
         if ($branch) {

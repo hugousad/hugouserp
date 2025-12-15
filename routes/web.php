@@ -202,14 +202,7 @@ Route::middleware('auth')->group(function () {
             ->name('create')
             ->middleware('can:purchases.manage');
 
-        Route::get('/{purchase}', \App\Livewire\Purchases\Show::class)
-            ->name('show')
-            ->middleware('can:purchases.view');
-
-        Route::get('/{purchase}/edit', \App\Livewire\Purchases\Form::class)
-            ->name('edit')
-            ->middleware('can:purchases.manage');
-
+        // Specific routes must come before wildcard routes
         Route::get('/returns', \App\Livewire\Purchases\Returns\Index::class)
             ->name('returns.index')
             ->middleware('can:purchases.return');
@@ -243,6 +236,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/grn/create', \App\Livewire\Purchases\GRN\Form::class)
             ->name('grn.create')
+            ->middleware('can:purchases.manage');
+
+        // Wildcard routes must come last
+        Route::get('/{purchase}', \App\Livewire\Purchases\Show::class)
+            ->name('show')
+            ->middleware('can:purchases.view');
+
+        Route::get('/{purchase}/edit', \App\Livewire\Purchases\Form::class)
+            ->name('edit')
             ->middleware('can:purchases.manage');
     });
 
