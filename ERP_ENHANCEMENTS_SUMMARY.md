@@ -6,14 +6,22 @@ This document summarizes the major enhancements and fixes made to the HugoERP sy
 
 ### A. Production Errors Fixed
 
-1. **Stock Alerts Ambiguous Column** - Fixed SQL ambiguity in stock alerts query by using subquery approach
-2. **Warehouse is_active Column** - Changed to use `status` column which matches the schema
-3. **Expenses/Incomes Category Column** - Fixed `category_id` references in ReportService
+| Issue | File | Fix Applied |
+|-------|------|-------------|
+| Stock Alerts Ambiguous Column | `app/Livewire/Inventory/StockAlerts.php` | Rewrote query using subquery approach to avoid column ambiguity |
+| Warehouse is_active Column | `app/Livewire/Sales/Form.php`, warehouse index view | Changed to use `status` column which matches the schema |
+| Expenses Category Column | `app/Services/ReportService.php` | Fixed `expense_category_id` → `category_id` |
+| Incomes Category Column | `app/Services/ReportService.php` | Fixed `income_category_id` → `category_id`, added category filter |
+| Admin Stores name_ar | `app/Livewire/Admin/Store/Stores.php` | Already has defensive `Schema::hasColumn` check |
 
 ### B. Sidebar Consolidation
 
-- Main sidebar is `layouts/sidebar.blade.php`
-- Deprecated sidebar variants (sidebar-enhanced, sidebar-new, sidebar-organized, sidebar-dynamic) marked with deprecation notices
+- **Canonical**: `layouts/sidebar.blade.php`
+- **Deprecated** (marked with notices):
+  - `layouts/sidebar-enhanced.blade.php`
+  - `layouts/sidebar-new.blade.php`
+  - `layouts/sidebar-organized.blade.php`
+  - `layouts/sidebar-dynamic.blade.php`
 
 ### C. Module Status
 
@@ -25,6 +33,20 @@ All major ERP modules are complete with:
 - Models and migrations
 - Services where applicable
 
+**Modules Verified:**
+- POS
+- Inventory / Products
+- Warehouse
+- Sales / Purchases
+- Rental (Properties, Units, Tenants, Contracts)
+- HRM (Employees, Attendance, Payroll)
+- Manufacturing
+- Fixed Assets
+- Banking
+- Helpdesk
+- Projects
+- Documents
+
 ### D. Key Features
 
 - Multi-branch support
@@ -35,7 +57,8 @@ All major ERP modules are complete with:
 
 ### E. Testing
 
-- Feature tests cover key functionality
 - PHP linting passes for all files
+- Targeted tests pass: `HomeRouteTest`, `ExampleTest`, `ERPEnhancementsTest`
+- CodeQL security check passed
 
 For detailed module documentation, see `MODULE_COMPLETENESS_AUDIT_REPORT.md`.
