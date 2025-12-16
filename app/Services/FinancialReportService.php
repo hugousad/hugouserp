@@ -272,8 +272,10 @@ class FinancialReportService
         $aging = [];
 
         foreach ($sales as $sale) {
-            // Calculate days from posted date (or due date if available)
-            $referenceDate = $sale->due_date ?? $sale->posted_at ?? $sale->created_at;
+            // Calculate due date: use explicit due_date if set, otherwise calculate from sale date + payment terms
+            $saleDate = $sale->posted_at ?? $sale->created_at;
+            $paymentTermsDays = (int) setting('sales.payment_terms_days', 30);
+            $referenceDate = $sale->due_date ?? $saleDate->copy()->addDays($paymentTermsDays);
             $asOf = \Carbon\Carbon::parse($asOfDate);
             $daysOverdue = $asOf->diffInDays($referenceDate, false);
             $outstandingAmount = $sale->grand_total - ($sale->paid_total ?? 0);
@@ -329,8 +331,10 @@ class FinancialReportService
         $aging = [];
 
         foreach ($purchases as $purchase) {
-            // Calculate days from posted date (or due date if available)
-            $referenceDate = $purchase->due_date ?? $purchase->posted_at ?? $purchase->created_at;
+            // Calculate due date: use explicit due_date if set, otherwise calculate from purchase date + payment terms
+            $purchaseDate = $purchase->posted_at ?? $purchase->created_at;
+            $paymentTermsDays = (int) setting('purchases.payment_terms_days', 30);
+            $referenceDate = $purchase->due_date ?? $purchaseDate->copy()->addDays($paymentTermsDays);
             $asOf = \Carbon\Carbon::parse($asOfDate);
             $daysOverdue = $asOf->diffInDays($referenceDate, false);
             $outstandingAmount = $purchase->grand_total - ($purchase->paid_total ?? 0);
