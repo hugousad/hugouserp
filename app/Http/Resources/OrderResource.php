@@ -27,7 +27,7 @@ class OrderResource extends JsonResource
             'paid_amount' => (float) ($this->paid_total ?? 0),
             'due_amount' => (float) $this->due_total,
             'status' => $this->status,
-            'payment_status' => $this->payment_status,
+            'payment_status' => $this->isPaid() ? 'paid' : ($this->paid_total > 0 ? 'partial' : 'unpaid'),
             'payment_method' => $this->payment_method,
             'source' => $this->channel ?? 'pos',
             'external_reference' => $this->external_reference,
