@@ -23,8 +23,9 @@
     };
 @endphp
 <aside
-    class="hidden md:flex md:flex-col md:w-64 lg:w-72 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-slate-100 shadow-xl z-20"
-    :class="sidebarOpen ? 'block' : ''"
+    class="fixed md:relative inset-y-0 {{ app()->getLocale() === 'ar' ? 'right-0' : 'left-0' }} w-72 lg:w-80 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-slate-100 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-out"
+    :class="sidebarOpen ? 'translate-x-0' : '{{ app()->getLocale() === 'ar' ? 'translate-x-full' : '-translate-x-full' }} md:translate-x-0'"
+    x-cloak
 >
     {{-- Logo & User --}}
     <div class="flex items-center justify-between px-4 py-4 border-b border-slate-700">
