@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Models\StoreSyncLog;
 use App\Services\Contracts\InventoryServiceInterface;
+use App\Services\Store\Clients\LaravelClient;
 use App\Services\Store\Clients\ShopifyClient;
 use App\Services\Store\Clients\WooCommerceClient;
 use Illuminate\Support\Facades\DB;
@@ -474,6 +475,209 @@ class StoreSyncService
             }
         });
     }
+
+    // Laravel Store Sync Methods
+
+    public function pullProductsFromLaravel(Store $store): StoreSyncLog
+    {
+        $log = $this->createSyncLog($store, StoreSyncLog::TYPE_PRODUCTS, StoreSyncLog::DIRECTION_PULL);
+
+        try {
+            $client = new LaravelClient($store);
+            $products = $client->getProducts();
+
+            foreach ($products as $product) {
+                try {
+                    $this->syncLaravelProductToERP($store, $product);
+                    $log->incrementSuccess();
+                } catch (\Exception $e) {
+                    $log->incrementFailed();
+                    Log::error('Failed to sync Laravel product: '.$e->getMessage());
+                }
+            }
+
+            $log->markCompleted();
+        } catch (\Exception $e) {
+            $log->markFailed($e->getMessage());
+        }
+
+        return $log;
+    }
+
+    public function pushStockToLaravel(Store $store): StoreSyncLog
+    {
+        $log = $this->createSyncLog($store, StoreSyncLog::TYPE_INVENTORY, StoreSyncLog::DIRECTION_PUSH);
+
+        try {
+            $client = new LaravelClient($store);
+            $mappings = ProductStoreMapping::where('store_id', $store->id)->with('product')->get();
+
+            $items = [];
+            foreach ($mappings as $mapping) {
+                if ($mapping->product) {
+                    $currentQty = $this->inventory->currentQty($mapping->product->id);
+                    $items[] = [
+                        'product_id' => $mapping->external_id,
+                        'quantity' => (int) $currentQty,
+                        'action' => 'set',
+                    ];
+                }
+            }
+
+            if (! empty($items)) {
+                $result = $client->bulkUpdateStock($items);
+                if ($result['success'] ?? false) {
+                    $log->success_count = $result['updated'] ?? count($items);
+                    $log->failed_count = $result['failed'] ?? 0;
+                    foreach ($mappings as $mapping) {
+                        $mapping->markSynced();
+                    }
+                } else {
+                    $log->failed_count = count($items);
+                }
+            }
+
+            $log->markCompleted();
+        } catch (\Exception $e) {
+            $log->markFailed($e->getMessage());
+        }
+
+        return $log;
+    }
+
+    public function pullOrdersFromLaravel(Store $store): StoreSyncLog
+    {
+        $log = $this->createSyncLog($store, StoreSyncLog::TYPE_ORDERS, StoreSyncLog::DIRECTION_PULL);
+
+        try {
+            $client = new LaravelClient($store);
+            $orders = $client->getOrders();
+
+            foreach ($orders as $order) {
+                try {
+                    $this->syncLaravelOrderToERP($store, $order);
+                    $log->incrementSuccess();
+                } catch (\Exception $e) {
+                    $log->incrementFailed();
+                    Log::error('Failed to sync Laravel order: '.$e->getMessage());
+                }
+            }
+
+            $log->markCompleted();
+        } catch (\Exception $e) {
+            $log->markFailed($e->getMessage());
+        }
+
+        return $log;
+    }
+
+    protected function syncLaravelProductToERP(Store $store, array $data): void
+    {
+        $externalId = (string) ($data['id'] ?? '');
+        if (! $externalId) {
+            return;
+        }
+
+        DB::transaction(function () use ($store, $data, $externalId) {
+            $mapping = ProductStoreMapping::where('store_id', $store->id)
+                ->where('external_id', $externalId)
+                ->first();
+
+            $productData = [
+                'name' => $data['name'] ?? 'Unknown Product',
+                'description' => $data['description'] ?? '',
+                'sku' => $data['sku'] ?? 'LAR-'.$externalId,
+                'default_price' => (float) ($data['default_price'] ?? $data['price'] ?? 0),
+                'cost' => (float) ($data['cost'] ?? 0),
+                'branch_id' => $store->branch_id,
+            ];
+
+            if ($mapping) {
+                $mapping->product->update($productData);
+                $mapping->update([
+                    'external_data' => $data,
+                    'last_synced_at' => now(),
+                ]);
+            } else {
+                $product = Product::create($productData);
+                ProductStoreMapping::create([
+                    'product_id' => $product->id,
+                    'store_id' => $store->id,
+                    'external_id' => $externalId,
+                    'external_data' => $data,
+                    'last_synced_at' => now(),
+                ]);
+            }
+        });
+    }
+
+    protected function syncLaravelOrderToERP(Store $store, array $data): void
+    {
+        $externalId = (string) ($data['id'] ?? $data['external_id'] ?? '');
+        if (! $externalId) {
+            return;
+        }
+
+        $existingOrder = Sale::where('external_reference', $externalId)
+            ->where('channel', 'laravel')
+            ->first();
+
+        if ($existingOrder) {
+            $existingOrder->update([
+                'status' => $data['status'] ?? $existingOrder->status,
+            ]);
+
+            return;
+        }
+
+        DB::transaction(function () use ($store, $data, $externalId) {
+            $customerId = null;
+
+            // Try to find or create customer
+            $customerData = $data['customer'] ?? [];
+            if (! empty($customerData['email'])) {
+                $customer = Customer::firstOrCreate(
+                    ['email' => $customerData['email']],
+                    [
+                        'name' => $customerData['name'] ?? 'Unknown',
+                        'phone' => $customerData['phone'] ?? null,
+                        'address' => $customerData['address'] ?? null,
+                        'branch_id' => $store->branch_id,
+                    ]
+                );
+                $customerId = $customer->id;
+            }
+
+            $sale = Sale::create([
+                'branch_id' => $store->branch_id,
+                'customer_id' => $customerId,
+                'sub_total' => (float) ($data['sub_total'] ?? $data['subtotal'] ?? 0),
+                'tax_total' => (float) ($data['tax_total'] ?? $data['tax'] ?? 0),
+                'discount_total' => (float) ($data['discount_total'] ?? $data['discount'] ?? 0),
+                'grand_total' => (float) ($data['grand_total'] ?? $data['total'] ?? 0),
+                'status' => $data['status'] ?? 'pending',
+                'channel' => 'laravel',
+                'external_reference' => $externalId,
+            ]);
+
+            foreach ($data['items'] ?? [] as $lineItem) {
+                $productMapping = ProductStoreMapping::where('store_id', $store->id)
+                    ->where('external_id', (string) ($lineItem['product_id'] ?? ''))
+                    ->first();
+
+                $sale->items()->create([
+                    'product_id' => $productMapping?->product_id,
+                    'qty' => (float) ($lineItem['qty'] ?? $lineItem['quantity'] ?? 1),
+                    'unit_price' => (float) ($lineItem['unit_price'] ?? $lineItem['price'] ?? 0),
+                    'discount' => (float) ($lineItem['discount'] ?? 0),
+                    'line_total' => (float) ($lineItem['line_total'] ?? $lineItem['total'] ?? 0),
+                    'branch_id' => $store->branch_id,
+                ]);
+            }
+        });
+    }
+
+    // Helper methods
 
     protected function mapShopifyOrderStatus(string $status): string
     {

@@ -810,6 +810,11 @@ Route::middleware('auth')->group(function () {
             ->name('stores.orders.export')
             ->middleware('can:stores.view');
 
+        // API Documentation
+        Route::get('/api-docs', \App\Livewire\Admin\ApiDocumentation::class)
+            ->name('api-docs')
+            ->middleware('can:stores.view');
+
         // Currency Management
         Route::get('/currencies', \App\Livewire\Admin\CurrencyManager::class)
             ->name('currencies.index')

@@ -290,6 +290,8 @@ class Stores extends Component
                 $log = $service->pullProductsFromShopify($store);
             } elseif ($store->isWooCommerce()) {
                 $log = $service->pullProductsFromWooCommerce($store);
+            } elseif ($store->isLaravel()) {
+                $log = $service->pullProductsFromLaravel($store);
             } else {
                 session()->flash('error', __('Sync not supported for this store type'));
 
@@ -318,6 +320,8 @@ class Stores extends Component
                 $log = $service->pushStockToShopify($store);
             } elseif ($store->isWooCommerce()) {
                 $log = $service->pushStockToWooCommerce($store);
+            } elseif ($store->isLaravel()) {
+                $log = $service->pushStockToLaravel($store);
             } else {
                 session()->flash('error', __('Sync not supported for this store type'));
 
@@ -346,6 +350,8 @@ class Stores extends Component
                 $log = $service->pullOrdersFromShopify($store);
             } elseif ($store->isWooCommerce()) {
                 $log = $service->pullOrdersFromWooCommerce($store);
+            } elseif ($store->isLaravel()) {
+                $log = $service->pullOrdersFromLaravel($store);
             } else {
                 session()->flash('error', __('Sync not supported for this store type'));
 
