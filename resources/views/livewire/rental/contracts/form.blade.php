@@ -14,9 +14,15 @@
     <form wire:submit.prevent="save" class="space-y-6 max-w-3xl">
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                    {{ __('Unit') }}
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {{ __('Unit') }}
+                    </label>
+                    <x-quick-add-link 
+                        :route="route('app.rental.units.create')" 
+                        label="{{ __('Add Unit') }}"
+                        permission="rental.units.manage" />
+                </div>
                 <select wire:model="form.unit_id" class="erp-input">
                     @foreach($availableUnits as $option)
                         <option value="{{ $option['id'] }}">{{ $option['label'] }}</option>
@@ -28,9 +34,15 @@
             </div>
 
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                    {{ __('Tenant') }}
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {{ __('Tenant') }}
+                    </label>
+                    <x-quick-add-link 
+                        :route="route('app.rental.tenants.index')" 
+                        label="{{ __('Add Tenant') }}"
+                        permission="rental.view" />
+                </div>
                 <select wire:model="form.tenant_id" class="erp-input">
                     @foreach($availableTenants as $option)
                         <option value="{{ $option['id'] }}">{{ $option['label'] }}</option>
@@ -57,9 +69,15 @@
             </div>
 
             <div class="space-y-1">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                    {{ __('Rental Period') }}
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {{ __('Rental Period') }}
+                    </label>
+                    <x-quick-add-link 
+                        :route="route('admin.modules.rental-periods', ['module' => 5])" 
+                        label="{{ __('Manage Periods') }}"
+                        permission="modules.manage" />
+                </div>
                 <select wire:model.live="form.rental_period_id" class="erp-input">
                     <option value="">{{ __('Select period...') }}</option>
                     @foreach($availablePeriods as $period)
@@ -69,6 +87,11 @@
                 @error('form.rental_period_id')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                @if(empty($availablePeriods))
+                    <p class="mt-1 text-xs text-amber-600">
+                        {{ __('No rental periods configured. Please add periods in Admin > Modules > Rental Periods.') }}
+                    </p>
+                @endif
             </div>
 
             @if($showCustomDays)
