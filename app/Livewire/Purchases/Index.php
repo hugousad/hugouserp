@@ -104,7 +104,6 @@ class Index extends Component
                 'purchases.due_total as amount_due',
                 'purchases.status',
                 'branches.name as branch_name',
-                'purchases.created_at',
             ])
             ->get();
 
