@@ -170,6 +170,22 @@
             }
         });
     });
+
+    // Handle session/page expiration (419 errors)
+    // This automatically refreshes the page when the CSRF token expires
+    document.addEventListener('livewire:init', () => {
+        Livewire.hook('request', ({ fail }) => {
+            fail(({ status, preventDefault }) => {
+                if (status === 419) {
+                    // Session expired - show a friendly message and refresh
+                    if (confirm('{{ __("Your session has expired. Click OK to refresh the page.") }}')) {
+                        window.location.reload();
+                    }
+                    preventDefault();
+                }
+            });
+        });
+    });
 </script>
 
     <div id="erp-toast-root" class="fixed inset-0 pointer-events-none flex flex-col items-end justify-start px-4 py-6 space-y-2 z-[9999]"></div>
