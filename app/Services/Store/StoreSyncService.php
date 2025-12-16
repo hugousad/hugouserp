@@ -571,7 +571,7 @@ class StoreSyncService
         return $log;
     }
 
-    protected function syncLaravelProductToERP(Store $store, array $data): void
+    public function syncLaravelProductToERP(Store $store, array $data): void
     {
         $externalId = (string) ($data['id'] ?? '');
         if (! $externalId) {
@@ -611,7 +611,7 @@ class StoreSyncService
         });
     }
 
-    protected function syncLaravelOrderToERP(Store $store, array $data): void
+    public function syncLaravelOrderToERP(Store $store, array $data): void
     {
         $externalId = (string) ($data['id'] ?? $data['external_id'] ?? '');
         if (! $externalId) {
