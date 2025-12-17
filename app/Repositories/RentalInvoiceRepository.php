@@ -18,12 +18,14 @@ final class RentalInvoiceRepository extends EloquentBaseRepository implements Re
 
     protected function baseBranchQuery(int $branchId): Builder
     {
-        return $this->query()->where('branch_id', $branchId);
+        // Use the contract relationship for branch filtering instead of non-existent branch_id column
+        return $this->query()->forBranch($branchId);
     }
 
     public function paginateForBranch(int $branchId, int $perPage = 20): LengthAwarePaginator
     {
         return $this->baseBranchQuery($branchId)
+            ->with('contract') // Eager load contracts to prevent N+1
             ->orderByDesc('id')
             ->paginate($perPage);
     }
