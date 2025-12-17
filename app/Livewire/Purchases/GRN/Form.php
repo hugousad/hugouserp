@@ -50,15 +50,21 @@ class Form extends Component
         $this->inspectorId = $this->grn->inspected_by;
         $this->notes = $this->grn->notes;
 
+        // Load existing GRN items with correct schema fields
         $this->items = $this->grn->items->map(function ($item) {
             return [
+                'id' => $item->id,
                 'product_id' => $item->product_id,
-                'quantity_ordered' => $item->quantity_ordered,
-                'quantity_received' => $item->quantity_received,
+                'purchase_item_id' => $item->purchase_item_id,
+                'qty_ordered' => $item->qty_ordered ?? 0,
+                'qty_received' => $item->qty_received ?? 0,
+                'qty_rejected' => $item->qty_rejected ?? 0,
+                'qty_accepted' => $item->qty_accepted ?? ($item->qty_received - $item->qty_rejected),
+                'unit_cost' => $item->unit_cost ?? 0,
                 'quality_status' => $item->quality_status ?? 'good',
-                'quantity_damaged' => $item->quantity_damaged ?? 0,
-                'quantity_defective' => $item->quantity_defective ?? 0,
-                'inspection_notes' => $item->inspection_notes,
+                'rejection_reason' => $item->rejection_reason ?? '',
+                'notes' => $item->notes ?? '',
+                'uom' => $item->uom ?? '',
             ];
         })->toArray();
     }
@@ -135,19 +141,28 @@ class Form extends Component
             $this->grn = GoodsReceivedNote::create($data);
         }
 
-        // Save items
+        // Save items with schema-consistent fields
         $this->grn->items()->delete();
 
         foreach ($this->items as $item) {
-            GoodsReceivedNoteItem::create([
-                'goods_received_note_id' => $this->grn->id,
+            $qtyReceived = (float) ($item['qty_received'] ?? $item['quantity_received'] ?? 0);
+            $qtyRejected = (float) ($item['qty_rejected'] ?? ($item['quantity_damaged'] ?? 0) + ($item['quantity_defective'] ?? 0));
+            $qtyAccepted = max(0, $qtyReceived - $qtyRejected);
+            
+            GRNItem::create([
+                'grn_id' => $this->grn->id,
                 'product_id' => $item['product_id'],
-                'quantity_ordered' => $item['quantity_ordered'],
-                'quantity_received' => $item['quantity_received'],
-                'quality_status' => $item['quality_status'],
-                'quantity_damaged' => $item['quantity_damaged'] ?? 0,
-                'quantity_defective' => $item['quantity_defective'] ?? 0,
-                'inspection_notes' => $item['inspection_notes'] ?? null,
+                'purchase_item_id' => $item['purchase_item_id'] ?? null,
+                'qty_ordered' => $item['qty_ordered'] ?? $item['quantity_ordered'] ?? 0,
+                'qty_received' => $qtyReceived,
+                'qty_rejected' => $qtyRejected,
+                'qty_accepted' => $qtyAccepted,
+                'unit_cost' => $item['unit_cost'] ?? 0,
+                'quality_status' => $item['quality_status'] ?? 'good',
+                'rejection_reason' => $item['rejection_reason'] ?? '',
+                'notes' => $item['notes'] ?? $item['inspection_notes'] ?? '',
+                'uom' => $item['uom'] ?? '',
+                'created_by' => auth()->id(),
             ]);
         }
 
@@ -185,18 +200,28 @@ class Form extends Component
             $this->grn = GoodsReceivedNote::create($data);
         }
 
-        // Save items
+        // Save items with schema-consistent fields
         $this->grn->items()->delete();
 
         foreach ($this->items as $item) {
+            $qtyReceived = (float) ($item['qty_received'] ?? $item['quantity_received'] ?? 0);
+            $qtyRejected = (float) ($item['qty_rejected'] ?? ($item['quantity_damaged'] ?? 0) + ($item['quantity_defective'] ?? 0));
+            $qtyAccepted = max(0, $qtyReceived - $qtyRejected);
+            
             GRNItem::create([
                 'grn_id' => $this->grn->id,
                 'product_id' => $item['product_id'],
-                'qty_ordered' => $item['quantity_ordered'],
-                'qty_received' => $item['quantity_received'],
-                'qty_accepted' => $item['quantity_received'] - ($item['quantity_damaged'] ?? 0) - ($item['quantity_defective'] ?? 0),
-                'qty_rejected' => ($item['quantity_damaged'] ?? 0) + ($item['quantity_defective'] ?? 0),
-                'notes' => $item['inspection_notes'] ?? null,
+                'purchase_item_id' => $item['purchase_item_id'] ?? null,
+                'qty_ordered' => $item['qty_ordered'] ?? $item['quantity_ordered'] ?? 0,
+                'qty_received' => $qtyReceived,
+                'qty_rejected' => $qtyRejected,
+                'qty_accepted' => $qtyAccepted,
+                'unit_cost' => $item['unit_cost'] ?? 0,
+                'quality_status' => $item['quality_status'] ?? 'good',
+                'rejection_reason' => $item['rejection_reason'] ?? '',
+                'notes' => $item['notes'] ?? $item['inspection_notes'] ?? '',
+                'uom' => $item['uom'] ?? '',
+                'created_by' => auth()->id(),
             ]);
         }
 

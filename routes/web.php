@@ -629,6 +629,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/{document}/versions', \App\Livewire\Documents\Versions::class)
             ->name('versions')
             ->middleware('can:documents.view');
+        
+        // Authenticated, permission-guarded download route
+        Route::get('/{document}/download', \App\Http\Controllers\Documents\DownloadController::class)
+            ->name('download')
+            ->middleware(['auth', 'can:documents.view']);
     });
 
     // HELPDESK MODULE
