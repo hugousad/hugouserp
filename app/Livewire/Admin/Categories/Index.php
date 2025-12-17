@@ -55,6 +55,7 @@ class Index extends Component
         $categories = ProductCategory::query()
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('name_ar', 'like', "%{$this->search}%"))
+            ->with('parent:id,name') // Eager load parent to prevent N+1
             ->withCount('products')
             ->orderBy('sort_order')
             ->orderBy('name')
