@@ -113,35 +113,11 @@ class Form extends Component
         return $discrepancies;
     }
 
-    public function save(): ?RedirectResponse
+    /**
+     * Save GRN items with schema-consistent fields
+     */
+    private function saveGRNItems(): void
     {
-        $this->validate([
-            'purchaseId' => 'required|exists:purchases,id',
-            'receivedDate' => 'required|date|before_or_equal:today',
-            'inspectorId' => 'nullable|exists:users,id',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_received' => 'required|numeric|min:0',
-            'items.*.quality_status' => 'required|in:good,damaged,defective',
-            'items.*.quantity_damaged' => 'nullable|numeric|min:0',
-            'items.*.quantity_defective' => 'nullable|numeric|min:0',
-        ]);
-
-        $data = [
-            'purchase_id' => $this->purchaseId,
-            'received_date' => $this->receivedDate,
-            'inspected_by' => $this->inspectorId,
-            'notes' => $this->notes,
-            'status' => 'draft',
-        ];
-
-        if ($this->grn) {
-            $this->grn->update($data);
-        } else {
-            $this->grn = GoodsReceivedNote::create($data);
-        }
-
-        // Save items with schema-consistent fields
         $this->grn->items()->delete();
 
         foreach ($this->items as $item) {
@@ -165,6 +141,51 @@ class Form extends Component
                 'created_by' => auth()->id(),
             ]);
         }
+    }
+
+    /**
+     * Validate GRN data
+     */
+    private function validateGRN(): void
+    {
+        $this->validate([
+            'purchaseId' => 'required|exists:purchases,id',
+            'receivedDate' => 'required|date|before_or_equal:today',
+            'inspectorId' => 'nullable|exists:users,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity_received' => 'required|numeric|min:0',
+            'items.*.quality_status' => 'required|in:good,damaged,defective',
+            'items.*.quantity_damaged' => 'nullable|numeric|min:0',
+            'items.*.quantity_defective' => 'nullable|numeric|min:0',
+        ]);
+    }
+
+    /**
+     * Save or update GRN record
+     */
+    private function saveGRNRecord(string $status): void
+    {
+        $data = [
+            'purchase_id' => $this->purchaseId,
+            'received_date' => $this->receivedDate,
+            'inspected_by' => $this->inspectorId,
+            'notes' => $this->notes,
+            'status' => $status,
+        ];
+
+        if ($this->grn) {
+            $this->grn->update($data);
+        } else {
+            $this->grn = GoodsReceivedNote::create($data);
+        }
+    }
+
+    public function save(): ?RedirectResponse
+    {
+        $this->validateGRN();
+        $this->saveGRNRecord('draft');
+        $this->saveGRNItems();
 
         session()->flash('success', __('GRN saved successfully.'));
 
@@ -173,57 +194,9 @@ class Form extends Component
 
     public function submit(): ?RedirectResponse
     {
-        // First validate and save
-        $this->validate([
-            'purchaseId' => 'required|exists:purchases,id',
-            'receivedDate' => 'required|date|before_or_equal:today',
-            'inspectorId' => 'nullable|exists:users,id',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity_received' => 'required|numeric|min:0',
-            'items.*.quality_status' => 'required|in:good,damaged,defective',
-            'items.*.quantity_damaged' => 'nullable|numeric|min:0',
-            'items.*.quantity_defective' => 'nullable|numeric|min:0',
-        ]);
-
-        $data = [
-            'purchase_id' => $this->purchaseId,
-            'received_date' => $this->receivedDate,
-            'inspected_by' => $this->inspectorId,
-            'notes' => $this->notes,
-            'status' => 'pending_inspection',
-        ];
-
-        if ($this->grn) {
-            $this->grn->update($data);
-        } else {
-            $this->grn = GoodsReceivedNote::create($data);
-        }
-
-        // Save items with schema-consistent fields
-        $this->grn->items()->delete();
-
-        foreach ($this->items as $item) {
-            $qtyReceived = (float) ($item['qty_received'] ?? $item['quantity_received'] ?? 0);
-            $qtyRejected = (float) ($item['qty_rejected'] ?? ($item['quantity_damaged'] ?? 0) + ($item['quantity_defective'] ?? 0));
-            $qtyAccepted = max(0, $qtyReceived - $qtyRejected);
-            
-            GRNItem::create([
-                'grn_id' => $this->grn->id,
-                'product_id' => $item['product_id'],
-                'purchase_item_id' => $item['purchase_item_id'] ?? null,
-                'qty_ordered' => $item['qty_ordered'] ?? $item['quantity_ordered'] ?? 0,
-                'qty_received' => $qtyReceived,
-                'qty_rejected' => $qtyRejected,
-                'qty_accepted' => $qtyAccepted,
-                'unit_cost' => $item['unit_cost'] ?? 0,
-                'quality_status' => $item['quality_status'] ?? 'good',
-                'rejection_reason' => $item['rejection_reason'] ?? '',
-                'notes' => $item['notes'] ?? $item['inspection_notes'] ?? '',
-                'uom' => $item['uom'] ?? '',
-                'created_by' => auth()->id(),
-            ]);
-        }
+        $this->validateGRN();
+        $this->saveGRNRecord('pending_inspection');
+        $this->saveGRNItems();
 
         session()->flash('success', __('GRN submitted for inspection.'));
 

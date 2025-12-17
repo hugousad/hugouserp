@@ -18,16 +18,10 @@ class DownloadController extends Controller
 
     public function __invoke(Document $document): StreamedResponse
     {
-        // Check user is authenticated
-        abort_unless(Auth::check(), 401, 'Unauthorized');
-        
-        // Authorization check - verify user has permission to access documents
-        abort_unless(Gate::allows('documents.view') || Auth::user()->can('view', $document), 403, 'Forbidden');
-        
         // Verify file exists on the public disk
         abort_unless(Storage::disk('public')->exists($document->file_path), 404, 'File not found');
         
-        // Delegate auditing to the document service (this also validates access)
+        // Validate access and log download (throws 403 if unauthorized)
         $this->documentService->downloadDocument($document, Auth::user());
         
         return Storage::disk('public')->download(
