@@ -264,6 +264,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'tickets.priorities.manage',
             'tickets.sla.view',
             'tickets.sla.manage',
+            // Media Library
+            'media.view',
+            'media.upload',
+            'media.delete',
+            'media.manage',
+            'media.view-others',
         ];
 
         foreach ($webPermissions as $name) {

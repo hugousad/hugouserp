@@ -840,6 +840,11 @@ Route::middleware('auth')->group(function () {
         Route::redirect('/settings/translations', '/admin/settings?tab=translations');
         Route::redirect('/settings/advanced', '/admin/settings?tab=advanced');
 
+        // Media Library
+        Route::get('/media', \App\Livewire\Admin\MediaLibrary::class)
+            ->name('media.index')
+            ->middleware('can:media.view');
+
         // Audit Logs
         Route::get('/logs/audit', AuditLogPage::class)
             ->name('logs.audit')

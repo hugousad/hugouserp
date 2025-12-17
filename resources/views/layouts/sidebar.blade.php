@@ -505,6 +505,18 @@
         </a>
         @endif
 
+        {{-- Media Library --}}
+        @if($canAccess('media.view'))
+        <a href="{{ route('admin.media.index') }}"
+           class="sidebar-link bg-gradient-to-r from-pink-500 to-pink-600 {{ $isActive('admin.media') ? 'active ring-2 ring-white/30' : '' }}">
+            <span class="text-lg">📁</span>
+            <span class="text-sm font-medium">{{ __('Media Library') }}</span>
+            @if($isActive('admin.media'))
+                <span class="ms-auto w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            @endif
+        </a>
+        @endif
+
         {{-- Advanced Settings --}}
         @if($canAccess('settings.view'))
         <a href="{{ route('admin.settings') }}?tab=advanced"
