@@ -57,7 +57,7 @@ class Show extends Component
 
         $this->ticket->refresh();
 
-        session()->flash('message', 'Reply added successfully.');
+        session()->flash('message', __('Reply added successfully.'));
     }
 
     public function assignToMe(): void
@@ -71,7 +71,7 @@ class Show extends Component
         $this->ticket->assign($user->id);
         $this->ticket->refresh();
 
-        session()->flash('message', 'Ticket assigned to you.');
+        session()->flash('message', __('Ticket assigned to you.'));
     }
 
     public function resolve(): void
@@ -83,7 +83,7 @@ class Show extends Component
         $this->ticket->resolve();
         $this->ticket->refresh();
 
-        session()->flash('message', 'Ticket marked as resolved.');
+        session()->flash('message', __('Ticket marked as resolved.'));
     }
 
     public function close(): void
@@ -93,14 +93,14 @@ class Show extends Component
         }
 
         if (! $this->ticket->canBeClosed()) {
-            session()->flash('error', 'Ticket must be resolved before closing.');
+            session()->flash('error', __('Ticket must be resolved before closing.'));
             return;
         }
 
         $this->ticket->close();
         $this->ticket->refresh();
 
-        session()->flash('message', 'Ticket closed.');
+        session()->flash('message', __('Ticket closed.'));
     }
 
     public function reopen(): void
@@ -110,14 +110,14 @@ class Show extends Component
         }
 
         if (! $this->ticket->canBeReopened()) {
-            session()->flash('error', 'Ticket cannot be reopened.');
+            session()->flash('error', __('Ticket cannot be reopened.'));
             return;
         }
 
         $this->ticket->reopen();
         $this->ticket->refresh();
 
-        session()->flash('message', 'Ticket reopened.');
+        session()->flash('message', __('Ticket reopened.'));
     }
 
     #[Layout('layouts.app')]

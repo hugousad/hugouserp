@@ -67,13 +67,13 @@
     <div class="grid gap-4 md:grid-cols-4">
         <div class="erp-card p-4 rounded-2xl">
             <h3 class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Sales (total)
+                {{ __('Sales') }} ({{ __('total') }})
             </h3>
             <p class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-50">
                 {{ number_format($salesStats['total'] ?? 0, 2) }}
             </p>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Today:
+                {{ __('Today') }}:
                 <span class="font-semibold text-emerald-600 dark:text-emerald-400">
                     {{ number_format($salesStats['today'] ?? 0, 2) }}
                 </span>
@@ -141,7 +141,7 @@
         <div class="erp-card p-4 rounded-2xl">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-50">
-                    Contracts by status
+                    {{ __('Contracts by status') }}
                 </h2>
             </div>
             <div wire:ignore>
@@ -153,16 +153,16 @@
     <div class="grid gap-6 md:grid-cols-2">
         <div class="erp-card p-4 rounded-2xl">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-50 mb-3">
-                Latest sales
+                {{ __('Latest sales') }}
             </h2>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="border-b border-slate-200/80 dark:border-slate-700/80 text-left text-xs uppercase text-slate-500 dark:text-slate-400">
                         <tr>
-                            <th class="py-2 pr-4">Code</th>
-                            <th class="py-2 pr-4">Customer</th>
-                            <th class="py-2 pr-4">Grand total</th>
-                            <th class="py-2 pr-4">Date</th>
+                            <th class="py-2 pr-4">{{ __('Code') }}</th>
+                            <th class="py-2 pr-4">{{ __('Customer') }}</th>
+                            <th class="py-2 pr-4">{{ __('Grand total') }}</th>
+                            <th class="py-2 pr-4">{{ __('Date') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
@@ -201,16 +201,16 @@
 
         <div class="erp-card p-4 rounded-2xl">
             <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-50 mb-3">
-                Contracts expiring soon
+                {{ __('Contracts expiring soon') }}
             </h2>
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="border-b border-slate-200/80 dark:border-slate-700/80 text-left text-xs uppercase text-slate-500 dark:text-slate-400">
                         <tr>
-                            <th class="py-2 pr-4">Unit</th>
-                            <th class="py-2 pr-4">Tenant</th>
-                            <th class="py-2 pr-4">End date</th>
-                            <th class="py-2 pr-4">Rent</th>
+                            <th class="py-2 pr-4">{{ __('Unit') }}</th>
+                            <th class="py-2 pr-4">{{ __('Tenant') }}</th>
+                            <th class="py-2 pr-4">{{ __('End date') }}</th>
+                            <th class="py-2 pr-4">{{ __('Rent') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-200">
@@ -243,7 +243,7 @@
                         @empty
                             <tr>
                                 <td colspan="4" class="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                                    No expiring contracts.
+                                    {{ __('No expiring contracts found.') }}
                                 </td>
                             </tr>
                         @endforelse

@@ -23,8 +23,9 @@
     };
 @endphp
 <aside
-    class="hidden md:flex md:flex-col md:w-64 lg:w-72 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-slate-100 shadow-xl z-20"
-    :class="sidebarOpen ? 'block' : ''"
+    class="fixed md:relative inset-y-0 {{ app()->getLocale() === 'ar' ? 'right-0' : 'left-0' }} w-72 lg:w-80 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 text-slate-100 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-out"
+    :class="sidebarOpen ? 'translate-x-0' : '{{ app()->getLocale() === 'ar' ? 'translate-x-full' : '-translate-x-full' }} md:translate-x-0'"
+    x-cloak
 >
     {{-- Logo & User --}}
     <div class="flex items-center justify-between px-4 py-4 border-b border-slate-700">
@@ -316,16 +317,58 @@
         </a>
         @endif
 
-        {{-- HR Module --}}
+        {{-- HR Module (Expanded) --}}
         @if($canAccess('hrm.employees.view'))
-        <a href="{{ route('app.hrm.employees.index') }}"
-           class="sidebar-link bg-gradient-to-r from-rose-500 to-rose-600 {{ $isActive('app.hrm') ? 'active ring-2 ring-white/30' : '' }}">
-            <span class="text-lg">👔</span>
-            <span class="text-sm font-medium">{{ __('Human Resources') }}</span>
-            @if($isActive('app.hrm'))
-                <span class="ms-auto w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            @endif
-        </a>
+        <div class="space-y-1" x-data="{ expanded: {{ $isActive('app.hrm') ? 'true' : 'false' }} }">
+            <button @click="expanded = !expanded" type="button"
+               class="w-full sidebar-link bg-gradient-to-r from-rose-500 to-rose-600 {{ $isActive('app.hrm') ? 'active ring-2 ring-white/30' : '' }}">
+                <span class="text-lg">👔</span>
+                <span class="text-sm font-medium">{{ __('Human Resources') }}</span>
+                <svg class="ms-auto w-4 h-4 transition-transform duration-200" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            
+            <div x-show="expanded" x-collapse class="space-y-0.5">
+                <a href="{{ route('app.hrm.employees.index') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('app.hrm.employees') ? 'active' : '' }}">
+                    <span class="text-base">👥</span>
+                    <span class="text-sm">{{ __('Employees') }}</span>
+                </a>
+                
+                @if($canAccess('hrm.attendance.view'))
+                <a href="{{ route('app.hrm.attendance.index') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('app.hrm.attendance') ? 'active' : '' }}">
+                    <span class="text-base">⏰</span>
+                    <span class="text-sm">{{ __('Attendance') }}</span>
+                </a>
+                @endif
+                
+                @if($canAccess('hrm.view'))
+                <a href="{{ route('app.hrm.shifts.index') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('app.hrm.shifts') ? 'active' : '' }}">
+                    <span class="text-base">📅</span>
+                    <span class="text-sm">{{ __('Shifts') }}</span>
+                </a>
+                @endif
+                
+                @if($canAccess('hrm.payroll.view'))
+                <a href="{{ route('app.hrm.payroll.index') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('app.hrm.payroll') ? 'active' : '' }}">
+                    <span class="text-base">💰</span>
+                    <span class="text-sm">{{ __('Payroll') }}</span>
+                </a>
+                @endif
+                
+                @if($canAccess('hrm.view-reports'))
+                <a href="{{ route('app.hrm.reports') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('app.hrm.reports') ? 'active' : '' }}">
+                    <span class="text-base">📊</span>
+                    <span class="text-sm">{{ __('HR Reports') }}</span>
+                </a>
+                @endif
+            </div>
+        </div>
         @endif
 
         {{-- Rental Module --}}
@@ -416,25 +459,59 @@
         </a>
         @endif
 
-        {{-- Store Integrations --}}
+        {{-- Store Integrations (Expanded) --}}
         @if($canAccess('store.manage'))
-        <a href="{{ route('admin.stores.index') }}"
-           class="sidebar-link bg-gradient-to-r from-indigo-500 to-indigo-600 {{ $isActive('admin.stores') ? 'active ring-2 ring-white/30' : '' }}">
-            <span class="text-lg">🔗</span>
-            <span class="text-sm font-medium">{{ __('Store Integrations') }}</span>
-            @if($isActive('admin.stores'))
+        <div class="space-y-1" x-data="{ expanded: {{ $isActive('admin.stores') || $isActive('admin.api-docs') ? 'true' : 'false' }} }">
+            <button @click="expanded = !expanded" type="button"
+               class="w-full sidebar-link bg-gradient-to-r from-indigo-500 to-indigo-600 {{ $isActive('admin.stores') ? 'active ring-2 ring-white/30' : '' }}">
+                <span class="text-lg">🔗</span>
+                <span class="text-sm font-medium">{{ __('Store Integrations') }}</span>
+                <svg class="ms-auto w-4 h-4 transition-transform duration-200" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            
+            <div x-show="expanded" x-collapse class="space-y-0.5">
+                <a href="{{ route('admin.stores.index') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('admin.stores.index') ? 'active' : '' }}">
+                    <span class="text-base">🏪</span>
+                    <span class="text-sm">{{ __('Connected Stores') }}</span>
+                </a>
+                
+                <a href="{{ route('admin.api-docs') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('admin.api-docs') ? 'active' : '' }}">
+                    <span class="text-base">📖</span>
+                    <span class="text-sm">{{ __('API Documentation') }}</span>
+                </a>
+                
+                <a href="{{ route('admin.stores.orders') }}"
+                   class="sidebar-link-secondary ms-4 {{ $isActive('admin.stores.orders') ? 'active' : '' }}">
+                    <span class="text-base">📦</span>
+                    <span class="text-sm">{{ __('Store Orders') }}</span>
+                </a>
+            </div>
+        </div>
+        @endif
+
+        {{-- Translation Manager --}}
+        @if($canAccess('settings.view'))
+        <a href="{{ route('admin.translations.index') }}"
+           class="sidebar-link bg-gradient-to-r from-cyan-500 to-cyan-600 {{ $isActive('admin.translations') ? 'active ring-2 ring-white/30' : '' }}">
+            <span class="text-lg">🌍</span>
+            <span class="text-sm font-medium">{{ __('Translation Manager') }}</span>
+            @if($isActive('admin.translations'))
                 <span class="ms-auto w-2 h-2 rounded-full bg-white animate-pulse"></span>
             @endif
         </a>
         @endif
 
-        {{-- Translation Manager --}}
-        @if($canAccess('settings.translations.manage'))
-        <a href="{{ route('admin.settings') }}?tab=translations"
-           class="sidebar-link bg-gradient-to-r from-cyan-500 to-cyan-600 {{ $isActive('admin.settings') ? 'active ring-2 ring-white/30' : '' }}">
-            <span class="text-lg">🌍</span>
-            <span class="text-sm font-medium">{{ __('Translation Manager') }}</span>
-            @if($isActive('admin.settings'))
+        {{-- Media Library --}}
+        @if($canAccess('media.view'))
+        <a href="{{ route('admin.media.index') }}"
+           class="sidebar-link bg-gradient-to-r from-pink-500 to-pink-600 {{ $isActive('admin.media') ? 'active ring-2 ring-white/30' : '' }}">
+            <span class="text-lg">📁</span>
+            <span class="text-sm font-medium">{{ __('Media Library') }}</span>
+            @if($isActive('admin.media'))
                 <span class="ms-auto w-2 h-2 rounded-full bg-white animate-pulse"></span>
             @endif
         </a>
@@ -519,9 +596,14 @@
 
         @if($canAccess('logs.audit.view'))
         <a href="{{ route('admin.logs.audit') }}"
-           class="sidebar-link-secondary {{ $isActive('admin.logs') ? 'active' : '' }}">
+           class="sidebar-link-secondary {{ $isActive('admin.logs.audit') ? 'active' : '' }}">
             <span class="text-base">📋</span>
             <span class="text-sm">{{ __('Audit Logs') }}</span>
+        </a>
+        <a href="{{ route('admin.activity-log') }}"
+           class="sidebar-link-secondary {{ $isActive('admin.activity-log') ? 'active' : '' }}">
+            <span class="text-base">📜</span>
+            <span class="text-sm">{{ __('Activity Log') }}</span>
         </a>
         @endif
 
@@ -577,3 +659,45 @@
         </form>
     </div>
 </aside>
+
+{{-- Auto-scroll to active menu item on page load --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Find the active menu item
+    const activeItem = document.querySelector('.sidebar-link.active, .sidebar-link-secondary.active');
+    if (activeItem) {
+        // Scroll the sidebar nav to show the active item
+        setTimeout(() => {
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+});
+</script>
+
+<style>
+/* Enhanced active states for better visibility */
+.sidebar-link.active {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: scale(1.02);
+}
+
+.sidebar-link-secondary.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left: 3px solid currentColor;
+    font-weight: 600;
+}
+
+/* Smooth transitions */
+.sidebar-link, .sidebar-link-secondary {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover effects */
+.sidebar-link:hover {
+    transform: translateX(2px);
+}
+
+.sidebar-link-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+</style>

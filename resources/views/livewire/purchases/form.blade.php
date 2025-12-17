@@ -92,7 +92,7 @@
                             @foreach($searchResults as $product)
                                 <button type="button" wire:click="addProduct({{ $product['id'] }})" class="w-full px-4 py-2 text-left hover:bg-emerald-50 flex justify-between items-center">
                                     <span class="font-medium text-slate-800">{{ $product['name'] }}</span>
-                                    <span class="text-sm text-slate-500">{{ $product['sku'] }} - {{ number_format($product['cost_price'] ?? 0, 2) }}</span>
+                                    <span class="text-sm text-slate-500">{{ $product['sku'] }} - {{ number_format($product['cost'] ?? 0, 2) }}</span>
                                 </button>
                             @endforeach
                         </div>

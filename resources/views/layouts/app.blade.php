@@ -20,9 +20,84 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Turbo.js for SPA-like navigation (optional enhancement) --}}
+    <script type="module">
+        // Turbo.js loaded via CDN as optional enhancement
+        // If CDN fails, navigation falls back to standard page loads
+        try {
+            const turbo = await import('https://cdn.skypack.dev/@hotwired/turbo');
+            window.TurboLoaded = true;
+        } catch (e) {
+            console.info('Turbo.js not loaded, using standard navigation');
+            window.TurboLoaded = false;
+        }
+    </script>
 
     <style>
         * { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important; }
+        
+        /* Performance optimizations */
+        .erp-card, .sidebar-link, table {
+            contain: content;
+        }
+        
+        /* Hardware acceleration for animations */
+        .sidebar-link, .erp-card, button, a {
+            transform: translateZ(0);
+            will-change: transform, opacity;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Loading indicator */
+        .turbo-progress-bar {
+            height: 3px;
+            background: linear-gradient(to right, #10b981, #3b82f6);
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+            aside {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 50;
+            }
+            aside.sidebar-open {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 40;
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+            .responsive-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+        
+        /* Better touch targets */
+        @media (pointer: coarse) {
+            .sidebar-link, button, a {
+                min-height: 44px;
+            }
+        }
     </style>
 
     <script>
@@ -46,7 +121,19 @@
     @livewireStyles
 </head>
 <body class="h-full text-[15px] sm:text-base"
-      x-data="{ sidebarOpen: false }">
+      x-data="{ sidebarOpen: false }"
+      @keydown.escape.window="sidebarOpen = false">
+
+{{-- Mobile sidebar overlay --}}
+<div x-show="sidebarOpen" 
+     x-transition:enter="transition-opacity ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition-opacity ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     @click="sidebarOpen = false"
+     class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"></div>
 
 <div class="min-h-screen flex {{ $dir === 'rtl' ? 'flex-row-reverse' : 'flex-row' }}">
 
@@ -170,9 +257,85 @@
             }
         });
     });
+
+    // Handle session/page expiration (419 errors)
+    // This automatically refreshes the page when the CSRF token expires
+    document.addEventListener('livewire:init', () => {
+        Livewire.hook('request', ({ fail }) => {
+            fail(({ status, preventDefault }) => {
+                if (status === 419) {
+                    // Session expired - show a friendly message and refresh
+                    if (confirm('{{ __("Your session has expired. Click OK to refresh the page.") }}')) {
+                        window.location.reload();
+                    }
+                    preventDefault();
+                }
+            });
+        });
+    });
 </script>
 
     <div id="erp-toast-root" class="fixed inset-0 pointer-events-none flex flex-col items-end justify-start px-4 py-6 space-y-2 z-[9999]"></div>
+
+{{-- Loading indicator --}}
+<div id="page-loading" class="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-blue-500 to-emerald-500 transform -translate-x-full transition-transform duration-300 z-[10000]" style="display:none;"></div>
+
+<script>
+    // Intelligent prefetching - preload links on hover
+    // Uses a Set to track prefetched URLs to avoid duplicates
+    document.addEventListener('DOMContentLoaded', function() {
+        const prefetchedUrls = new Set();
+        const MAX_PREFETCHES = 20; // Limit to prevent memory issues
+        
+        document.querySelectorAll('a[href^="/"]').forEach(link => {
+            link.addEventListener('mouseenter', function() {
+                const href = this.getAttribute('href');
+                if (href && !prefetchedUrls.has(href) && !href.includes('#') && prefetchedUrls.size < MAX_PREFETCHES) {
+                    prefetchedUrls.add(href);
+                    const prefetch = document.createElement('link');
+                    prefetch.rel = 'prefetch';
+                    prefetch.href = href;
+                    document.head.appendChild(prefetch);
+                    
+                    // Remove prefetch link after 30 seconds to free memory
+                    setTimeout(() => {
+                        prefetch.remove();
+                    }, 30000);
+                }
+            }, { once: true, passive: true });
+        });
+        
+        // Auto-scroll to active menu item in sidebar
+        const activeItem = document.querySelector('.sidebar-link.active, .sidebar-link-secondary.active');
+        if (activeItem) {
+            setTimeout(() => {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    });
+    
+    // Show loading indicator during Turbo navigation (only if Turbo is loaded)
+    if (window.TurboLoaded !== false) {
+        document.addEventListener('turbo:before-fetch-request', () => {
+            const loader = document.getElementById('page-loading');
+            if (loader) {
+                loader.style.display = 'block';
+                loader.style.transform = 'translateX(-50%)';
+            }
+        });
+        
+        document.addEventListener('turbo:before-fetch-response', () => {
+            const loader = document.getElementById('page-loading');
+            if (loader) {
+                loader.style.transform = 'translateX(0)';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    loader.style.transform = 'translateX(-100%)';
+            }, 300);
+        }
+    });
+    }
+</script>
     
 </body>
 </html>

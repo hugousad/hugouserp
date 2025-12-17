@@ -18,7 +18,7 @@ class VehicleStoreRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'vin' => ['nullable', 'string', 'max:190', 'unique:vehicles,vin'],
-            'price' => ['required', 'numeric', 'gte:0'],
+            'sale_price' => ['required', 'numeric', 'gte:0'],
             'cost' => ['nullable', 'numeric', 'gte:0'],
         ];
     }

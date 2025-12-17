@@ -107,7 +107,7 @@
                             {{ $product->barcode }}
                         </td>
                         <td class="px-3 py-2 text-xs text-slate-800">
-                            {{ number_format($product->price ?? 0, 2) }}
+                            {{ number_format($product->default_price ?? 0, 2) }}
                         </td>
                         <td class="px-3 py-2 text-xs text-slate-800">
                             {{ number_format($product->cost ?? 0, 2) }}

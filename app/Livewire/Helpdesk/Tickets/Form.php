@@ -96,12 +96,12 @@ class Form extends Component
         if ($this->isEditing) {
             $data['updated_by'] = $user->id;
             $this->ticket->update($data);
-            session()->flash('message', 'Ticket updated successfully.');
+            session()->flash('message', __('Ticket updated successfully.'));
             $this->redirect(route('app.helpdesk.tickets.index'));
         } else {
             $data['created_by'] = $user->id;
             $ticket = Ticket::create($data);
-            session()->flash('message', 'Ticket created successfully.');
+            session()->flash('message', __('Ticket created successfully.'));
             $this->redirect(route('app.helpdesk.tickets.show', $ticket->id));
         }
     }

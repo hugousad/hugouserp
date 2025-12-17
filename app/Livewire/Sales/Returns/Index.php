@@ -110,7 +110,7 @@ class Index extends Component
             'product_name' => $item->product?->name ?? 'Unknown',
             'max_qty' => (float) $item->qty,
             'qty' => 0,
-            'price' => (float) $item->price,
+            'price' => (float) $item->unit_price,
         ])->toArray();
     }
 
@@ -220,7 +220,7 @@ class Index extends Component
             ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->when($this->search, function ($query) {
                 $query->whereHas('sale', function ($q) {
-                    $q->where('invoice_number', 'like', '%'.$this->search.'%')
+                    $q->where('code', 'like', '%'.$this->search.'%')
                         ->orWhere('reference_no', 'like', '%'.$this->search.'%');
                 });
             })

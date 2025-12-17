@@ -20,7 +20,7 @@ class VehicleUpdateRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:255'],
             'vin' => ['sometimes', 'string', 'max:190', 'unique:vehicles,vin,'.$vehicle?->id],
-            'price' => ['sometimes', 'numeric', 'gte:0'],
+            'sale_price' => ['sometimes', 'numeric', 'gte:0'],
             'cost' => ['sometimes', 'numeric', 'gte:0'],
         ];
     }

@@ -108,7 +108,7 @@
                                     <option value="{{ $purchase->id }}">
                                         {{ $purchase->reference_no ?: '#' . $purchase->id }} - 
                                         {{ $purchase->supplier?->name ?? __('Unknown Supplier') }} - 
-                                        {{ number_format((float)$purchase->total, 2) }}
+                                        {{ number_format((float)$purchase->grand_total, 2) }}
                                     </option>
                                 @endforeach
                             </select>
@@ -117,7 +117,7 @@
                         <div class="mb-4 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
                             <p class="text-sm"><strong>{{ __('Reference') }}:</strong> {{ $selectedPurchase->reference_no ?: '#' . $selectedPurchase->id }}</p>
                             <p class="text-sm"><strong>{{ __('Supplier') }}:</strong> {{ $selectedPurchase->supplier?->name ?? __('Unknown Supplier') }}</p>
-                            <p class="text-sm"><strong>{{ __('Total') }}:</strong> {{ number_format((float)$selectedPurchase->total, 2) }}</p>
+                            <p class="text-sm"><strong>{{ __('Total') }}:</strong> {{ number_format((float)$selectedPurchase->grand_total, 2) }}</p>
                         </div>
 
                         <div class="mb-4">

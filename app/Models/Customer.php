@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Customer extends BaseModel
 {
+    use LogsActivity;
     protected ?string $moduleKey = 'customers';
 
     protected $table = 'customers';
@@ -50,5 +53,14 @@ class Customer extends BaseModel
     public function scopeActive($q)
     {
         return $q->where('status', 'active');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'phone', 'status', 'loyalty_points', 'customer_tier'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Customer {$this->name} was {$eventName}");
     }
 }

@@ -6,6 +6,7 @@ namespace App\Livewire\Rental\Properties;
 
 use App\Models\Property;
 use App\Models\RentalUnit;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -14,6 +15,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesRequests;
     use WithPagination;
 
     #[Url]

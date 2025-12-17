@@ -134,11 +134,11 @@ class GlobalSearch extends Component
         if ($user->can('sales.view')) {
             $sales = Sale::query()
                 ->where(function ($q) use ($searchTerm) {
-                    $q->where('invoice_number', 'like', $searchTerm)
+                    $q->where('code', 'like', $searchTerm)
                         ->orWhere('reference_no', 'like', $searchTerm);
                 })
                 ->limit(5)
-                ->get(['id', 'invoice_number', 'status']);
+                ->get(['id', 'code', 'status']);
 
             if ($sales->isNotEmpty()) {
                 $this->results['sales'] = [
@@ -147,7 +147,7 @@ class GlobalSearch extends Component
                     'route' => 'app.sales.index',
                     'items' => $sales->map(fn ($s) => [
                         'id' => $s->id,
-                        'title' => $s->invoice_number ?: '#'.$s->id,
+                        'title' => $s->code ?: '#'.$s->id,
                         'subtitle' => ucfirst($s->status ?? 'pending'),
                         'route' => route('app.sales.show', $s->id),
                     ])->toArray(),

@@ -30,9 +30,9 @@
                     @foreach($purchase->items as $item)
                     <tr class="border-b">
                         <td class="py-2">{{ $item->product->name ?? __('N/A') }}</td>
-                        <td class="text-right">{{ $item->quantity }}</td>
+                        <td class="text-right">{{ $item->qty }}</td>
                         <td class="text-right">{{ number_format($item->unit_cost, 2) }}</td>
-                        <td class="text-right">{{ number_format($item->quantity * $item->unit_cost, 2) }}</td>
+                        <td class="text-right">{{ number_format($item->qty * $item->unit_cost, 2) }}</td>
                     </tr>
                     @endforeach
                 </tbody>

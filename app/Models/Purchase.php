@@ -7,9 +7,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Purchase extends BaseModel
 {
+    use LogsActivity;
     protected ?string $moduleKey = 'purchases';
 
     protected $table = 'purchases';
@@ -113,5 +116,29 @@ class Purchase extends BaseModel
         $receivedQty = $this->getTotalQuantityReceived();
 
         return $receivedQty > 0 && !$this->isFullyReceived();
+    }
+
+    public function getTotalPaidAttribute(): float
+    {
+        return (float) $this->payments()->sum('amount');
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        return max(0, (float) $this->grand_total - $this->total_paid);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->remaining_amount <= 0;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['code', 'status', 'grand_total', 'paid_total', 'supplier_id', 'branch_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Purchase {$this->code} was {$eventName}");
     }
 }

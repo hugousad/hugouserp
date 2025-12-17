@@ -83,8 +83,8 @@ class Form extends Component
                 'id' => $item->id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->product->name ?? '',
-                'quantity' => $item->quantity,
-                'unit_price' => $item->estimated_unit_price,
+                'quantity' => $item->qty,
+                'unit_price' => $item->estimated_unit_cost,
                 'specifications' => $item->specifications ?? '',
             ];
         })->toArray();
@@ -94,7 +94,7 @@ class Form extends Component
     {
         $this->products = Product::where('branch_id', auth()->user()->branch_id)
             ->where('status', 'active')
-            ->select('id', 'name', 'sku', 'price')
+            ->select('id', 'name', 'sku', 'default_price')
             ->get()
             ->toArray();
     }
@@ -121,7 +121,7 @@ class Form extends Component
         if (isset($this->items[$index]['product_id'])) {
             $product = Product::find($this->items[$index]['product_id']);
             if ($product) {
-                $this->items[$index]['unit_price'] = $product->price;
+                $this->items[$index]['unit_price'] = $product->default_price ?? 0;
                 $this->items[$index]['product_name'] = $product->name;
             }
         }
@@ -158,10 +158,10 @@ class Form extends Component
         // Create items
         foreach ($this->items as $item) {
             PurchaseRequisitionItem::create([
-                'purchase_requisition_id' => $this->requisition->id,
+                'requisition_id' => $this->requisition->id,
                 'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'estimated_unit_price' => $item['unit_price'],
+                'qty' => $item['quantity'],
+                'estimated_unit_cost' => $item['unit_price'],
                 'specifications' => $item['specifications'] ?? null,
             ]);
         }
@@ -205,10 +205,10 @@ class Form extends Component
         // Create items
         foreach ($this->items as $item) {
             PurchaseRequisitionItem::create([
-                'purchase_requisition_id' => $this->requisition->id,
+                'requisition_id' => $this->requisition->id,
                 'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'estimated_unit_price' => $item['unit_price'],
+                'qty' => $item['quantity'],
+                'estimated_unit_cost' => $item['unit_price'],
                 'specifications' => $item['specifications'] ?? null,
             ]);
         }

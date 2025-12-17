@@ -810,6 +810,16 @@ Route::middleware('auth')->group(function () {
             ->name('stores.orders.export')
             ->middleware('can:stores.view');
 
+        // API Documentation
+        Route::get('/api-docs', \App\Livewire\Admin\ApiDocumentation::class)
+            ->name('api-docs')
+            ->middleware('can:stores.view');
+
+        // Translation Management
+        Route::get('/translations', \App\Livewire\Admin\TranslationManager::class)
+            ->name('translations.index')
+            ->middleware('can:settings.view');
+
         // Currency Management
         Route::get('/currencies', \App\Livewire\Admin\CurrencyManager::class)
             ->name('currencies.index')
@@ -830,10 +840,20 @@ Route::middleware('auth')->group(function () {
         Route::redirect('/settings/translations', '/admin/settings?tab=translations');
         Route::redirect('/settings/advanced', '/admin/settings?tab=advanced');
 
+        // Media Library
+        Route::get('/media', \App\Livewire\Admin\MediaLibrary::class)
+            ->name('media.index')
+            ->middleware('can:media.view');
+
         // Audit Logs
         Route::get('/logs/audit', AuditLogPage::class)
             ->name('logs.audit')
             ->middleware('can:'.config('screen_permissions.logs.audit', 'logs.audit.view'));
+
+        // Activity Log (Spatie)
+        Route::get('/activity-log', \App\Livewire\Admin\ActivityLog::class)
+            ->name('activity-log')
+            ->middleware('can:logs.audit.view');
 
         /*
         |--------------------------------------------------------------------------

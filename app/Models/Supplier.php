@@ -6,9 +6,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Supplier extends BaseModel
 {
+    use LogsActivity;
+
     protected ?string $moduleKey = 'suppliers';
 
     protected $fillable = ['branch_id', 'name', 'email', 'phone', 'address', 'tax_number', 'is_active', 'extra_attributes'];
@@ -23,5 +27,14 @@ class Supplier extends BaseModel
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'phone', 'is_active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Supplier {$this->name} was {$eventName}");
     }
 }

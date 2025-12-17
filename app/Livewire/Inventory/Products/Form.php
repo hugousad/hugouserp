@@ -323,15 +323,18 @@ class Form extends Component
                 ->toArray();
 
             if (! empty($enabledModuleIds)) {
-                // Only show modules that support items/products
+                // Only show modules that support items/products and are enabled for this branch
                 $modules = Module::where('is_active', true)
                     ->where('supports_items', true)
                     ->whereIn('id', $enabledModuleIds)
                     ->orderBy('sort_order')
                     ->get();
             }
-        } else {
-            // Only show modules that support items/products
+        }
+        
+        // Fallback: If no branch-specific modules found (or user has no branch), show all active modules that support items
+        // This ensures users can always see modules even if branch modules aren't configured
+        if ($modules->isEmpty()) {
             $modules = Module::where('is_active', true)
                 ->where('supports_items', true)
                 ->orderBy('sort_order')
