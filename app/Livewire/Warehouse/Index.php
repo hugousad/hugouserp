@@ -32,6 +32,16 @@ class Index extends Component
     #[Url]
     public string $warehouseId = '';
 
+    // Modal properties
+    public bool $showModal = false;
+    public ?int $editingId = null;
+    public string $name = '';
+    public string $code = '';
+    public string $type = 'main';
+    public string $status = 'active';
+    public string $address = '';
+    public string $notes = '';
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -41,6 +51,122 @@ class Index extends Component
     {
         $this->activeTab = $tab;
         $this->resetPage();
+    }
+
+    public function openModal(?int $id = null): void
+    {
+        $this->resetForm();
+
+        if ($id) {
+            $warehouse = Warehouse::findOrFail($id);
+            $this->editingId = $warehouse->id;
+            $this->name = $warehouse->name;
+            $this->code = $warehouse->code ?? '';
+            $this->type = $warehouse->type ?? 'main';
+            $this->status = $warehouse->status ?? 'active';
+            $this->address = $warehouse->address ?? '';
+            $this->notes = $warehouse->notes ?? '';
+        }
+
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->resetForm();
+    }
+
+    protected function resetForm(): void
+    {
+        $this->editingId = null;
+        $this->name = '';
+        $this->code = '';
+        $this->type = 'main';
+        $this->status = 'active';
+        $this->address = '';
+        $this->notes = '';
+        $this->resetValidation();
+    }
+
+    public function save(): void
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:50',
+            'type' => 'nullable|string|max:50',
+            'status' => 'required|in:active,inactive',
+            'address' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:1000',
+        ];
+
+        $this->validate($rules);
+
+        $user = auth()->user();
+
+        $data = [
+            'name' => $this->name,
+            'code' => $this->code ?: null,
+            'type' => $this->type,
+            'status' => $this->status,
+            'address' => $this->address ?: null,
+            'notes' => $this->notes ?: null,
+            'branch_id' => $user?->branch_id,
+        ];
+
+        try {
+            if ($this->editingId) {
+                $warehouse = Warehouse::findOrFail($this->editingId);
+                $data['updated_by'] = $user?->id;
+                $warehouse->update($data);
+                session()->flash('success', __('Warehouse updated successfully'));
+            } else {
+                $data['created_by'] = $user?->id;
+                Warehouse::create($data);
+                session()->flash('success', __('Warehouse created successfully'));
+            }
+
+            $this->closeModal();
+            $this->resetPage();
+            Cache::forget('warehouse_stats_'.($user?->branch_id ?? 'all'));
+            Cache::forget('all_warehouses_'.($user?->branch_id ?? 'all'));
+        } catch (\Exception $e) {
+            $this->addError('name', __('Failed to save warehouse. Please try again.'));
+        }
+    }
+
+    public function delete(int $id): void
+    {
+        $this->authorize('warehouse.manage');
+        
+        $warehouse = Warehouse::find($id);
+        if ($warehouse) {
+            if ($warehouse->stockMovements()->count() > 0) {
+                session()->flash('error', __('Cannot delete warehouse with stock movements'));
+                return;
+            }
+            $warehouse->delete();
+            session()->flash('success', __('Warehouse deleted successfully'));
+            
+            $user = auth()->user();
+            Cache::forget('warehouse_stats_'.($user?->branch_id ?? 'all'));
+            Cache::forget('all_warehouses_'.($user?->branch_id ?? 'all'));
+        }
+    }
+
+    public function toggleStatus(int $id): void
+    {
+        $this->authorize('warehouse.manage');
+        
+        $warehouse = Warehouse::find($id);
+        if ($warehouse) {
+            $newStatus = $warehouse->status === 'active' ? 'inactive' : 'active';
+            $warehouse->update(['status' => $newStatus]);
+            
+            $user = auth()->user();
+            Cache::forget('warehouse_stats_'.($user?->branch_id ?? 'all'));
+            Cache::forget('all_warehouses_'.($user?->branch_id ?? 'all'));
+        }
     }
 
     public function getStatistics(): array

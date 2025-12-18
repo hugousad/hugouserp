@@ -840,7 +840,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/stores/orders/export', StoreOrdersExportController::class)
             ->name('stores.orders.export')
-            ->middleware('can:stores.view');
+            ->middleware('can:store.reports.dashboard');
 
         // API Documentation
         Route::get('/api-docs', \App\Livewire\Admin\ApiDocumentation::class)
