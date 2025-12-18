@@ -32,6 +32,10 @@ class CustomerUpdateRequest extends FormRequest
             'discount_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
             'customer_group' => ['sometimes', 'nullable', 'string', 'max:191'],
             'preferred_payment_method' => ['sometimes', 'nullable', 'string', 'max:191'],
-        ], $this->paymentTermsRules(false));  // false = optional validation
+        ], 
+        $this->paymentTermsRules(false),
+        $this->paymentTermsDaysRules(false),
+        $this->paymentDueDaysRules(false)
+        );
     }
 }

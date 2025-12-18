@@ -30,6 +30,10 @@ class CustomerStoreRequest extends FormRequest
             'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'customer_group' => ['nullable', 'string', 'max:191'],
             'preferred_payment_method' => ['nullable', 'string', 'max:191'],
-        ], $this->paymentTermsRules());
+        ], 
+        $this->paymentTermsRules(),
+        $this->paymentTermsDaysRules(),
+        $this->paymentDueDaysRules()
+        );
     }
 }
