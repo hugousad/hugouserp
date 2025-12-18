@@ -84,7 +84,26 @@ class Form extends Component
             $this->authorize('customers.manage');
             $this->customer = $customer;
             $this->editMode = true;
-            $this->fill($customer->toArray());
+            
+            // Explicitly set all fields to ensure proper initialization
+            $this->name = $customer->name ?? '';
+            $this->email = $customer->email ?? '';
+            $this->phone = $customer->phone ?? '';
+            $this->phone2 = $customer->phone2 ?? '';
+            $this->address = $customer->address ?? '';
+            $this->city = $customer->city ?? '';
+            $this->country = $customer->country ?? '';
+            $this->tax_number = $customer->tax_number ?? '';
+            $this->company_name = $customer->company_name ?? '';
+            $this->customer_type = $customer->customer_type ?? 'individual';
+            $this->credit_limit = (float) ($customer->credit_limit ?? 0);
+            $this->discount_percentage = (float) ($customer->discount_percentage ?? 0);
+            $this->payment_terms = $customer->payment_terms ?? '';
+            $this->payment_terms_days = (int) ($customer->payment_terms_days ?? 30);
+            $this->customer_group = $customer->customer_group ?? '';
+            $this->preferred_payment_method = $customer->preferred_payment_method ?? '';
+            $this->notes = $customer->notes ?? '';
+            $this->is_active = (bool) ($customer->is_active ?? true);
         } else {
             $this->authorize('customers.manage');
         }

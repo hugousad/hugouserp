@@ -100,7 +100,25 @@ class Form extends Component
         if ($supplier && $supplier->exists) {
             $this->supplier = $supplier;
             $this->editMode = true;
-            $this->fill($supplier->toArray());
+            
+            // Explicitly set all fields to ensure proper initialization
+            $this->name = $supplier->name ?? '';
+            $this->email = $supplier->email ?? '';
+            $this->phone = $supplier->phone ?? '';
+            $this->address = $supplier->address ?? '';
+            $this->city = $supplier->city ?? '';
+            $this->country = $supplier->country ?? '';
+            $this->tax_number = $supplier->tax_number ?? '';
+            $this->company_name = $supplier->company_name ?? '';
+            $this->contact_person = $supplier->contact_person ?? '';
+            $this->payment_terms = $supplier->payment_terms ?? '';
+            $this->minimum_order_value = (float) ($supplier->minimum_order_value ?? 0);
+            $this->supplier_rating = $supplier->supplier_rating ?? '';
+            $this->quality_rating = (float) ($supplier->quality_rating ?? 0);
+            $this->delivery_rating = (float) ($supplier->delivery_rating ?? 0);
+            $this->service_rating = (float) ($supplier->service_rating ?? 0);
+            $this->notes = $supplier->notes ?? '';
+            $this->is_active = (bool) ($supplier->is_active ?? true);
         }
     }
 
