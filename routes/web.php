@@ -212,11 +212,11 @@ Route::middleware('auth')->group(function () {
 
         // Export & Import
         Route::get('/export', \App\Http\Controllers\Branch\Sales\ExportImportController::class . '@exportSales')
-            ->name('export')
+            ->name('sales.export')
             ->middleware('can:sales.export');
 
         Route::post('/import', \App\Http\Controllers\Branch\Sales\ExportImportController::class . '@importSales')
-            ->name('import')
+            ->name('sales.import')
             ->middleware('can:sales.import');
 
         Route::get('/{sale}', \App\Livewire\Sales\Show::class)
@@ -278,11 +278,11 @@ Route::middleware('auth')->group(function () {
 
         // Export & Import
         Route::get('/export', \App\Http\Controllers\Branch\Purchases\ExportImportController::class . '@exportPurchases')
-            ->name('export')
+            ->name('purchases.export')
             ->middleware('can:purchases.export');
 
         Route::post('/import', \App\Http\Controllers\Branch\Purchases\ExportImportController::class . '@importPurchases')
-            ->name('import')
+            ->name('purchases.import')
             ->middleware('can:purchases.import');
 
         // Wildcard routes must come last

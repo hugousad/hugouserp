@@ -147,7 +147,7 @@ class ExportImportController extends Controller
                 try {
                     // Find or create sale
                     $saleData = [
-                        'reference' => $rowData['reference'] ?? 'IMPORT-' . time() . '-' . $rowNum,
+                        'reference' => $rowData['reference'] ?? 'IMP-' . date('Ymd') . '-' . \Str::uuid()->toString(),
                         'posted_at' => $rowData['date'],
                         'grand_total' => (float) $rowData['total'],
                         'subtotal' => (float) ($rowData['subtotal'] ?? $rowData['total']),

@@ -63,7 +63,7 @@ class AuditViewButtons extends Command
                 if (!preg_match('/(wire:click|@click|onclick|type=["\']submit["\']|form=)/', $line)) {
                     // Check if it's within a form (rough check)
                     $this->issues[] = [
-                        'file' => str_replace(resource_path(), '', $filePath),
+                        'file' => str_replace(resource_path() . DIRECTORY_SEPARATOR, '', $filePath),
                         'line' => $lineNum + 1,
                         'issue' => 'Button without action',
                         'code' => $line,
@@ -75,7 +75,7 @@ class AuditViewButtons extends Command
                     $method = trim($matches[1]);
                     if (empty($method) || $method === '$refresh') {
                         $this->issues[] = [
-                            'file' => str_replace(resource_path(), '', $filePath),
+                            'file' => str_replace(resource_path() . DIRECTORY_SEPARATOR, '', $filePath),
                             'line' => $lineNum + 1,
                             'issue' => 'wire:click with empty or $refresh method',
                             'code' => $line,
@@ -88,7 +88,7 @@ class AuditViewButtons extends Command
             if (preg_match('/<a[^>]*class=["\'][^"\']*btn[^"\']*["\'][^>]*>/', $line)) {
                 if (!preg_match('/(href=|wire:click|@click|onclick)/', $line)) {
                     $this->issues[] = [
-                        'file' => str_replace(resource_path(), '', $filePath),
+                        'file' => str_replace(resource_path() . DIRECTORY_SEPARATOR, '', $filePath),
                         'line' => $lineNum + 1,
                         'issue' => 'Button-styled anchor without action',
                         'code' => $line,
@@ -100,7 +100,7 @@ class AuditViewButtons extends Command
             if (preg_match('/<button[^>]*disabled[^>]*>/', $line)) {
                 if (!preg_match('/(wire:loading|x-bind:disabled|\$wire)/', $line)) {
                     $this->issues[] = [
-                        'file' => str_replace(resource_path(), '', $filePath),
+                        'file' => str_replace(resource_path() . DIRECTORY_SEPARATOR, '', $filePath),
                         'line' => $lineNum + 1,
                         'issue' => 'Button permanently disabled (not conditionally)',
                         'code' => $line,

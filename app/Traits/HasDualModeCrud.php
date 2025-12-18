@@ -72,7 +72,7 @@ trait HasDualModeCrud
     /**
      * Navigate to dedicated create page
      */
-    public function goToCreatePage(): void
+    public function goToCreatePage()
     {
         $currentRoute = request()->route()->getName();
         $createRoute = str_replace('.index', '.create', $currentRoute);
@@ -80,12 +80,15 @@ trait HasDualModeCrud
         if (\Route::has($createRoute)) {
             return redirect()->route($createRoute);
         }
+        
+        // Fallback to current page if route doesn't exist
+        return redirect()->back()->with('error', __('Create page not available'));
     }
 
     /**
      * Navigate to dedicated edit page
      */
-    public function goToEditPage(int $id): void
+    public function goToEditPage(int $id)
     {
         $currentRoute = request()->route()->getName();
         $editRoute = str_replace('.index', '.edit', $currentRoute);
@@ -93,12 +96,15 @@ trait HasDualModeCrud
         if (\Route::has($editRoute)) {
             return redirect()->route($editRoute, ['id' => $id]);
         }
+        
+        // Fallback to current page if route doesn't exist
+        return redirect()->back()->with('error', __('Edit page not available'));
     }
 
     /**
      * Return to index/list page
      */
-    public function goToIndex(): void
+    public function goToIndex()
     {
         $currentRoute = request()->route()->getName();
         
