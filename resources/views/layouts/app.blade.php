@@ -106,7 +106,7 @@
 <div class="min-h-screen flex {{ $dir === 'rtl' ? 'flex-row-reverse' : 'flex-row' }}">
 
     {{-- Sidebar --}}
-    @includeIf('layouts.sidebar-improved')
+    @includeIf('layouts.sidebar')
 
     {{-- Main --}}
     <div class="flex-1 flex flex-col min-h-screen">
@@ -395,14 +395,6 @@
                 }
             }, { once: true, passive: true });
         });
-        
-        // Auto-scroll to active menu item in sidebar
-        const activeItem = document.querySelector('.sidebar-link.active, .sidebar-link-secondary.active');
-        if (activeItem) {
-            setTimeout(() => {
-                activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        }
     });
     
     // Show loading indicator during Turbo navigation (only if Turbo is loaded)
