@@ -11,7 +11,7 @@
     </div>
 
 
-    <div class="rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-700 flex flex-wrap gap-3 items-end">
+    <div class="rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
         <div>
             <label class="block text-[11px] font-medium text-slate-500 mb-0.5">
                 {{ __('Actor') }}
@@ -44,7 +44,8 @@
 
 
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-100 text-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     <th class="px-3 py-2 text-left text-xs font-semibold text-slate-600">
@@ -112,6 +113,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
 
         <div class="border-t border-slate-100 bg-slate-50 px-3 py-2">
             {{ $logs->links() }}

@@ -6,9 +6,11 @@ namespace App\Livewire\Admin;
 
 use App\Models\CurrencyRate;
 use App\Services\CurrencyService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('layouts.app')]
 class CurrencyRates extends Component
 {
     use WithPagination;

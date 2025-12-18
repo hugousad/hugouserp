@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Admin;
 
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Artisan;
 
+#[Layout('layouts.app')]
 class TranslationManager extends Component
 {
     use WithPagination;

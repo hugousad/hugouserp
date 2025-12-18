@@ -7,10 +7,12 @@ namespace App\Livewire\Admin;
 use App\Models\Media;
 use App\Services\ImageOptimizationService;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
+#[Layout('layouts.app')]
 class MediaLibrary extends Component
 {
     use WithFileUploads, WithPagination;
