@@ -421,4 +421,59 @@ class AccountingService
 
         return (float) ($result ?? 0);
     }
+
+    /**
+     * Get account ID from mapping key
+     * 
+     * @param string $key Mapping key (e.g., 'fixed_assets.depreciation_expense')
+     * @return int|null Account ID or null if not configured
+     */
+    public function getAccountMapping(string $key): ?int
+    {
+        return AccountMapping::where('key', $key)
+            ->value('account_id');
+    }
+
+    /**
+     * Create a journal entry with lines
+     * 
+     * @param array $data Entry data including lines array
+     * @return JournalEntry Created journal entry
+     * @throws Exception If entry is not balanced
+     */
+    public function createEntry(array $data): JournalEntry
+    {
+        $lines = $data['lines'] ?? [];
+        
+        if (empty($lines)) {
+            throw new Exception('Journal entry must have at least one line');
+        }
+
+        if (!$this->validateBalancedEntry($lines)) {
+            throw new Exception('Journal entry debits and credits must balance');
+        }
+
+        return DB::transaction(function () use ($data, $lines) {
+            $entry = JournalEntry::create([
+                'branch_id' => $data['branch_id'] ?? auth()->user()?->branch_id ?? 1,
+                'reference_number' => $data['reference_number'] ?? $this->generateReferenceNumber('JE'),
+                'entry_date' => $data['entry_date'] ?? now(),
+                'description' => $data['description'] ?? '',
+                'status' => 'posted',
+                'created_by' => auth()->id(),
+            ]);
+
+            foreach ($lines as $line) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id' => $line['account_id'],
+                    'debit' => $line['debit'] ?? 0,
+                    'credit' => $line['credit'] ?? 0,
+                    'description' => $line['description'] ?? '',
+                ]);
+            }
+
+            return $entry->fresh('lines');
+        });
+    }
 }
