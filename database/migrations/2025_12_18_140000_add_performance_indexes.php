@@ -193,65 +193,161 @@ return new class extends Migration
 
         if (Schema::hasTable('purchases')) {
             Schema::table('purchases', function (Blueprint $table) {
-                $table->dropIndex(['supplier_id']);
-                $table->dropIndex(['branch_id']);
-                $table->dropIndex(['status']);
-                $table->dropIndex(['posted_at']);
+                try {
+                    $table->dropIndex(['supplier_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['branch_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['status']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['posted_at']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('products')) {
             Schema::table('products', function (Blueprint $table) {
-                $table->dropIndex(['sku']);
-                $table->dropIndex(['barcode']);
-                $table->dropIndex(['category_id']);
-                $table->dropIndex(['is_active']);
+                try {
+                    $table->dropIndex(['sku']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['barcode']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['category_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['is_active']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('customers')) {
             Schema::table('customers', function (Blueprint $table) {
-                $table->dropIndex(['email']);
-                $table->dropIndex(['phone']);
-                $table->dropIndex(['branch_id']);
+                try {
+                    $table->dropIndex(['email']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['phone']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['branch_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('suppliers')) {
             Schema::table('suppliers', function (Blueprint $table) {
-                $table->dropIndex(['email']);
-                $table->dropIndex(['phone']);
+                try {
+                    $table->dropIndex(['email']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['phone']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('rental_contracts')) {
             Schema::table('rental_contracts', function (Blueprint $table) {
-                $table->dropIndex(['status']);
-                $table->dropIndex(['start_date']);
-                $table->dropIndex(['end_date']);
+                try {
+                    $table->dropIndex(['status']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['start_date']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['end_date']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('hr_employees')) {
             Schema::table('hr_employees', function (Blueprint $table) {
-                $table->dropIndex(['branch_id']);
-                $table->dropIndex(['is_active']);
+                try {
+                    $table->dropIndex(['branch_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['is_active']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('attendances')) {
             Schema::table('attendances', function (Blueprint $table) {
-                $table->dropIndex(['employee_id']);
-                $table->dropIndex(['date']);
-                $table->dropIndex(['status']);
+                try {
+                    $table->dropIndex(['employee_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['date']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['status']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
 
         if (Schema::hasTable('stock_movements')) {
             Schema::table('stock_movements', function (Blueprint $table) {
-                $table->dropIndex(['product_id']);
-                $table->dropIndex(['warehouse_id']);
-                $table->dropIndex(['created_at']);
+                try {
+                    $table->dropIndex(['product_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['warehouse_id']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
+                try {
+                    $table->dropIndex(['created_at']);
+                } catch (\Exception $e) {
+                    // Index may not exist
+                }
             });
         }
     }

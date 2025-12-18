@@ -65,7 +65,7 @@ return new class extends Migration
             $table->decimal('quality_rating', 3, 2)->default(0)->after('preferred_currency')->comment('Quality rating 0-5');
             $table->decimal('delivery_rating', 3, 2)->default(0)->after('quality_rating')->comment('On-time delivery rating 0-5');
             $table->decimal('service_rating', 3, 2)->default(0)->after('delivery_rating')->comment('Service rating 0-5');
-            $table->integer('total_orders', )->default(0)->after('service_rating')->comment('Total number of orders placed');
+            $table->integer('total_orders')->default(0)->after('service_rating')->comment('Total number of orders placed');
             
             // Contact info
             $table->string('website')->nullable()->after('total_orders')->comment('Supplier website');
