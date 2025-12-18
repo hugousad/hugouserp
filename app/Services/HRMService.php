@@ -206,7 +206,8 @@ class HRMService implements HRMServiceInterface
 
             $dailyRate = (float) $emp->salary / 30;
 
-            return round($dailyRate * $absenceDays, 2);
+            // Use bcmath for precise absence deduction
+            return (float) bcmul((string) $dailyRate, (string) $absenceDays, 2);
         } catch (\Exception $e) {
             Log::warning('Failed to calculate absence deduction', [
                 'employee_id' => $emp->getKey(),
