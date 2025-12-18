@@ -50,8 +50,26 @@
                         <div class="flex gap-3">
                             {{-- Icon --}}
                             <div class="flex-shrink-0">
-                                <div class="w-10 h-10 rounded-full bg-{{ $notification['color'] }}-100 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-{{ $notification['color'] }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @php
+                                    $bgClass = match($notification['color']) {
+                                        'green' => 'bg-green-100',
+                                        'blue' => 'bg-blue-100',
+                                        'purple' => 'bg-purple-100',
+                                        'rose' => 'bg-rose-100',
+                                        'emerald' => 'bg-emerald-100',
+                                        default => 'bg-gray-100'
+                                    };
+                                    $textClass = match($notification['color']) {
+                                        'green' => 'text-green-600',
+                                        'blue' => 'text-blue-600',
+                                        'purple' => 'text-purple-600',
+                                        'rose' => 'text-rose-600',
+                                        'emerald' => 'text-emerald-600',
+                                        default => 'text-gray-600'
+                                    };
+                                @endphp
+                                <div class="w-10 h-10 rounded-full {{ $bgClass }} flex items-center justify-center">
+                                    <svg class="w-5 h-5 {{ $textClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $notification['icon'] }}"/>
                                     </svg>
                                 </div>

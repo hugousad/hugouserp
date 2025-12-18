@@ -67,6 +67,26 @@
                 @endphp
 
                 <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                    @php
+                        $bgClass = match($color) {
+                            'emerald' => 'bg-emerald-100',
+                            'blue' => 'bg-blue-100',
+                            'purple' => 'bg-purple-100',
+                            'rose' => 'bg-rose-100',
+                            'orange' => 'bg-orange-100',
+                            'indigo' => 'bg-indigo-100',
+                            default => 'bg-gray-100'
+                        };
+                        $textClass = match($color) {
+                            'emerald' => 'text-emerald-600',
+                            'blue' => 'text-blue-600',
+                            'purple' => 'text-purple-600',
+                            'rose' => 'text-rose-600',
+                            'orange' => 'text-orange-600',
+                            'indigo' => 'text-indigo-600',
+                            default => 'text-gray-600'
+                        };
+                    @endphp
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <p class="text-sm text-slate-600 font-medium">{{ $title }}</p>
@@ -74,8 +94,8 @@
                                 {{ $prefix }}{{ $value }}{{ $suffix }}
                             </p>
                         </div>
-                        <div class="w-12 h-12 rounded-full bg-{{ $color }}-100 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-6 h-6 text-{{ $color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 rounded-full {{ $bgClass }} flex items-center justify-center flex-shrink-0">
+                            <svg class="w-6 h-6 {{ $textClass }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
                             </svg>
                         </div>

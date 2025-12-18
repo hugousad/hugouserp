@@ -85,9 +85,17 @@ class DashboardWidgets extends Component
                 'active_products' => $productsQuery->where('is_active', true)->count(),
                 'total_customers' => $customersQuery->count(),
                 'new_customers_month' => $customersQuery->whereMonth('created_at', now()->month)->count(),
-                'low_stock_count' => $productsQuery->whereNotNull('min_stock')
-                    ->where('min_stock', '>', 0)
-                    ->whereRaw('COALESCE((SELECT SUM(CASE WHEN direction = \'in\' THEN qty ELSE -qty END) FROM stock_movements WHERE stock_movements.product_id = products.id), 0) <= min_stock')
+                // Use indexed query with proper joins for better performance
+                'low_stock_count' => DB::table('products')
+                    ->leftJoin('stock_movements', 'stock_movements.product_id', '=', 'products.id')
+                    ->whereNull('products.deleted_at')
+                    ->whereNotNull('products.min_stock')
+                    ->where('products.min_stock', '>', 0)
+                    ->when(!$isAdmin && $branchId, fn($q) => $q->where('products.branch_id', $branchId))
+                    ->select('products.id')
+                    ->selectRaw('COALESCE(SUM(CASE WHEN stock_movements.direction = \'in\' THEN stock_movements.qty ELSE -stock_movements.qty END), 0) as current_stock')
+                    ->groupBy('products.id', 'products.min_stock')
+                    ->havingRaw('current_stock <= products.min_stock')
                     ->count(),
                 'pending_orders' => $salesQuery->where('status', 'pending')->count(),
             ];
