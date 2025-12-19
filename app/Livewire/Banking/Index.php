@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire\Banking;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use AuthorizesRequests;
+
     public function mount(): void
     {
         $this->authorize('banking.view');
