@@ -4,14 +4,14 @@
 - **Severity:** High  
 - **Type:** Security  
 - **Location:** `app/Livewire/Admin/MediaLibrary.php` (upload loop around lines 40-75)  
-- **Description:** Uploads are validated only with `file|max:10240` and stored to the public disk. There is no MIME/extension allow‑list.  
+- **Description:** Uploads are validated only with `file|max:10240` and stored to the public disk. There is no MIME/extension allowlist.  
 - **Impact:** Allows uploading executable/HTML files reachable via public URLs → remote code delivery/stored XSS risk.  
 - **Steps to Reproduce:**  
   1) Login as user with `media.upload`.  
   2) Upload a `.php` or `.html` file.  
   3) Open the generated public URL; note execution/rendering.  
 - **Evidence:** Validation rule omits `mimes`/`mimetypes`; `Storage::disk('public')->url` is used after `store`.  
-- **Proposed Fix:** Add strict MIME/extension allow‑list, consider private storage with signed URLs and AV scanning.  
+- **Proposed Fix:** Add strict MIME/extension allowlist, consider private storage with signed URLs and AV scanning.  
 - **Test to Add:** Livewire test asserting `.php/.html` upload fails validation and no `Media` record is created.
 
 ### BUG-002 — Search filter mixes OR conditions and bypasses ownership filter
@@ -32,14 +32,14 @@
 - **Severity:** High  
 - **Type:** Security  
 - **Location:** `app/Livewire/Documents/Form.php` (lines ~86-104) and `app/Services/DocumentService.php` (lines ~18-71)  
-- **Description:** Validation is only `file|max:51200`; files are stored to `public` without MIME allow‑list.  
+- **Description:** Validation is only `file|max:51200`; files are stored to `public` without MIME allowlist.  
 - **Impact:** Attackers can host HTML/JS or executables via public URLs → XSS/malware distribution.  
 - **Steps to Reproduce:**  
   1) Create a document with an `.html` upload.  
   2) Access stored file URL.  
   3) Browser executes HTML/JS.  
 - **Evidence:** Missing `mimes`/`mimetypes`; `store('documents','public')` persists files unchanged.  
-- **Proposed Fix:** Enforce MIME/extension allow‑list, virus-scan, prefer non‑public disk with signed downloads.  
+- **Proposed Fix:** Enforce MIME/extension allowlist, virus-scan, prefer non‑public disk with signed downloads.  
 - **Test to Add:** Livewire test that `.html` upload fails validation and nothing is stored nor inserted.
 
 ### BUG-004 — Document sharing allows sharing without ownership verification
