@@ -77,3 +77,5 @@
 - [x] Completed performance audit (queries/reports/caching/queues)  
 - [x] Produced full prioritized bug list with repro + fixes + tests  
 - [x] Final consolidated report delivered
+
+CodeQL: Executed; no analyzable code changes detected, so no analysis was run.
