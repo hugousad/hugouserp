@@ -6,12 +6,16 @@ namespace App\Livewire\Suppliers;
 
 use App\Models\Supplier;
 use App\Traits\HasExport;
+use App\Traits\HasSortableColumns;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesRequests;
     use HasExport;
+    use HasSortableColumns;
     use WithPagination;
 
     public string $search = '';
@@ -22,6 +26,14 @@ class Index extends Component
 
     protected $queryString = ['search'];
 
+    /**
+     * Define allowed sort columns to prevent SQL injection.
+     */
+    protected function allowedSortColumns(): array
+    {
+        return ['id', 'name', 'email', 'phone', 'balance', 'created_at', 'updated_at'];
+    }
+
     public function mount(): void
     {
         $this->initializeExport('suppliers');
@@ -30,16 +42,6 @@ class Index extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
-    }
-
-    public function sortBy(string $field): void
-    {
-        if ($this->sortField === $field) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            $this->sortField = $field;
-            $this->sortDirection = 'asc';
-        }
     }
 
     public function delete(int $id): void
@@ -55,7 +57,7 @@ class Index extends Component
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")
                 ->orWhere('phone', 'like', "%{$this->search}%"))
-            ->orderBy($this->sortField, $this->sortDirection)
+            ->orderBy($this->getSortField(), $this->getSortDirection())
             ->paginate(15);
 
         return view('livewire.suppliers.index', [
@@ -69,7 +71,7 @@ class Index extends Component
             ->when($this->search, fn ($q) => $q->where('name', 'like', "%{$this->search}%")
                 ->orWhere('email', 'like', "%{$this->search}%")
                 ->orWhere('phone', 'like', "%{$this->search}%"))
-            ->orderBy($this->sortField, $this->sortDirection)
+            ->orderBy($this->getSortField(), $this->getSortDirection())
             ->select(['id', 'name', 'email', 'phone', 'address', 'balance', 'created_at'])
             ->get();
 
