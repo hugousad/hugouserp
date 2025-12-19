@@ -226,24 +226,40 @@ class DocumentService
      */
     public function getStatistics(?int $branchId = null): array
     {
-        $query = Document::query();
+        $baseQuery = Document::query()
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId));
 
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
-
-        $totalSize = $query->sum('file_size');
+        $totalSize = (clone $baseQuery)->sum('file_size');
 
         return [
-            'total_documents' => $query->count(),
+            'total_documents' => (clone $baseQuery)->count(),
             'total_size' => $totalSize,
             'total_size_formatted' => $this->uiHelper->formatBytes((int) $totalSize),
-            'by_category' => $query->select('category', DB::raw('count(*) as count'))
+            'by_category' => (clone $baseQuery)
+                ->select('category', DB::raw('count(*) as count'))
                 ->whereNotNull('category')
                 ->groupBy('category')
                 ->pluck('count', 'category')
                 ->toArray(),
-            'recent_uploads' => $query->latest()->limit(5)->get(),
+            'storage_by_type' => (clone $baseQuery)
+                ->select('mime_type',
+                    DB::raw('COUNT(*) as documents'),
+                    DB::raw('COALESCE(SUM(file_size), 0) as total_size'))
+                ->whereNotNull('mime_type')
+                ->groupBy('mime_type')
+                ->orderByDesc('total_size')
+                ->get(),
+            'recent_uploads' => (clone $baseQuery)->latest()->limit(5)->get(),
+            'top_uploaders' => (clone $baseQuery)
+                ->select('uploaded_by',
+                    DB::raw('COUNT(*) as documents_uploaded'),
+                    DB::raw('COALESCE(SUM(file_size), 0) as storage_used'))
+                ->whereNotNull('uploaded_by')
+                ->groupBy('uploaded_by')
+                ->orderByDesc('documents_uploaded')
+                ->limit(5)
+                ->with('uploader:id,name')
+                ->get(),
             'most_downloaded' => Document::withCount('activities')
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->orderBy('activities_count', 'desc')
