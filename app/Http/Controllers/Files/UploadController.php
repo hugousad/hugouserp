@@ -37,11 +37,13 @@ class UploadController extends Controller
             return $this->fail(__('File not found.'), 404);
         }
 
+        // Files are capped at 10MB via validation, so reading into memory is acceptable here
         $content = $storage->get($path);
+        $filename = str_replace(["\r", "\n", '"'], '', basename($path));
 
         return response($content, 200, [
             'Content-Type' => $storage->mimeType($path) ?: 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="'.basename($path).'"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
