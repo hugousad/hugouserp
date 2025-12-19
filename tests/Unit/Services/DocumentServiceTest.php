@@ -108,8 +108,6 @@ class DocumentServiceTest extends TestCase
         config(['filesystems.document_disk' => 'local']);
         $this->actingAs($this->user);
 
-        $this->expectException(ValidationException::class);
-
         try {
             $this->service->uploadDocument(
                 UploadedFile::fake()->create('payload.html', 10, 'text/html'),
@@ -122,7 +120,8 @@ class DocumentServiceTest extends TestCase
                     'branch_id' => $this->branch->id,
                 ]
             );
-        } finally {
+            $this->fail('Expected validation exception was not thrown.');
+        } catch (ValidationException $e) {
             $this->assertDatabaseCount('documents', 0);
             Storage::disk('local')->assertDirectoryEmpty('documents');
         }
