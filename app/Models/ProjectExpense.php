@@ -56,6 +56,11 @@ class ProjectExpense extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function requestedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class);

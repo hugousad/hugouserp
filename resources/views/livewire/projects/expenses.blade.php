@@ -25,7 +25,7 @@
             <tbody class="bg-white divide-y divide-slate-200">
                 @forelse($expenses as $expense)
                 <tr>
-                    <td class="px-4 py-3 text-sm">{{ $expense->date->format('Y-m-d') }}</td>
+                    <td class="px-4 py-3 text-sm">{{ optional($expense->expense_date)->format('Y-m-d') }}</td>
                     <td class="px-4 py-3 text-sm">{{ $expense->description }}</td>
                     <td class="px-4 py-3 text-sm">
                         <span class="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-800">
@@ -58,7 +58,7 @@
     <div class="bg-slate-50 rounded-lg p-4">
         <div class="flex items-center justify-between">
             <p class="text-sm text-slate-600">{{ __('Total Expenses') }}:</p>
-            <p class="text-xl font-bold text-slate-900">{{ number_format($totalExpenses, 2) }}</p>
+            <p class="text-xl font-bold text-slate-900">{{ number_format($totalExpenses ?? 0, 2) }}</p>
         </div>
     </div>
 

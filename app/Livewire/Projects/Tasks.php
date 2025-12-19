@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -18,9 +19,12 @@ class Tasks extends Component
 
     public Project $project;
     public ?ProjectTask $editingTask = null;
+    public bool $showModal = false;
+    public ?int $editingTaskId = null;
+    public array $form = [];
 
     // Form fields
-    public string $name = '';
+    public string $title = '';
     public ?string $description = null;
     public ?int $assigned_to = null;
     public ?int $parent_task_id = null;
@@ -36,22 +40,31 @@ class Tasks extends Component
     public function mount(int $projectId): void
     {
         $this->authorize('projects.tasks.view');
-        $this->project = Project::findOrFail($projectId);
+        $this->project = Project::query()
+            ->forUserBranches(auth()->user())
+            ->findOrFail($projectId);
     }
 
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'assigned_to' => ['nullable', 'exists:users,id'],
-            'parent_task_id' => ['nullable', 'exists:project_tasks,id'],
+            'parent_task_id' => [
+                'nullable',
+                Rule::exists('project_tasks', 'id')->where('project_id', $this->project->id)
+            ],
             'priority' => ['required', 'in:low,medium,high,critical'],
             'status' => ['required', 'in:pending,in_progress,review,completed,cancelled'],
             'start_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'estimated_hours' => ['required', 'numeric', 'min:0'],
             'progress' => ['required', 'integer', 'min:0', 'max:100'],
+            'selectedDependencies' => ['array'],
+            'selectedDependencies.*' => [
+                Rule::exists('project_tasks', 'id')->where('project_id', $this->project->id)
+            ],
         ];
     }
 
@@ -65,14 +78,16 @@ class Tasks extends Component
     public function editTask(int $id): void
     {
         $this->authorize('projects.tasks.manage');
-        $this->editingTask = ProjectTask::findOrFail($id);
+        $this->editingTask = $this->project->tasks()->findOrFail($id);
         $this->fill($this->editingTask->only([
-            'name', 'description', 'assigned_to', 'parent_task_id',
+            'title', 'description', 'assigned_to', 'parent_task_id',
             'priority', 'status', 'start_date', 'due_date',
             'estimated_hours', 'progress'
         ]));
-        $this->parent_task_id = $this->editingTask->parent_id;
-        $this->selectedDependencies = $this->editingTask->dependencies()->pluck('dependency_id')->toArray();
+        $this->selectedDependencies = $this->editingTask
+            ->dependencies()
+            ->pluck('project_tasks.id')
+            ->toArray();
     }
 
     public function save(): void
@@ -81,13 +96,10 @@ class Tasks extends Component
         $this->validate();
 
         $data = $this->only([
-            'name', 'description', 'assigned_to', 'parent_task_id',
+            'title', 'description', 'assigned_to', 'parent_task_id',
             'priority', 'status', 'start_date', 'due_date',
             'estimated_hours', 'progress'
         ]);
-
-        $data['parent_id'] = $data['parent_task_id'];
-        unset($data['parent_task_id']);
 
         if ($this->editingTask) {
             $this->editingTask->update($data);
@@ -110,7 +122,7 @@ class Tasks extends Component
     public function deleteTask(int $id): void
     {
         $this->authorize('projects.tasks.manage');
-        $task = ProjectTask::findOrFail($id);
+        $task = $this->project->tasks()->findOrFail($id);
         $task->delete();
         session()->flash('success', __('Task deleted successfully'));
     }
@@ -118,7 +130,7 @@ class Tasks extends Component
     public function resetForm(): void
     {
         $this->reset([
-            'name', 'description', 'assigned_to', 'parent_task_id',
+            'title', 'description', 'assigned_to', 'parent_task_id',
             'priority', 'status', 'start_date', 'due_date',
             'estimated_hours', 'progress', 'selectedDependencies'
         ]);
@@ -134,7 +146,7 @@ class Tasks extends Component
         $users = User::orderBy('name')->get();
         $availableTasks = $this->project->tasks()
             ->when($this->editingTask, fn($q) => $q->where('id', '!=', $this->editingTask->id))
-            ->orderBy('name')
+            ->orderBy('title')
             ->get();
 
         return view('livewire.projects.tasks', [

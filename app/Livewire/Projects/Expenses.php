@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\ProjectExpense;
 use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -19,22 +20,28 @@ class Expenses extends Component
 
     public Project $project;
     public ?ProjectExpense $editingExpense = null;
+    public bool $showModal = false;
+    public ?int $editingExpenseId = null;
+    public array $form = [];
 
     // Form fields
     public string $category = '';
     public float $amount = 0;
-    public ?string $date = null;
+    public ?string $expense_date = null;
     public ?string $vendor = null;
     public ?string $description = null;
-    public bool $requires_reimbursement = false;
-    public ?int $requested_by = null;
+    public bool $billable = true;
+    public ?int $user_id = null;
+    public ?int $task_id = null;
 
     public function mount(int $projectId): void
     {
         $this->authorize('projects.expenses.view');
-        $this->project = Project::findOrFail($projectId);
-        $this->date = now()->format('Y-m-d');
-        $this->requested_by = auth()->id();
+        $this->project = Project::query()
+            ->forUserBranches(auth()->user())
+            ->findOrFail($projectId);
+        $this->expense_date = now()->format('Y-m-d');
+        $this->user_id = auth()->id();
     }
 
     public function rules(): array
@@ -42,11 +49,15 @@ class Expenses extends Component
         return [
             'category' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'date' => ['required', 'date'],
+            'expense_date' => ['required', 'date'],
             'vendor' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'requires_reimbursement' => ['boolean'],
-            'requested_by' => ['required', 'exists:users,id'],
+            'billable' => ['boolean'],
+            'user_id' => ['required', 'exists:users,id'],
+            'task_id' => [
+                'nullable',
+                Rule::exists('project_tasks', 'id')->where('project_id', $this->project->id),
+            ],
         ];
     }
 
@@ -60,10 +71,10 @@ class Expenses extends Component
     public function editExpense(int $id): void
     {
         $this->authorize('projects.expenses.manage');
-        $this->editingExpense = ProjectExpense::findOrFail($id);
+        $this->editingExpense = $this->project->expenses()->findOrFail($id);
         $this->fill($this->editingExpense->only([
-            'category', 'amount', 'date', 'vendor', 'description',
-            'requires_reimbursement', 'requested_by'
+            'category', 'amount', 'expense_date', 'vendor', 'description',
+            'billable', 'user_id', 'task_id'
         ]));
     }
 
@@ -73,8 +84,8 @@ class Expenses extends Component
         $this->validate();
 
         $data = $this->only([
-            'category', 'amount', 'date', 'vendor', 'description',
-            'requires_reimbursement', 'requested_by'
+            'category', 'amount', 'expense_date', 'vendor', 'description',
+            'billable', 'user_id', 'task_id'
         ]);
 
         if ($this->editingExpense) {
@@ -94,23 +105,23 @@ class Expenses extends Component
     public function approve(int $id): void
     {
         $this->authorize('projects.expenses.approve');
-        $expense = ProjectExpense::findOrFail($id);
-        $expense->approve();
+        $expense = $this->project->expenses()->findOrFail($id);
+        $expense->approve(auth()->id());
         session()->flash('success', __('Expense approved successfully'));
     }
 
     public function reject(int $id, string $reason): void
     {
         $this->authorize('projects.expenses.approve');
-        $expense = ProjectExpense::findOrFail($id);
-        $expense->reject($reason);
+        $expense = $this->project->expenses()->findOrFail($id);
+        $expense->reject(auth()->id(), $reason);
         session()->flash('success', __('Expense rejected'));
     }
 
     public function deleteExpense(int $id): void
     {
         $this->authorize('projects.expenses.manage');
-        $expense = ProjectExpense::findOrFail($id);
+        $expense = $this->project->expenses()->findOrFail($id);
         $expense->delete();
         session()->flash('success', __('Expense deleted successfully'));
     }
@@ -118,17 +129,17 @@ class Expenses extends Component
     public function resetForm(): void
     {
         $this->reset([
-            'category', 'amount', 'vendor', 'description', 'requires_reimbursement'
+            'category', 'amount', 'vendor', 'description', 'billable', 'task_id'
         ]);
-        $this->date = now()->format('Y-m-d');
-        $this->requested_by = auth()->id();
+        $this->expense_date = now()->format('Y-m-d');
+        $this->user_id = auth()->id();
     }
 
     public function render()
     {
         $expenses = $this->project->expenses()
             ->with(['requestedBy'])
-            ->orderBy('date', 'desc')
+            ->orderBy('expense_date', 'desc')
             ->paginate(15);
 
         $users = User::orderBy('name')->get();
@@ -145,6 +156,7 @@ class Expenses extends Component
             'expenses' => $expenses,
             'users' => $users,
             'stats' => $stats,
+            'totalExpenses' => $stats['total_expenses'],
         ]);
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ProjectTask extends Model
 {
@@ -14,8 +15,8 @@ class ProjectTask extends Model
 
     protected $fillable = [
         'project_id',
-        'parent_id',
-        'name',
+        'parent_task_id',
+        'title',
         'description',
         'assigned_to',
         'status',
@@ -24,8 +25,6 @@ class ProjectTask extends Model
         'due_date',
         'estimated_hours',
         'progress',
-        'order',
-        'notes',
         'created_by',
         'updated_by',
     ];
@@ -35,7 +34,6 @@ class ProjectTask extends Model
         'due_date' => 'date',
         'estimated_hours' => 'decimal:2',
         'progress' => 'integer',
-        'order' => 'integer',
     ];
 
     // Relationships
@@ -44,14 +42,14 @@ class ProjectTask extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function parent(): BelongsTo
+    public function parentTask(): BelongsTo
     {
-        return $this->belongsTo(ProjectTask::class, 'parent_id');
+        return $this->belongsTo(ProjectTask::class, 'parent_task_id');
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany(ProjectTask::class, 'parent_id');
+        return $this->hasMany(ProjectTask::class, 'parent_task_id');
     }
 
     public function assignedTo(): BelongsTo
@@ -64,14 +62,24 @@ class ProjectTask extends Model
         return $this->hasMany(ProjectTimeLog::class, 'task_id');
     }
 
-    public function dependencies(): HasMany
+    public function dependencies(): BelongsToMany
     {
-        return $this->hasMany(TaskDependency::class, 'task_id');
+        return $this->belongsToMany(
+            ProjectTask::class,
+            'task_dependencies',
+            'task_id',
+            'depends_on_task_id'
+        );
     }
 
-    public function dependents(): HasMany
+    public function dependents(): BelongsToMany
     {
-        return $this->hasMany(TaskDependency::class, 'depends_on_task_id');
+        return $this->belongsToMany(
+            ProjectTask::class,
+            'task_dependencies',
+            'depends_on_task_id',
+            'task_id'
+        );
     }
 
     public function createdBy(): BelongsTo
@@ -121,8 +129,7 @@ class ProjectTask extends Model
     {
         // Check if all dependencies are completed
         $incompleteDependencies = $this->dependencies()
-            ->join('project_tasks', 'project_tasks.id', '=', 'task_dependencies.depends_on_task_id')
-            ->where('project_tasks.status', '!=', 'completed')
+            ->where('status', '!=', 'completed')
             ->count();
 
         return $incompleteDependencies === 0;
@@ -152,19 +159,13 @@ class ProjectTask extends Model
 
     public function isBlocking(): bool
     {
-        // Check if this task is blocking any other tasks
         return $this->dependents()
-            ->join('project_tasks', 'project_tasks.id', '=', 'task_dependencies.task_id')
-            ->where('project_tasks.status', '!=', 'completed')
+            ->where('status', '!=', 'completed')
             ->exists();
     }
 
     public function getDependentTasks()
     {
-        return ProjectTask::whereIn('id', function ($query) {
-            $query->select('task_id')
-                ->from('task_dependencies')
-                ->where('depends_on_task_id', $this->id);
-        })->get();
+        return $this->dependents()->get();
     }
 }
