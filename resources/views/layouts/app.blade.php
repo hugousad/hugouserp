@@ -9,7 +9,7 @@
 <html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $dir }}" class="h-full antialiased {{ $isDark ? 'dark' : '' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
     <title>@yield('title', config('app.name', 'Ghanem ERP'))</title>
 
@@ -36,7 +36,15 @@
 
     <style>
         * { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif !important; }
-        
+
+        html { scroll-behavior: smooth; }
+        body { min-height: 100vh; background-color: #f8fafc; }
+
+        img, svg, video, canvas { max-width: 100%; height: auto; }
+        .content-container { width: 100%; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .toolbar-wrap { flex-wrap: wrap; }
+
         /* Performance optimizations */
         .erp-card, .sidebar-link, table {
             contain: content;
@@ -109,13 +117,13 @@
     @includeIf('layouts.sidebar')
 
     {{-- Main --}}
-    <div class="flex-1 flex flex-col min-h-screen">
+    <div class="flex-1 flex flex-col min-h-screen w-full">
 
         {{-- Navbar --}}
         @includeIf('layouts.navbar')
 
-        <main class="flex-1">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+        <main class="flex-1 w-full">
+            <div class="content-container mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-4 space-y-4">
 
                 @hasSection('page-header')
                     @php
@@ -142,11 +150,11 @@
                         ];
                         $requiredPermission = $routePermissions[$routeName] ?? null;
                     @endphp
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between gap-3 toolbar-wrap w-full">
+                        <div class="flex flex-col gap-1 w-full sm:w-auto">
                             @yield('page-header')
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 toolbar-wrap justify-end">
                             @if ($requiredPermission)
                                 <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-600">
                                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -158,8 +166,8 @@
                     </div>
                 @else
 
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between gap-3 toolbar-wrap w-full">
+                        <div class="flex flex-col gap-1 w-full sm:w-auto">
                             @yield('page-header')
                         </div>
                         @yield('page-actions')
@@ -190,7 +198,7 @@
         </main>
 
         <footer class="border-t border-emerald-100/60 bg-white/80 backdrop-blur py-3 text-xs text-slate-500">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-2 flex-wrap w-full">
                 <span>&copy; {{ date('Y') }} {{ config('app.name', 'Ghanem ERP') }}</span>
                 <span class="hidden sm:inline">
                     {{ __('Powered by Laravel & Livewire') }}

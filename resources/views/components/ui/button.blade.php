@@ -10,16 +10,16 @@
 ])
 
 @php
-$baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+$baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 w-full sm:w-auto min-h-[44px]';
 
 $variantClasses = match($variant) {
-    'primary' => 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500',
-    'secondary' => 'bg-slate-200 hover:bg-slate-300 text-slate-900 focus:ring-slate-500 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100',
-    'danger' => 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500',
-    'success' => 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500',
-    'warning' => 'bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500',
-    'ghost' => 'bg-transparent hover:bg-slate-100 text-slate-700 focus:ring-slate-500 dark:hover:bg-slate-800 dark:text-slate-300',
-    default => 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500',
+    'primary' => 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 shadow-emerald-500/20 hover:shadow-md',
+    'secondary' => 'bg-slate-200 hover:bg-slate-300 text-slate-900 focus:ring-slate-500 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100 shadow-slate-400/20 hover:shadow-md',
+    'danger' => 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-red-500/20 hover:shadow-md',
+    'success' => 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 shadow-green-500/20 hover:shadow-md',
+    'warning' => 'bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500 shadow-amber-500/20 hover:shadow-md',
+    'ghost' => 'bg-transparent hover:bg-slate-100 text-slate-700 focus:ring-slate-500 dark:hover:bg-slate-800 dark:text-slate-300 shadow-none hover:shadow-sm',
+    default => 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500 shadow-emerald-500/20 hover:shadow-md',
 };
 
 $sizeClasses = match($size) {
