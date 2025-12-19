@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Manufacturing\ProductionOrders;
 
+use App\Livewire\Manufacturing\Concerns\StatsCacheVersion;
 use App\Models\ProductionOrder;
 use App\Traits\HasSortableColumns;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -18,6 +19,7 @@ class Index extends Component
     use AuthorizesRequests;
     use WithPagination;
     use HasSortableColumns;
+    use StatsCacheVersion;
 
     #[Url]
     public string $search = '';
@@ -65,17 +67,12 @@ class Index extends Component
             $baseQuery->where('branch_id', $user->branch_id);
         }
 
-        $lastUpdated = (clone $baseQuery)->max('updated_at');
-        $lastUpdatedKey = $lastUpdated
-            ? (is_string($lastUpdated) ? (strtotime($lastUpdated) ?: md5($lastUpdated)) : $lastUpdated->getTimestamp())
-            : 'none';
-
         $cacheKey = sprintf(
             'production_orders_stats_%s_%s_%s_%s',
             $user?->branch_id ?? 'all',
             $this->status ?: 'all',
             $this->priority ?: 'all',
-            $lastUpdatedKey
+            $this->statsCacheVersion($baseQuery)
         );
 
         return Cache::remember($cacheKey, 300, function () use ($baseQuery) {
