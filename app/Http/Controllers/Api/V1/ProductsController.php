@@ -161,6 +161,8 @@ class ProductsController extends BaseApiController
         // Map API fields to database columns
         $validated['default_price'] = $validated['price'];
         unset($validated['price']);
+        $quantity = (float) $validated['quantity'];
+        unset($validated['quantity']);
 
         if (isset($validated['cost_price'])) {
             $validated['cost'] = $validated['cost_price'];
@@ -171,6 +173,7 @@ class ProductsController extends BaseApiController
         $product = new Product($validated);
         $product->branch_id = $store->branch_id;
         $product->created_by = auth()->id();
+        $product->stock_quantity = $quantity;
         $product->save();
 
         if ($store && $request->filled('external_id')) {
@@ -228,6 +231,10 @@ class ProductsController extends BaseApiController
         if (isset($validated['cost_price'])) {
             $validated['cost'] = $validated['cost_price'];
             unset($validated['cost_price']);
+        }
+        if (array_key_exists('quantity', $validated)) {
+            $product->stock_quantity = (float) $validated['quantity'];
+            unset($validated['quantity']);
         }
 
         $product->fill($validated);

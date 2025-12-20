@@ -192,20 +192,21 @@ class NotesAttachments extends Component
         foreach ($this->newFiles as $file) {
             $path = $file->store('attachments/'.strtolower(class_basename($this->modelType)), 'local');
 
-            Attachment::create([
+            $attachment = new Attachment([
                 'attachable_type' => $this->modelType,
                 'attachable_id' => $this->modelId,
                 'filename' => basename($path),
                 'original_filename' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
                 'size' => $file->getSize(),
-                'disk' => 'local',
-                'path' => $path,
                 'type' => $this->getFileType($file->getMimeType()),
                 'description' => $this->fileDescription,
                 'branch_id' => $user?->branch_id,
                 'uploaded_by' => $user?->id,
             ]);
+            $attachment->disk = 'local';
+            $attachment->path = $path;
+            $attachment->mime_type = $file->getMimeType();
+            $attachment->save();
         }
 
         session()->flash('success', __('Files uploaded successfully'));

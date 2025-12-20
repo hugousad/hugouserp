@@ -179,6 +179,15 @@ class DocumentService
     public function shareDocument(Document $document, int $userId, string $permission = 'view', ?\DateTime $expiresAt = null): void
     {
         $this->ensureCanManageShares($document);
+        $targetUser = User::findOrFail($userId);
+
+        if ($document->branch_id && $targetUser->branch_id !== $document->branch_id) {
+            throw new AuthorizationException('You cannot share documents across branches.');
+        }
+
+        if ($document->branch_id && auth()->user()?->branch_id && auth()->user()->branch_id !== $document->branch_id) {
+            throw new AuthorizationException('You cannot share documents outside your branch.');
+        }
 
         DB::transaction(function () use ($document, $userId, $permission, $expiresAt) {
             $document->shares()->updateOrCreate(

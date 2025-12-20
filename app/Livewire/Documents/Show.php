@@ -88,6 +88,8 @@ class Show extends Component
     public function render()
     {
         $users = User::where('id', '!=', $this->document->uploaded_by)
+            ->when($this->document->branch_id, fn ($q) => $q->where('branch_id', $this->document->branch_id))
+            ->when(! $this->document->branch_id && auth()->user()?->branch_id, fn ($q) => $q->where('branch_id', auth()->user()->branch_id))
             ->orderBy('name')
             ->get();
 

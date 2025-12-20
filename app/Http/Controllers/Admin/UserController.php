@@ -30,12 +30,13 @@ class UserController extends Controller
             'is_active' => ['boolean'],
             'roles' => ['sometimes', 'array'],
         ]);
-        $user = User::create([
+        $user = new User([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
             'is_active' => $data['is_active'] ?? true,
         ]);
+        $user->password = Hash::make($data['password']);
+        $user->save();
         if (! empty($data['roles']) && method_exists($user, 'syncRoles')) {
             $user->syncRoles($data['roles']);
         }
@@ -57,8 +58,9 @@ class UserController extends Controller
             'is_active' => ['boolean'],
             'roles' => ['sometimes', 'array'],
         ]);
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        if (array_key_exists('password', $data)) {
+            $user->password = Hash::make($data['password']);
+            unset($data['password']);
         }
         $user->fill($data);
         $user->save();

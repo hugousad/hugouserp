@@ -21,15 +21,18 @@ class Attachment extends Model
         'attachable_id',
         'filename',
         'original_filename',
-        'mime_type',
         'size',
-        'disk',
-        'path',
         'type',
         'description',
         'metadata',
         'branch_id',
         'uploaded_by',
+    ];
+
+    protected $guarded = [
+        'disk',
+        'path',
+        'mime_type',
     ];
 
     protected $casts = [

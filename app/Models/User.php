@@ -35,7 +35,6 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     protected $fillable = [
         'name',
         'email',
-        'password',
         'phone',
         'is_active',
         'username',
@@ -47,12 +46,16 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
         'daily_discount_limit',
         'can_modify_price',
         'two_factor_enabled',
+        'max_sessions',
+        'avatar',
+    ];
+
+    protected $guarded = [
+        'password',
         'two_factor_secret',
         'two_factor_recovery_codes',
         'two_factor_confirmed_at',
-        'max_sessions',
         'password_changed_at',
-        'avatar',
     ];
 
     protected $hidden = [
