@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductStoreMapping;
 use App\Models\Store;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -50,9 +51,50 @@ class ProductStoreMappings extends Component
 
         if ($productId) {
             $this->product = Product::findOrFail($productId);
+            
+            // Enforce branch scoping: user must have access to product's branch
+            $this->authorizeProductBranch($this->product);
         }
 
         $this->loadStores();
+    }
+
+    /**
+     * Verify the user has a valid branch assignment.
+     */
+    protected function requireUserBranch(): int
+    {
+        $user = Auth::user();
+        
+        if (! $user || ! $user->branch_id) {
+            abort(403, __('User must be assigned to a branch to perform this action'));
+        }
+
+        return $user->branch_id;
+    }
+
+    /**
+     * Verify the product belongs to the user's branch.
+     */
+    protected function authorizeProductBranch(Product $product): void
+    {
+        $userBranchId = $this->requireUserBranch();
+        
+        if ($product->branch_id !== $userBranchId) {
+            abort(403, __('Access denied to product from another branch'));
+        }
+    }
+
+    /**
+     * Check if the user has the required permission.
+     */
+    protected function authorizeAction(string $permission): void
+    {
+        $user = Auth::user();
+        
+        if (! $user || ! $user->can($permission)) {
+            abort(403, __('Unauthorized'));
+        }
     }
 
     protected function loadStores(): void
@@ -76,10 +118,23 @@ class ProductStoreMappings extends Component
 
     public function openModal(?int $id = null): void
     {
+        // Require create or update permission based on action
+        if ($id) {
+            $this->authorizeAction('inventory.products.update');
+        } else {
+            $this->authorizeAction('inventory.products.create');
+        }
+        
         $this->resetForm();
 
         if ($id) {
-            $mapping = ProductStoreMapping::findOrFail($id);
+            $mapping = ProductStoreMapping::with('product')->findOrFail($id);
+            
+            // Ensure the mapping belongs to the user's branch
+            if ($mapping->product) {
+                $this->authorizeProductBranch($mapping->product);
+            }
+            
             $this->editingId = $mapping->id;
             $this->store_id = $mapping->store_id;
             $this->external_id = $mapping->external_id ?? '';
@@ -115,6 +170,20 @@ class ProductStoreMappings extends Component
 
     public function save(): void
     {
+        // Check authorization based on create vs update
+        if ($this->editingId) {
+            $this->authorizeAction('inventory.products.update');
+        } else {
+            $this->authorizeAction('inventory.products.create');
+        }
+        
+        // Ensure user has a branch and product belongs to their branch
+        if ($this->product) {
+            $this->authorizeProductBranch($this->product);
+        } else {
+            abort(422, __('Product is required'));
+        }
+        
         $this->validate();
 
         $data = [
@@ -125,21 +194,41 @@ class ProductStoreMappings extends Component
         ];
 
         if ($this->editingId) {
-            $mapping = ProductStoreMapping::findOrFail($this->editingId);
+            $mapping = ProductStoreMapping::with('product')->findOrFail($this->editingId);
+            
+            // Re-verify branch ownership before update
+            if ($mapping->product) {
+                $this->authorizeProductBranch($mapping->product);
+            }
+            
             $mapping->update($data);
             session()->flash('success', __('Mapping updated successfully'));
         } else {
-            $exists = ProductStoreMapping::where('product_id', $this->productId)
-                ->where('store_id', $this->store_id)
-                ->exists();
-
-            if ($exists) {
-                $this->addError('store_id', __('This product is already mapped to this store'));
-
-                return;
+            // Use firstOrCreate to handle concurrency (BUG-004)
+            // The database has a unique constraint on (product_id, store_id)
+            try {
+                DB::transaction(function () use ($data) {
+                    ProductStoreMapping::firstOrCreate(
+                        [
+                            'product_id' => $data['product_id'],
+                            'store_id' => $data['store_id'],
+                        ],
+                        [
+                            'external_id' => $data['external_id'],
+                            'external_sku' => $data['external_sku'],
+                        ]
+                    );
+                });
+            } catch (\Illuminate\Database\QueryException $e) {
+                // Handle unique constraint violation gracefully
+                if (str_contains($e->getMessage(), 'UNIQUE constraint failed') || 
+                    str_contains($e->getMessage(), 'Duplicate entry')) {
+                    $this->addError('store_id', __('This product is already mapped to this store'));
+                    return;
+                }
+                throw $e;
             }
-
-            ProductStoreMapping::create($data);
+            
             session()->flash('success', __('Mapping created successfully'));
         }
 
@@ -148,12 +237,16 @@ class ProductStoreMappings extends Component
 
     public function delete(int $id): void
     {
-        $user = Auth::user();
-        if (! $user || ! $user->can('inventory.products.delete')) {
-            abort(403);
+        $this->authorizeAction('inventory.products.delete');
+        
+        $mapping = ProductStoreMapping::with('product')->findOrFail($id);
+        
+        // Verify branch ownership before delete
+        if ($mapping->product) {
+            $this->authorizeProductBranch($mapping->product);
         }
 
-        ProductStoreMapping::findOrFail($id)->delete();
+        $mapping->delete();
         session()->flash('success', __('Mapping deleted successfully'));
     }
 
