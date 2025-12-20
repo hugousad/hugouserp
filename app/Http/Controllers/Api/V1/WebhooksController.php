@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class WebhooksController extends BaseApiController
 {
@@ -49,7 +50,15 @@ class WebhooksController extends BaseApiController
 
             return $this->successResponse(null, __('Webhook processed successfully'));
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            // BUG-006 FIX: Log detailed error server-side, return generic message to client
+            Log::error('Shopify webhook processing failed', [
+                'store_id' => $storeId,
+                'topic' => $topic,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse(__('Webhook processing failed'), 500);
         }
     }
 
@@ -79,7 +88,15 @@ class WebhooksController extends BaseApiController
 
             return $this->successResponse(null, __('Webhook processed successfully'));
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            // BUG-006 FIX: Log detailed error server-side, return generic message to client
+            Log::error('WooCommerce webhook processing failed', [
+                'store_id' => $storeId,
+                'topic' => $topic,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse(__('Webhook processing failed'), 500);
         }
     }
 
@@ -166,7 +183,15 @@ class WebhooksController extends BaseApiController
 
             return $this->successResponse(null, __('Webhook processed successfully'));
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            // BUG-006 FIX: Log detailed error server-side, return generic message to client
+            Log::error('Laravel webhook processing failed', [
+                'store_id' => $storeId,
+                'event' => $event,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse(__('Webhook processing failed'), 500);
         }
     }
 
