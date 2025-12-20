@@ -145,17 +145,14 @@ class Form extends Component
 
                 $user->save();
 
-                $roles = [];
-                if (! empty($selectedRoles)) {
-                    $roles = WebRole::query()
+                $roles = ! empty($selectedRoles)
+                    ? WebRole::query()
                         ->whereIn('id', $selectedRoles)
                         ->where('guard_name', 'web')
-                        ->get();
-                }
+                        ->get()
+                    : collect();
 
-                if (! empty($roles)) {
-                    $user->syncRoles($roles);
-                }
+                $user->syncRoles($roles);
 
                 $rolesAfter = $user->roles()
                     ->where('guard_name', 'web')

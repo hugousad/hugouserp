@@ -6,6 +6,7 @@ use App\Models\GoodsReceivedNote;
 use App\Models\GRNItem;
 use App\Models\Purchase;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Livewire\Attributes\Layout;
@@ -34,8 +35,16 @@ class Form extends Component
     {
         if ($id) {
             $this->authorize('grn.update');
+            $user = auth()->user();
             $this->grnId = $id;
-            $this->grn = GoodsReceivedNote::with('items.product')->findOrFail($id);
+            $this->grn = GoodsReceivedNote::with('items.product')
+                ->when($user?->branch_id, fn ($q) => $q->where('branch_id', $user->branch_id))
+                ->findOrFail($id);
+
+            if ($user?->branch_id && $this->grn->branch_id !== $user->branch_id) {
+                abort(403);
+            }
+
             $this->loadGRN();
         } else {
             $this->authorize('grn.create');
@@ -57,13 +66,18 @@ class Form extends Component
                 'product_id' => $item->product_id,
                 'purchase_item_id' => $item->purchase_item_id,
                 'qty_ordered' => $item->qty_ordered ?? 0,
+                'quantity_ordered' => $item->qty_ordered ?? 0,
                 'qty_received' => $item->qty_received ?? 0,
+                'quantity_received' => $item->qty_received ?? 0,
                 'qty_rejected' => $item->qty_rejected ?? 0,
+                'quantity_damaged' => $item->qty_rejected ?? 0,
+                'quantity_defective' => 0,
                 'qty_accepted' => $item->qty_accepted ?? ($item->qty_received - $item->qty_rejected),
                 'unit_cost' => $item->unit_cost ?? 0,
                 'quality_status' => $item->quality_status ?? 'good',
                 'rejection_reason' => $item->rejection_reason ?? '',
                 'notes' => $item->notes ?? '',
+                'inspection_notes' => $item->notes ?? '',
                 'uom' => $item->uom ?? '',
             ];
         })->toArray();
@@ -179,6 +193,7 @@ class Form extends Component
             'inspected_by' => $this->inspectorId,
             'notes' => $this->notes,
             'status' => $status,
+            'branch_id' => $this->grn?->branch_id ?? auth()->user()?->branch_id,
         ];
 
         if ($this->grn) {
@@ -188,22 +203,26 @@ class Form extends Component
         }
     }
 
-    public function save(): ?RedirectResponse
+    public function save()
     {
         $this->validateGRN();
-        $this->saveGRNRecord('draft');
-        $this->saveGRNItems();
+        DB::transaction(function () {
+            $this->saveGRNRecord('draft');
+            $this->saveGRNItems();
+        });
 
         session()->flash('success', __('GRN saved successfully.'));
 
         return redirect()->route('app.purchases.grn.index');
     }
 
-    public function submit(): ?RedirectResponse
+    public function submit()
     {
         $this->validateGRN();
-        $this->saveGRNRecord('pending_inspection');
-        $this->saveGRNItems();
+        DB::transaction(function () {
+            $this->saveGRNRecord('pending_inspection');
+            $this->saveGRNItems();
+        });
 
         session()->flash('success', __('GRN submitted for inspection.'));
 

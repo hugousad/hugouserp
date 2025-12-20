@@ -65,7 +65,38 @@ class Index extends Component
     {
         $this->authorize('documents.delete');
 
-        $document = Document::findOrFail($id);
+        $user = auth()->user();
+
+        $document = Document::query()
+            ->when($user?->branch_id, fn ($q) => $q->where('branch_id', $user->branch_id))
+            ->where(function ($q) use ($user) {
+                $q->where('uploaded_by', $user?->id)
+                    ->orWhere('is_public', true)
+                    ->orWhereHas('shares', function ($shareQuery) use ($user) {
+                        $shareQuery
+                            ->where(function ($sq) use ($user) {
+                                $sq->where('user_id', $user?->id)
+                                    ->orWhere('shared_with_user_id', $user?->id);
+                            })
+                            ->active();
+                    });
+            })
+            ->findOrFail($id);
+
+        if ($user && $document->uploaded_by !== $user->id && ! $user->can('documents.manage')) {
+            $share = $document->shares()
+                ->active()
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('shared_with_user_id', $user->id);
+                })
+                ->first();
+
+            if (! $share || ! $share->canDelete()) {
+                abort(403);
+            }
+        }
+
         $this->documentService->deleteDocument($document);
 
         session()->flash('success', __('Document deleted successfully'));

@@ -8,7 +8,9 @@ use App\Models\Adjustment;
 use App\Models\AdjustmentItem;
 use App\Models\Product;
 use App\Models\Warehouse;
+use App\Services\InventoryService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -95,31 +97,55 @@ class Form extends Component
         ]);
 
         $user = auth()->user();
+        $warehouse = Warehouse::findOrFail($this->warehouseId);
 
-        $data = [
-            'branch_id' => $user->branch_id ?? 1,
-            'warehouse_id' => $this->warehouseId,
-            'reason' => $this->reason,
-            'note' => $this->note,
-            'created_by' => $user->id,
-        ];
-
-        if ($this->adjustment) {
-            $this->adjustment->update($data);
-        } else {
-            $this->adjustment = Adjustment::create($data);
+        if ($user->branch_id && $warehouse->branch_id !== $user->branch_id) {
+            abort(403, 'Unauthorized access to this warehouse.');
         }
 
-        // Save items
-        $this->adjustment->items()->delete();
+        $branchId = $warehouse->branch_id;
+        $inventory = app(InventoryService::class);
 
-        foreach ($this->items as $item) {
-            AdjustmentItem::create([
-                'adjustment_id' => $this->adjustment->id,
-                'product_id' => $item['product_id'],
-                'qty' => $item['qty'],
-            ]);
-        }
+        DB::transaction(function () use ($user, $warehouse, $branchId, $inventory) {
+            $data = [
+                'branch_id' => $branchId,
+                'warehouse_id' => $warehouse->id,
+                'reason' => $this->reason,
+                'note' => $this->note,
+                'created_by' => $user->id,
+            ];
+
+            if ($this->adjustment) {
+                $this->adjustment->update($data);
+            } else {
+                $this->adjustment = Adjustment::create($data);
+            }
+
+            $this->adjustment->items()->delete();
+
+            foreach ($this->items as $item) {
+                $product = Product::where('branch_id', $branchId)->findOrFail($item['product_id']);
+
+                $adjustmentItem = AdjustmentItem::create([
+                    'adjustment_id' => $this->adjustment->id,
+                    'product_id' => $product->id,
+                    'qty' => $item['qty'],
+                ]);
+
+                $inventory->recordStockAdjustment([
+                    'product_id' => $product->id,
+                    'warehouse_id' => $warehouse->id,
+                    'branch_id' => $branchId,
+                    'qty' => abs((float) $item['qty']),
+                    'direction' => (float) $item['qty'] >= 0 ? 'in' : 'out',
+                    'reason' => $this->reason,
+                    'meta' => [
+                        'adjustment_id' => $this->adjustment->id,
+                        'adjustment_item_id' => $adjustmentItem->id,
+                    ],
+                ]);
+            }
+        });
 
         session()->flash('success', __('Adjustment saved successfully'));
 
