@@ -131,7 +131,9 @@ class MediaLibrary extends Component
     protected function guardAgainstHtmlPayload($file): void
     {
         $contents = strtolower((string) $file->get());
-        if (str_contains($contents, '<script') || str_contains($contents, '<iframe') || str_contains($contents, '<html')) {
+        $patterns = ['<script', '<iframe', '<html', '<object', '<embed', '&lt;script'];
+
+        if (collect($patterns)->contains(fn ($needle) => str_contains($contents, $needle))) {
             abort(422, __('Uploaded file contains HTML content and was rejected.'));
         }
     }

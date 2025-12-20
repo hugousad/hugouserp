@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Cache;
 
 class WebhooksController extends BaseApiController
 {
+    protected array $shopifyAllowedTopics = [
+        'products/create', 'products/update', 'products/delete',
+        'orders/create', 'orders/updated', 'inventory_levels/update',
+    ];
+
     public function __construct(
         protected StoreSyncService $syncService
     ) {}
@@ -85,16 +90,12 @@ class WebhooksController extends BaseApiController
         $timestamp = $request->header('X-Shopify-Triggered-At') ?? $request->header('X-Shopify-Webhook-Created-At');
         $topic = $request->header('X-Shopify-Topic');
         $secret = $store->integration?->webhook_secret;
-        $allowedTopics = [
-            'products/create', 'products/update', 'products/delete',
-            'orders/create', 'orders/updated', 'inventory_levels/update',
-        ];
 
         if (! $hmacHeader || ! $secret) {
             return false;
         }
 
-        if ($topic && ! in_array($topic, $allowedTopics, true)) {
+        if ($topic && ! in_array($topic, $this->shopifyAllowedTopics, true)) {
             return false;
         }
 

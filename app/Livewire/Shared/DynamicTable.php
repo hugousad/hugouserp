@@ -78,7 +78,13 @@ class DynamicTable extends Component
         $this->emptyMessage = $emptyMessage ?: __('No records found.');
         $this->actions = $actions;
         $this->selectable = $selectable;
-        $this->allowedActions = $allowedActions ?: array_filter(array_map(fn ($action) => $action['name'] ?? null, $actions));
+        if ($allowedActions) {
+            $this->allowedActions = $allowedActions;
+        } else {
+            $this->allowedActions = array_filter(
+                array_map(fn ($action) => $action['name'] ?? null, $actions)
+            );
+        }
 
         foreach ($this->filters as $filter) {
             $name = $filter['name'] ?? '';
