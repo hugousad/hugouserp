@@ -58,8 +58,12 @@ class UserController extends Controller
             'is_active' => ['boolean'],
             'roles' => ['sometimes', 'array'],
         ]);
+
         if (array_key_exists('password', $data)) {
-            $user->password = Hash::make($data['password']);
+            if ($data['password'] !== null) {
+                $user->password = Hash::make($data['password']);
+            }
+
             unset($data['password']);
         }
         $user->fill($data);
