@@ -54,7 +54,6 @@ class SalesCacheInvalidationTest extends TestCase
             'code' => 'SALE-001',
             'branch_id' => $this->branch->id,
             'warehouse_id' => $this->warehouse->id,
-            
             'customer_id' => $this->customer->id,
             'status' => 'completed',
             'grand_total' => 100.00,

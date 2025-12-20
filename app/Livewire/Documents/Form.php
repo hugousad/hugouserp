@@ -26,12 +26,15 @@ class Form extends Component
 
     public string $title = '';
 
+    // Nullable to match database schema and prevent type errors when filling from model
     public ?string $description = null;
 
     public ?UploadedFile $file = null;
 
+    // Nullable to match database schema and prevent type errors when filling from model
     public ?string $folder = null;
 
+    // Nullable to match database schema and prevent type errors when filling from model
     public ?string $category = null;
 
     public bool $is_public = false;
