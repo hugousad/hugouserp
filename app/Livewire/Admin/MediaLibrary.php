@@ -141,13 +141,15 @@ class MediaLibrary extends Component
             abort(422, __('Unable to read uploaded file.'));
         }
         
-        $contents = strtolower((string) fread($stream, $maxBytesToRead));
-        fclose($stream);
-        
-        $patterns = ['<script', '<iframe', '<html', '<object', '<embed', '&lt;script'];
+        try {
+            $contents = strtolower((string) fread($stream, $maxBytesToRead));
+            $patterns = ['<script', '<iframe', '<html', '<object', '<embed', '&lt;script'];
 
-        if (collect($patterns)->contains(fn ($needle) => str_contains($contents, $needle))) {
-            abort(422, __('Uploaded file contains HTML content and was rejected.'));
+            if (collect($patterns)->contains(fn ($needle) => str_contains($contents, $needle))) {
+                abort(422, __('Uploaded file contains HTML content and was rejected.'));
+            }
+        } finally {
+            fclose($stream);
         }
     }
 }

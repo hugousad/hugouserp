@@ -247,8 +247,16 @@ class ProductsController extends BaseApiController
             });
 
             return $this->successResponse($product, __('Product created successfully'), 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw validation exceptions
+            throw $e;
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            // Log the full exception for debugging
+            \Log::error('Product creation failed', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->errorResponse(__('Failed to create product'), 500);
         }
     }
 
@@ -352,8 +360,17 @@ class ProductsController extends BaseApiController
             });
 
             return $this->successResponse($product, __('Product updated successfully'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw validation exceptions
+            throw $e;
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            // Log the full exception for debugging
+            \Log::error('Product update failed', [
+                'product_id' => $id,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->errorResponse(__('Failed to update product'), 500);
         }
     }
 
