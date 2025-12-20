@@ -67,9 +67,12 @@ class DocumentPublicAccessBranchIsolationTest extends TestCase
         $this->actingAs($this->userBranchB);
 
         // Try to view public document from Branch A - should get 403
-        $response = $this->get(route('app.documents.show', $this->publicDocumentBranchA->id));
-
-        $response->assertStatus(403);
+        // The controller enforces branch isolation before checking canBeAccessedBy
+        $this->withoutExceptionHandling();
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('You cannot access documents from other branches');
+        
+        $this->get(route('app.documents.show', $this->publicDocumentBranchA->id));
     }
 
     public function test_user_from_branch_b_cannot_download_public_document_from_branch_a(): void
@@ -77,9 +80,12 @@ class DocumentPublicAccessBranchIsolationTest extends TestCase
         $this->actingAs($this->userBranchB);
 
         // Try to download public document from Branch A - should get 403
-        $response = $this->get(route('app.documents.download', $this->publicDocumentBranchA->id));
-
-        $response->assertStatus(403);
+        // The controller enforces branch isolation
+        $this->withoutExceptionHandling();
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('You cannot download documents from other branches');
+        
+        $this->get(route('app.documents.download', $this->publicDocumentBranchA->id));
     }
 
     public function test_user_from_branch_a_can_view_public_document_from_branch_a(): void

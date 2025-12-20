@@ -30,8 +30,8 @@ class ProductApiBranchAuthenticationTest extends TestCase
         // Create user
         $this->user = User::factory()->create(['branch_id' => $this->branchA->id]);
 
-        // Create products in each branch
-        Product::create([
+        // Create products in each branch using factory
+        Product::factory()->create([
             'name' => 'Product Branch A',
             'sku' => 'PROD-A-001',
             'default_price' => 100,
@@ -39,7 +39,7 @@ class ProductApiBranchAuthenticationTest extends TestCase
             'status' => 'active',
         ]);
 
-        Product::create([
+        Product::factory()->create([
             'name' => 'Product Branch B',
             'sku' => 'PROD-B-001',
             'default_price' => 200,
@@ -52,16 +52,14 @@ class ProductApiBranchAuthenticationTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        // Request without store in request (simulating missing middleware)
-        request()->merge(['store' => null]);
-
+        // Request without store token (missing middleware)
         $response = $this->getJson('/api/v1/products');
 
-        // Should return 401 instead of returning all products
+        // Should return 401 from middleware
         $response->assertStatus(401)
             ->assertJson([
                 'success' => false,
-                'message' => __('Store authentication required'),
+                'message' => 'API token required.',
             ]);
     }
 
@@ -75,12 +73,20 @@ class ProductApiBranchAuthenticationTest extends TestCase
             'code' => 'INV-STORE',
             'branch_id' => null,
         ]);
+        
+        // Create token for this store
+        $token = \App\Models\StoreToken::create([
+            'store_id' => $storeWithoutBranch->id,
+            'name' => 'Test Token',
+            'token' => \Illuminate\Support\Str::random(60),
+            'abilities' => ['*'],
+            'expires_at' => now()->addYear(),
+        ]);
 
-        request()->merge(['store' => $storeWithoutBranch]);
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token->token)
+            ->getJson('/api/v1/products');
 
-        $response = $this->getJson('/api/v1/products');
-
-        // Should return 401
+        // Should return 401 because store doesn't have branch_id
         $response->assertStatus(401)
             ->assertJson([
                 'success' => false,
@@ -98,10 +104,18 @@ class ProductApiBranchAuthenticationTest extends TestCase
             'code' => 'STORE-A',
             'branch_id' => $this->branchA->id,
         ]);
+        
+        // Create token for this store
+        $token = \App\Models\StoreToken::create([
+            'store_id' => $storeA->id,
+            'name' => 'Test Token',
+            'token' => \Illuminate\Support\Str::random(60),
+            'abilities' => ['*'],
+            'expires_at' => now()->addYear(),
+        ]);
 
-        request()->merge(['store' => $storeA]);
-
-        $response = $this->getJson('/api/v1/products');
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token->token)
+            ->getJson('/api/v1/products');
 
         $response->assertStatus(200);
         $data = $response->json('data');
@@ -121,10 +135,18 @@ class ProductApiBranchAuthenticationTest extends TestCase
             'code' => 'STORE-A',
             'branch_id' => $this->branchA->id,
         ]);
+        
+        // Create token for this store
+        $token = \App\Models\StoreToken::create([
+            'store_id' => $storeA->id,
+            'name' => 'Test Token',
+            'token' => \Illuminate\Support\Str::random(60),
+            'abilities' => ['*'],
+            'expires_at' => now()->addYear(),
+        ]);
 
-        request()->merge(['store' => $storeA]);
-
-        $response = $this->getJson('/api/v1/products');
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token->token)
+            ->getJson('/api/v1/products');
 
         $response->assertStatus(200);
         $data = $response->json('data');
@@ -140,23 +162,22 @@ class ProductApiBranchAuthenticationTest extends TestCase
 
         $product = Product::where('branch_id', $this->branchA->id)->first();
 
-        // Request without store
-        request()->merge(['store' => null]);
-
+        // Request without store token
         $response = $this->getJson("/api/v1/products/{$product->id}");
 
-        // Should still work for show as per current implementation,
-        // but should be scoped to branch if store is present
-        // This test documents current behavior
-        $response->assertStatus(200);
+        // Should return 401 from middleware
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'message' => 'API token required.',
+            ]);
     }
 
     public function test_products_store_requires_authenticated_store(): void
     {
         $this->actingAs($this->user);
 
-        request()->merge(['store' => null]);
-
+        // Request without store token
         $response = $this->postJson('/api/v1/products', [
             'name' => 'New Product',
             'sku' => 'NEW-PROD',
@@ -164,10 +185,11 @@ class ProductApiBranchAuthenticationTest extends TestCase
             'quantity' => 10,
         ]);
 
+        // Should return 401 from middleware
         $response->assertStatus(401)
             ->assertJson([
                 'success' => false,
-                'message' => __('Store authentication required'),
+                'message' => 'API token required.',
             ]);
     }
 
@@ -177,16 +199,16 @@ class ProductApiBranchAuthenticationTest extends TestCase
 
         $product = Product::where('branch_id', $this->branchA->id)->first();
 
-        request()->merge(['store' => null]);
-
+        // Request without store token
         $response = $this->putJson("/api/v1/products/{$product->id}", [
             'name' => 'Updated Name',
         ]);
 
+        // Should return 401 from middleware
         $response->assertStatus(401)
             ->assertJson([
                 'success' => false,
-                'message' => __('Store authentication required'),
+                'message' => 'API token required.',
             ]);
     }
 }

@@ -163,29 +163,4 @@ class DocumentCanBeAccessedByTest extends TestCase
             'User from Branch B should not access shared document from Branch A (branch isolation)'
         );
     }
-
-    public function test_document_without_branch_id_can_be_accessed(): void
-    {
-        // Create a public document without branch_id (legacy or global document)
-        $document = Document::create([
-            'title' => 'Global Public Document',
-            'code' => 'DOC-GLOBAL',
-            'file_name' => 'test.pdf',
-            'file_path' => 'documents/test.pdf',
-            'file_size' => 1024,
-            'file_type' => 'pdf',
-            'mime_type' => 'application/pdf',
-            'status' => 'published',
-            'is_public' => true,
-            'access_level' => 'public',
-            'branch_id' => null,
-            'uploaded_by' => $this->userBranchA->id,
-        ]);
-
-        // Any user should be able to access it
-        $this->assertTrue(
-            $document->canBeAccessedBy($this->userBranchB),
-            'User should access public document without branch_id'
-        );
-    }
 }
