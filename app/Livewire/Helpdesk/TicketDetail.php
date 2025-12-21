@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Services\HelpdeskService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -32,6 +33,7 @@ class TicketDetail extends Component
     public function mount(Ticket $ticket): void
     {
         $this->authorize('helpdesk.view');
+        $this->ensureSameBranch(auth()->user(), $ticket);
         $this->ticket = $ticket->load(['customer', 'assignedAgent', 'category', 'priority', 'slaPolicy', 'replies.user']);
         $this->assignToUser = $ticket->assigned_to;
     }
@@ -59,9 +61,24 @@ class TicketDetail extends Component
     public function assignTicket(): void
     {
         $this->authorize('helpdesk.assign');
+        $this->ensureSameBranch(auth()->user(), $this->ticket);
+
+        $branchId = $this->ticket->branch_id;
+        $user = auth()->user();
 
         $this->validate([
-            'assignToUser' => 'required|exists:users,id',
+            'assignToUser' => [
+                'required',
+                Rule::exists('users', 'id')->where(function ($query) use ($branchId, $user) {
+                    if (! $user?->hasRole('Super Admin') && $branchId) {
+                        $query->where('branch_id', $branchId);
+                    }
+
+                    if (! $branchId && $user?->branch_id && ! $user?->hasRole('Super Admin')) {
+                        $query->where('branch_id', $user->branch_id);
+                    }
+                }),
+            ],
         ]);
 
         $this->helpdeskService->assignTicket($this->ticket, $this->assignToUser);
@@ -113,11 +130,16 @@ class TicketDetail extends Component
     public function render()
     {
         // Get available agents for assignment
+        $user = auth()->user();
+        $branchId = $this->ticket->branch_id ?? $user?->branch_id;
+
         $agents = User::whereHas('roles', function ($query) {
             $query->where('name', 'like', '%agent%')
                   ->orWhere('name', 'like', '%support%')
                   ->orWhere('name', 'Super Admin');
-        })->get();
+        })
+            ->when(! $user?->hasRole('Super Admin') && $branchId, fn ($query) => $query->where('branch_id', $branchId))
+            ->get();
 
         // Calculate SLA compliance
         $slaCompliance = $this->helpdeskService->calculateSLA($this->ticket);
@@ -126,5 +148,21 @@ class TicketDetail extends Component
             'agents' => $agents,
             'slaCompliance' => $slaCompliance,
         ]);
+    }
+
+    private function ensureSameBranch(?User $user, Ticket $ticket): void
+    {
+        if (! $user) {
+            abort(403);
+        }
+
+        if (
+            $user->branch_id
+            && $ticket->branch_id
+            && $user->branch_id !== $ticket->branch_id
+            && ! $user->hasRole('Super Admin')
+        ) {
+            abort(403);
+        }
     }
 }

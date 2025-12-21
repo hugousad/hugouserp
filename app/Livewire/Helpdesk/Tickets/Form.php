@@ -56,6 +56,10 @@ class Form extends Component
         }
 
         if ($ticket && $ticket->exists) {
+            if (! $user->can('update', $ticket)) {
+                abort(403);
+            }
+
             $this->isEditing = true;
             $this->ticket = $ticket;
             $this->fill([
@@ -78,6 +82,9 @@ class Form extends Component
         $this->validate();
 
         $user = Auth::user();
+        if ($this->isEditing && $this->ticket && ! $user?->can('update', $this->ticket)) {
+            abort(403);
+        }
 
         $data = [
             'subject' => $this->subject,
@@ -90,7 +97,7 @@ class Form extends Component
             'sla_policy_id' => $this->sla_policy_id,
             'due_date' => $this->due_date,
             'tags' => $this->tags,
-            'branch_id' => $user->branch_id,
+            'branch_id' => $this->ticket?->branch_id ?? $user->branch_id,
         ];
 
         if ($this->isEditing) {

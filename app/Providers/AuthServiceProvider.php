@@ -16,6 +16,7 @@ use App\Models\RentalContract;
 use App\Models\RentalInvoice;
 use App\Models\RentalUnit;
 use App\Models\Sale;
+use App\Models\Ticket;
 use App\Models\Tenant;
 use App\Models\Vehicle;
 use App\Models\WorkCenter;
@@ -26,6 +27,7 @@ use App\Policies\NotificationPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\PurchasePolicy;
 use App\Policies\RentalPolicy;
+use App\Policies\TicketPolicy;
 use App\Policies\SalePolicy;
 use App\Policies\VehiclePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -43,6 +45,7 @@ class AuthServiceProvider extends ServiceProvider
         Sale::class => SalePolicy::class,
         Vehicle::class => VehiclePolicy::class,
         Notification::class => NotificationPolicy::class,
+        Ticket::class => TicketPolicy::class,
 
         // Rental domain mapped to a generic policy handling multiple models
         RentalContract::class => RentalPolicy::class,

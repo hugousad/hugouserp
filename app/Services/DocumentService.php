@@ -327,11 +327,13 @@ class DocumentService
     {
         $primaryDisk = $this->documentsDisk;
 
-        if (Storage::disk($primaryDisk)->exists($path)) {
-            return $primaryDisk;
-        }
+        abort_unless(
+            Storage::disk($primaryDisk)->exists($path),
+            404,
+            'File not found'
+        );
 
-        return 'public';
+        return $primaryDisk;
     }
 
     private function validateFile(UploadedFile $file): void

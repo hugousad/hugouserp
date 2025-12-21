@@ -141,6 +141,14 @@ class Document extends Model
             return true;
         }
 
+        if (
+            $this->branch_id
+            && $user->branch_id
+            && $this->branch_id !== $user->branch_id
+        ) {
+            return false;
+        }
+
         // Owner can always access
         if ($this->uploaded_by === $user->id) {
             return true;

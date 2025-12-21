@@ -9,6 +9,8 @@ use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use App\Models\TicketReply;
 use App\Models\TicketSLAPolicy;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +75,18 @@ class HelpdeskService
      */
     public function assignTicket(Ticket $ticket, int $userId): Ticket
     {
+        $assignee = User::findOrFail($userId);
+        $actor = auth()->user();
+
+        if (
+            $ticket->branch_id
+            && $assignee->branch_id
+            && $ticket->branch_id !== $assignee->branch_id
+            && ! $actor?->hasRole('Super Admin')
+        ) {
+            throw new AuthorizationException('You cannot assign this ticket outside its branch.');
+        }
+
         return DB::transaction(function () use ($ticket, $userId) {
             $oldAssignee = $ticket->assigned_to;
             $ticket->assigned_to = $userId;
