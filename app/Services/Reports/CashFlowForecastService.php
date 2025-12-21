@@ -64,14 +64,14 @@ class CashFlowForecastService
         return Sale::select(
                 'id',
                 'customer_id',
-                'due_date',
+                'payment_due_date as due_date',
                 'due_total as amount'
             )
             ->where('payment_status', '!=', 'paid')
             ->where('due_total', '>', 0)
-            ->whereBetween('due_date', [$startDate, $endDate])
+            ->whereBetween('payment_due_date', [$startDate, $endDate])
             ->whereNull('deleted_at')
-            ->orderBy('due_date')
+            ->orderBy('payment_due_date')
             ->get();
     }
 
@@ -83,14 +83,14 @@ class CashFlowForecastService
         return Purchase::select(
                 'id',
                 'supplier_id',
-                'due_date',
+                'payment_due_date as due_date',
                 'due_total as amount'
             )
             ->where('payment_status', '!=', 'paid')
             ->where('due_total', '>', 0)
-            ->whereBetween('due_date', [$startDate, $endDate])
+            ->whereBetween('payment_due_date', [$startDate, $endDate])
             ->whereNull('deleted_at')
-            ->orderBy('due_date')
+            ->orderBy('payment_due_date')
             ->get();
     }
 
