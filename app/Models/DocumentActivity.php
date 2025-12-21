@@ -20,14 +20,15 @@ class DocumentActivity extends Model
         'document_id',
         'user_id',
         'action',
-        'details',
+        'description',
+        'metadata',
         'ip_address',
         'user_agent',
         'created_at',
     ];
 
     protected $casts = [
-        'details' => 'array',
+        'metadata' => 'array',
     ];
 
     // Relationships
@@ -59,12 +60,13 @@ class DocumentActivity extends Model
             'created' => __('Created'),
             'viewed' => __('Viewed'),
             'downloaded' => __('Downloaded'),
-            'updated' => __('Updated'),
+            'edited' => __('Edited'),
             'deleted' => __('Deleted'),
             'shared' => __('Shared'),
             'unshared' => __('Unshared'),
+            'restored' => __('Restored'),
             'version_created' => __('New version created'),
-            default => __(ucfirst($this->action)),
+            default => __(ucwords(str_replace('_', ' ', $this->action))),
         };
     }
 }

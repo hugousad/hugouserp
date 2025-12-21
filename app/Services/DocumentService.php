@@ -197,7 +197,7 @@ class DocumentService
             }
 
             // Log activity
-            $document->logActivity('updated', auth()->user());
+            $document->logActivity('edited', auth()->user());
 
             return $document->fresh();
         });

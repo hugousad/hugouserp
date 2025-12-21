@@ -184,12 +184,29 @@ class Document extends Model
             ->exists();
     }
 
-    public function logActivity(string $action, ?User $user = null, ?array $details = null): void
+    public function logActivity(string $action, ?User $user = null, ?array $metadata = null, ?string $description = null): void
     {
+        $normalizedAction = $action === 'updated' ? 'edited' : $action;
+
+        $metadata = $metadata ?? [];
+
+        if (array_key_exists('description', $metadata)) {
+            $description = (string) $metadata['description'];
+            unset($metadata['description']);
+        }
+
+        $ipAddress = $metadata['ip_address'] ?? request()?->ip();
+        $userAgent = $metadata['user_agent'] ?? request()?->userAgent();
+
+        unset($metadata['ip_address'], $metadata['user_agent']);
+
         $this->activities()->create([
-            'action' => $action,
+            'action' => $normalizedAction,
             'user_id' => $user?->id ?? auth()->id(),
-            'details' => $details,
+            'description' => $description,
+            'metadata' => $metadata ?: null,
+            'ip_address' => $ipAddress,
+            'user_agent' => $userAgent,
             'created_at' => now(),
         ]);
     }
