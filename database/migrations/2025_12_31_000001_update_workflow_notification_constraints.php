@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -13,7 +14,11 @@ return new class extends Migration
         // Preserve workflow history when branches or approvals are removed
         Schema::table('workflow_instances', function (Blueprint $table) {
             if (Schema::hasColumn('workflow_instances', 'branch_id')) {
-                $table->dropForeign(['branch_id']);
+                try {
+                    $table->dropForeign(['branch_id']);
+                } catch (QueryException $e) {
+                    // Foreign key may not exist, continue
+                }
                 $table->foreign('branch_id')
                     ->references('id')
                     ->on('branches')
@@ -23,7 +28,11 @@ return new class extends Migration
 
         Schema::table('workflow_notifications', function (Blueprint $table) {
             if (Schema::hasColumn('workflow_notifications', 'workflow_approval_id')) {
-                $table->dropForeign(['workflow_approval_id']);
+                try {
+                    $table->dropForeign(['workflow_approval_id']);
+                } catch (QueryException $e) {
+                    // Foreign key may not exist, continue
+                }
                 $table->foreign('workflow_approval_id')
                     ->references('id')
                     ->on('workflow_approvals')
@@ -56,7 +65,11 @@ return new class extends Migration
     {
         Schema::table('workflow_notifications', function (Blueprint $table) {
             if (Schema::hasColumn('workflow_notifications', 'workflow_approval_id')) {
-                $table->dropForeign(['workflow_approval_id']);
+                try {
+                    $table->dropForeign(['workflow_approval_id']);
+                } catch (QueryException $e) {
+                    // Foreign key may not exist, continue
+                }
                 $table->foreign('workflow_approval_id')
                     ->references('id')
                     ->on('workflow_approvals')
@@ -72,7 +85,11 @@ return new class extends Migration
 
         Schema::table('workflow_instances', function (Blueprint $table) {
             if (Schema::hasColumn('workflow_instances', 'branch_id')) {
-                $table->dropForeign(['branch_id']);
+                try {
+                    $table->dropForeign(['branch_id']);
+                } catch (QueryException $e) {
+                    // Foreign key may not exist, continue
+                }
                 $table->foreign('branch_id')
                     ->references('id')
                     ->on('branches')

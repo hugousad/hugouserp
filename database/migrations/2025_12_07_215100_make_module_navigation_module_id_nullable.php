@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -12,8 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('module_navigation', function (Blueprint $table) {
-            // Drop the foreign key constraint first
-            $table->dropForeign(['module_id']);
+            // Drop the foreign key constraint first (with safety check)
+            try {
+                $table->dropForeign(['module_id']);
+            } catch (QueryException $e) {
+                // Foreign key may not exist, continue
+            }
 
             // Make module_id nullable and re-apply proper foreign key behavior
             $table->unsignedBigInteger('module_id')->nullable()->change();
@@ -27,8 +32,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('module_navigation', function (Blueprint $table) {
-            // Drop the foreign key
-            $table->dropForeign(['module_id']);
+            // Drop the foreign key (with safety check)
+            try {
+                $table->dropForeign(['module_id']);
+            } catch (QueryException $e) {
+                // Foreign key may not exist, continue
+            }
 
             // Make module_id not nullable again
             $table->unsignedBigInteger('module_id')->change();
