@@ -43,8 +43,8 @@ return new class extends Migration
             $table->date('delivery_date')->nullable()->comment('Delivery date');
             $table->date('expected_delivery_date')->nullable()->comment('Expected delivery date');
             $table->date('actual_delivery_date')->nullable()->comment('Actual delivery date');
-            $table->unsignedBigInteger('store_order_id')->nullable()->comment('Linked store order');
             $table->string('reference_no')->nullable()->comment('reference_no');
+            // store_order_id is added later (2025_11_27_000002) once store_orders table exists
             $table->timestamp('posted_at')->nullable()->comment('posted_at');
             $table->string('sales_person')->nullable()->comment('Sales person name or user ID');
             $table->text('notes')->nullable()->comment('notes');
@@ -62,14 +62,12 @@ return new class extends Migration
             $table->index('payment_status');
             $table->index('payment_due_date');
             $table->index(['branch_id', 'payment_status'], 'sales_branch_payment_idx');
-            $table->index('store_order_id');
 
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
             $table->foreign('warehouse_id')->references('id')->on('warehouses')->onDelete('restrict');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('store_order_id')->references('id')->on('store_orders')->onDelete('set null');
 
             $table->index(['branch_id', 'customer_id', 'status'], 'sales_br_cust_stat_idx');
             $table->index('branch_id');
