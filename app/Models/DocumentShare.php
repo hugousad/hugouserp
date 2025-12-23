@@ -81,6 +81,11 @@ class DocumentShare extends Model
         return in_array($this->permission, ['view', 'download', 'edit', 'manage']);
     }
 
+    public function canDownload(): bool
+    {
+        return in_array($this->permission, ['download', 'edit', 'manage']);
+    }
+
     public function canEdit(): bool
     {
         return in_array($this->permission, ['edit', 'manage']);

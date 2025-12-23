@@ -319,6 +319,20 @@ class DocumentService
             abort(403, 'You do not have permission to download this document');
         }
 
+        // Ensure the granted permission allows downloading when access is via a share
+        $share = $document->shares()
+            ->where('shared_with_user_id', $user->id)
+            ->first();
+
+        if (
+            $share
+            && ! $share->canDownload()
+            && $document->uploaded_by !== $user->id
+            && ! $user->can('documents.manage')
+        ) {
+            abort(403, 'You do not have permission to download this document');
+        }
+
         // Log activity
         $document->logActivity('downloaded', $user, [
             'ip_address' => request()->ip(),
@@ -326,7 +340,7 @@ class DocumentService
         ]);
 
         // Increment access count if shared
-        $share = $document->shares()->where('shared_with_user_id', $user->id)->first();
+        $share ??= $document->shares()->where('shared_with_user_id', $user->id)->first();
         if ($share) {
             $share->incrementAccessCount();
         }
