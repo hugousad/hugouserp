@@ -41,7 +41,7 @@ class ImageOptimizationService
     public function optimizeUploadedFile(
         UploadedFile $file,
         string $context = 'general',
-        ?string $disk = 'public'
+        ?string $disk = 'local'
     ): array {
         if (!$this->isImage($file)) {
             return $this->storeWithoutOptimization($file, $disk);
@@ -153,7 +153,7 @@ class ImageOptimizationService
     public function optimizeForContext(
         UploadedFile $file,
         string $context,
-        ?string $disk = 'public'
+        ?string $disk = 'local'
     ): array {
         return $this->optimizeUploadedFile($file, $context, $disk);
     }

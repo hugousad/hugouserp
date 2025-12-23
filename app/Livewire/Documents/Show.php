@@ -63,6 +63,7 @@ class Show extends Component
     public function shareDocument(): void
     {
         $this->authorize('documents.share');
+        $this->authorizeShareManagement();
 
         $this->validate([
             'shareUserId' => 'required|exists:users,id',
@@ -87,6 +88,7 @@ class Show extends Component
     public function unshare(int $userId): void
     {
         $this->authorize('documents.share');
+        $this->authorizeShareManagement();
 
         $this->documentService->unshareDocument($this->document, $userId);
 
@@ -105,5 +107,18 @@ class Show extends Component
         return view('livewire.documents.show', [
             'users' => $users,
         ]);
+    }
+
+    private function authorizeShareManagement(): void
+    {
+        $user = auth()->user();
+
+        if (! $user) {
+            abort(403, __('You are not authorized to manage document sharing.'));
+        }
+
+        if ($this->document->uploaded_by !== $user->id && ! $user->can('documents.manage')) {
+            abort(403, __('Only the document owner or a manager can manage sharing.'));
+        }
     }
 }

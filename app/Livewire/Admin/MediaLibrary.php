@@ -17,6 +17,39 @@ class MediaLibrary extends Component
 {
     use WithFileUploads, WithPagination;
 
+    private const ALLOWED_EXTENSIONS = [
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp',
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'ppt',
+        'pptx',
+        'csv',
+        'txt',
+    ];
+
+    private const ALLOWED_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/csv',
+        'text/plain',
+    ];
+
     public $files = [];
     public string $search = '';
     public string $filterType = 'all'; // all, images, documents
@@ -40,7 +73,8 @@ class MediaLibrary extends Component
     public function updatedFiles(): void
     {
         $this->validate([
-            'files.*' => 'file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,csv,txt', // 10MB max, restricted types
+            'files.*' => 'file|max:10240|mimes:' . implode(',', self::ALLOWED_EXTENSIONS) .
+                '|mimetypes:' . implode(',', self::ALLOWED_MIME_TYPES), // 10MB max, restricted types
         ]);
 
         $user = auth()->user();
@@ -50,7 +84,7 @@ class MediaLibrary extends Component
         }
 
         $optimizationService = app(ImageOptimizationService::class);
-        $disk = config('filesystems.media_disk', 'public');
+        $disk = config('filesystems.media_disk', 'local');
 
         foreach ($this->files as $file) {
             $this->guardAgainstHtmlPayload($file);
@@ -113,17 +147,20 @@ class MediaLibrary extends Component
         $query = Media::query()
             ->with('user')
             ->when($user->branch_id && ! $canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
-            ->when($this->search, fn ($q) =>
-                $q->where(function ($query) {
-                    $query->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('original_name', 'like', "%{$this->search}%");
-                })
-            )
             ->when($this->filterType === 'images', fn ($q) => $q->images())
             ->when($this->filterType === 'documents', fn ($q) => $q->documents())
-            ->when($this->filterOwner === 'mine' || !$user->can('media.view-others'), fn ($q) => 
-                $q->forUser($user->id)
+            ->when(
+                $this->filterOwner === 'mine' || !$user->can('media.view-others'),
+                fn ($q) => $q->forUser($user->id)
             )
+            ->when($this->search, function ($query) {
+                $search = "%{$this->search}%";
+
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('name', 'like', $search)
+                        ->orWhere('original_name', 'like', $search);
+                });
+            })
             ->orderBy('created_at', 'desc');
 
         $media = $query->paginate(20);

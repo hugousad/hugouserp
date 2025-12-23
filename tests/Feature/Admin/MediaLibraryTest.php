@@ -37,7 +37,8 @@ class MediaLibraryTest extends TestCase
 
     public function test_upload_rejects_disallowed_mime(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
+        config(['filesystems.media_disk' => 'local']);
         $this->defineMediaGates();
         $user = $this->makeUser();
 
@@ -47,7 +48,7 @@ class MediaLibraryTest extends TestCase
             ->assertHasErrors(['files.0' => 'mimes']);
 
         $this->assertSame(0, Media::count());
-        Storage::disk('public')->assertDirectoryEmpty('media');
+        Storage::disk('local')->assertDirectoryEmpty('media');
     }
 
     public function test_search_does_not_leak_other_users_media(): void

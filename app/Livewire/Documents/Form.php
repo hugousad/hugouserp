@@ -95,10 +95,13 @@ class Form extends Component
 
             session()->flash('success', __('Document updated successfully'));
         } else {
+            $allowedExtensions = implode(',', DocumentService::ALLOWED_EXTENSIONS);
+            $allowedMimeTypes = implode(',', DocumentService::ALLOWED_MIME_TYPES);
+
             $this->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'file' => 'required|file|max:51200|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,png,jpg,jpeg,gif,csv,txt',
+                'file' => "required|file|max:51200|mimes:{$allowedExtensions}|mimetypes:{$allowedMimeTypes}",
                 'folder' => 'nullable|string|max:255',
                 'category' => 'nullable|string|max:100',
             ]);

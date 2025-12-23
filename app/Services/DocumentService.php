@@ -18,9 +18,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
 {
-    private string $documentsDisk;
-    private ?string $fallbackDisk;
-    private array $allowedMimes = [
+    public const ALLOWED_EXTENSIONS = [
         'pdf',
         'doc',
         'docx',
@@ -35,6 +33,24 @@ class DocumentService
         'csv',
         'txt',
     ];
+
+    public const ALLOWED_MIME_TYPES = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'image/png',
+        'image/jpeg',
+        'image/gif',
+        'text/csv',
+        'text/plain',
+    ];
+
+    private string $documentsDisk;
+    private ?string $fallbackDisk;
 
     public function __construct(
         protected UIHelperService $uiHelper
@@ -374,9 +390,12 @@ class DocumentService
 
     private function validateFile(UploadedFile $file): void
     {
+        $mimesRule = implode(',', self::ALLOWED_EXTENSIONS);
+        $mimeTypesRule = implode(',', self::ALLOWED_MIME_TYPES);
+
         Validator::make(
             ['file' => $file],
-            ['file' => 'required|file|max:51200|mimes:' . implode(',', $this->allowedMimes)]
+            ['file' => "required|file|max:51200|mimes:{$mimesRule}|mimetypes:{$mimeTypesRule}"]
         )->validate();
     }
 

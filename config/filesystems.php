@@ -17,7 +17,7 @@ return [
 
     'document_disk' => env('DOCUMENTS_DISK', 'local'),
     'document_disk_fallback' => env('DOCUMENTS_DISK_FALLBACK'),
-    'media_disk' => env('MEDIA_DISK', 'public'),
+    'media_disk' => env('MEDIA_DISK', 'local'),
 
     /*
     |--------------------------------------------------------------------------
