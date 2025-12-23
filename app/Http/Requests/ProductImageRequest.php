@@ -16,7 +16,14 @@ class ProductImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['required', 'image'],
+            'image' => [
+                'required',
+                'file',
+                'max:5120', // 5 MB limit to prevent oversized uploads
+                'mimes:jpg,jpeg,png,gif,webp',
+                'mimetypes:image/jpeg,image/png,image/gif,image/webp',
+                'dimensions:max_width=6000,max_height=6000',
+            ],
         ];
     }
 }

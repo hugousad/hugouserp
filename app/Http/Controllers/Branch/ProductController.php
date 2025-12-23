@@ -161,6 +161,16 @@ class ProductController extends Controller
         abort_if($product->branch_id !== $branchId, 404, 'Product not found in this branch');
 
         $path = $request->file('image')->store('product-images', 'public');
+
+        // Defense-in-depth: verify stored MIME type to prevent disguised uploads (e.g., SVG/script payloads)
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $storedMime = Storage::disk('public')->mimeType($path);
+        if (! in_array($storedMime, $allowedMimes, true)) {
+            Storage::disk('public')->delete($path);
+
+            return $this->fail(__('Uploaded image type is not allowed.'), 422);
+        }
+
         $product->image_path = $path;
         $product->save();
 
