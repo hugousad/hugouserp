@@ -52,9 +52,15 @@ class Form extends Component
     {
         $this->authorize('income.manage');
 
+        $user = auth()->user();
+        $isSuperAdmin = $user?->hasAnyRole(['Super Admin', 'super-admin']);
         $this->income_date = now()->format('Y-m-d');
 
         if ($income && $income->exists) {
+            if ($user?->branch_id && $income->branch_id && $income->branch_id !== $user->branch_id && ! $isSuperAdmin) {
+                abort(403, __('You cannot access income records from other branches.'));
+            }
+
             $this->income = $income;
             $this->editMode = true;
             $this->category_id = (string) ($income->category_id ?? '');
@@ -69,11 +75,23 @@ class Form extends Component
     public function save(): void
     {
         $validated = $this->validate();
-        $validated['branch_id'] = auth()->user()->branch_id ?? auth()->user()->branches()->first()?->id;
+        $user = auth()->user();
+        $isSuperAdmin = $user?->hasAnyRole(['Super Admin', 'super-admin']);
+        $branchId = $this->income?->branch_id ?? $user?->branch_id ?? $user?->branches()->first()?->id;
+
+        if (! $branchId && ! $isSuperAdmin) {
+            abort(403, __('Unable to determine a branch for this income record.'));
+        }
+
+        if ($this->income && $this->income->branch_id && $branchId !== $this->income->branch_id && ! $isSuperAdmin) {
+            abort(403, __('You cannot modify income records from another branch.'));
+        }
+
+        $validated['branch_id'] = $this->income?->branch_id ?? $branchId;
         $validated['created_by'] = auth()->id();
 
         if ($this->attachment) {
-            $validated['attachment'] = $this->attachment->store('incomes', 'public');
+            $validated['attachment'] = $this->attachment->store('incomes', 'local');
         }
 
         $this->handleOperation(
