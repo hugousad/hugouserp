@@ -455,10 +455,26 @@ Route::middleware('auth')->group(function () {
             ->name('properties.index')
             ->middleware('can:rental.view');
 
+        Route::get('/properties/create', \App\Livewire\Rental\Properties\Form::class)
+            ->name('properties.create')
+            ->middleware('can:rental.properties.create');
+
+        Route::get('/properties/{property}/edit', \App\Livewire\Rental\Properties\Form::class)
+            ->name('properties.edit')
+            ->middleware('can:rental.properties.update');
+
         // Tenants
         Route::get('/tenants', \App\Livewire\Rental\Tenants\Index::class)
             ->name('tenants.index')
             ->middleware('can:rental.view');
+
+        Route::get('/tenants/create', \App\Livewire\Rental\Tenants\Form::class)
+            ->name('tenants.create')
+            ->middleware('can:rental.tenants.create');
+
+        Route::get('/tenants/{tenant}/edit', \App\Livewire\Rental\Tenants\Form::class)
+            ->name('tenants.edit')
+            ->middleware('can:rental.tenants.update');
 
         // Contracts
         Route::get('/contracts', RentalContractsIndex::class)
@@ -562,6 +578,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/shifts', \App\Livewire\Hrm\Shifts\Index::class)
             ->name('shifts.index')
             ->middleware('can:hrm.view');
+
+        Route::get('/shifts/create', \App\Livewire\Hrm\Shifts\Form::class)
+            ->name('shifts.create')
+            ->middleware('can:hrm.manage');
+
+        Route::get('/shifts/{shift}/edit', \App\Livewire\Hrm\Shifts\Form::class)
+            ->name('shifts.edit')
+            ->middleware('can:hrm.manage');
 
         // Reports
         Route::get('/reports', HrmReportsDashboard::class)

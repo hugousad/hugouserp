@@ -25,16 +25,6 @@ class Index extends Component
 
     public string $sortDirection = 'desc';
 
-    public bool $showModal = false;
-
-    public ?int $editingId = null;
-
-    public string $name = '';
-
-    public string $address = '';
-
-    public string $notes = '';
-
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -48,73 +38,6 @@ class Index extends Component
             $this->sortField = $field;
             $this->sortDirection = 'asc';
         }
-    }
-
-    public function openModal(?int $id = null): void
-    {
-        if ($id) {
-            $this->authorize('rental.properties.update');
-        } else {
-            $this->authorize('rental.properties.create');
-        }
-
-        $this->resetForm();
-
-        if ($id) {
-            $property = Property::findOrFail($id);
-            $this->editingId = $id;
-            $this->name = $property->name;
-            $this->address = $property->address ?? '';
-            $this->notes = $property->notes ?? '';
-        }
-
-        $this->showModal = true;
-    }
-
-    public function closeModal(): void
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    public function resetForm(): void
-    {
-        $this->editingId = null;
-        $this->name = '';
-        $this->address = '';
-        $this->notes = '';
-        $this->resetErrorBag();
-    }
-
-    public function save(): void
-    {
-        if ($this->editingId) {
-            $this->authorize('rental.properties.update');
-        } else {
-            $this->authorize('rental.properties.create');
-        }
-
-        $validated = $this->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'nullable|string|max:500',
-            'notes' => 'nullable|string',
-        ]);
-
-        $user = auth()->user();
-        $data = array_merge($validated, [
-            'branch_id' => $user->branch_id ?? 1,
-        ]);
-
-        if ($this->editingId) {
-            Property::findOrFail($this->editingId)->update($data);
-            session()->flash('success', __('Property updated successfully'));
-        } else {
-            Property::create($data);
-            session()->flash('success', __('Property created successfully'));
-        }
-
-        Cache::forget('properties_stats_'.($user->branch_id ?? 'all'));
-        $this->closeModal();
     }
 
     public function delete(int $id): void
