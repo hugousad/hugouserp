@@ -46,6 +46,14 @@ class Module extends Model
         'supports_items',
     ];
 
+    protected $attributes = [
+        'module_type' => 'data',
+        'supports_reporting' => true,
+        'supports_custom_fields' => true,
+        'supports_items' => true,
+        'has_inventory' => true,
+    ];
+
     protected $casts = [
         'is_core' => 'bool',
         'is_active' => 'bool',

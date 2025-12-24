@@ -405,9 +405,23 @@ class Stores extends Component
 
         $stores = $query->orderByDesc('created_at')->paginate(15);
 
-        $modules = \App\Models\Module::where('is_active', true)
+        $moduleQuery = \App\Models\Module::where('is_active', true)
             ->where('has_inventory', true)
-            ->orderBy('name')
+            ->where('supports_items', true);
+
+        if ($this->branch_id) {
+            $enabledModuleIds = \App\Models\BranchModule::where('branch_id', $this->branch_id)
+                ->where('enabled', true)
+                ->pluck('module_id')
+                ->filter()
+                ->all();
+
+            if (! empty($enabledModuleIds)) {
+                $moduleQuery->whereIn('id', $enabledModuleIds);
+            }
+        }
+
+        $modules = $moduleQuery->orderBy('name')
             ->get(['id', 'name', 'name_ar']);
 
         return view('livewire.admin.store.stores', [

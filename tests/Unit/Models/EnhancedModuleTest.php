@@ -181,4 +181,18 @@ class EnhancedModuleTest extends TestCase
         $this->assertCount(1, $functionalModules);
         $this->assertEquals('functional_module', $functionalModules->first()->key);
     }
+
+    public function test_new_modules_default_to_item_supporting_data_modules(): void
+    {
+        $module = Module::create([
+            'key' => 'custom_module',
+            'name' => 'Custom Module',
+        ]);
+
+        $this->assertTrue($module->supports_items);
+        $this->assertTrue($module->has_inventory);
+        $this->assertEquals('data', $module->module_type);
+        $this->assertTrue($module->supports_custom_fields);
+        $this->assertTrue($module->supports_reporting);
+    }
 }
