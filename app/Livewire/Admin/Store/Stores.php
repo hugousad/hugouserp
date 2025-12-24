@@ -299,7 +299,7 @@ class Stores extends Component
             }
 
             $this->loadSyncLogs();
-            session()->flash('success', __('Products synced: ').$log->success_count.' / '.($log->success_count + $log->failed_count));
+            session()->flash('success', __('Products synced: ').$log->records_success.' / '.($log->records_success + $log->records_failed));
 
         } catch (\Exception $e) {
             session()->flash('error', __('Sync failed: ').$e->getMessage());
@@ -329,7 +329,7 @@ class Stores extends Component
             }
 
             $this->loadSyncLogs();
-            session()->flash('success', __('Inventory synced: ').$log->success_count.' / '.($log->success_count + $log->failed_count));
+            session()->flash('success', __('Inventory synced: ').$log->records_success.' / '.($log->records_success + $log->records_failed));
 
         } catch (\Exception $e) {
             session()->flash('error', __('Sync failed: ').$e->getMessage());
@@ -359,7 +359,7 @@ class Stores extends Component
             }
 
             $this->loadSyncLogs();
-            session()->flash('success', __('Orders synced: ').$log->success_count.' / '.($log->success_count + $log->failed_count));
+            session()->flash('success', __('Orders synced: ').$log->records_success.' / '.($log->records_success + $log->records_failed));
 
         } catch (\Exception $e) {
             session()->flash('error', __('Sync failed: ').$e->getMessage());

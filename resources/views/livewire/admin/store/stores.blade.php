@@ -356,7 +356,7 @@
                                             </div>
                                             <div class="text-end">
                                                 <div class="text-sm text-gray-900 dark:text-gray-100">
-                                                    {{ $log['success_count'] ?? 0 }} / {{ ($log['success_count'] ?? 0) + ($log['failed_count'] ?? 0) }}
+                                                    {{ $log['records_success'] ?? 0 }} / {{ ($log['records_success'] ?? 0) + ($log['records_failed'] ?? 0) }}
                                                 </div>
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">
                                                     {{ \Carbon\Carbon::parse($log['created_at'])->diffForHumans() }}
