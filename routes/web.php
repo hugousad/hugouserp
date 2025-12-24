@@ -422,6 +422,14 @@ Route::middleware('auth')->group(function () {
             ->name('index')
             ->middleware('can:warehouse.view');
 
+        Route::get('/warehouses/create', \App\Livewire\Warehouse\Warehouses\Form::class)
+            ->name('warehouses.create')
+            ->middleware('can:warehouse.manage');
+
+        Route::get('/warehouses/{warehouse}/edit', \App\Livewire\Warehouse\Warehouses\Form::class)
+            ->name('warehouses.edit')
+            ->middleware('can:warehouse.manage');
+
         Route::get('/locations', \App\Livewire\Warehouse\Locations\Index::class)
             ->name('locations.index')
             ->middleware('can:warehouse.view');
