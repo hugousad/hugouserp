@@ -527,13 +527,15 @@ class StoreSyncService
             if (! empty($items)) {
                 $result = $client->bulkUpdateStock($items);
                 if ($result['success'] ?? false) {
-                    $log->success_count = $result['updated'] ?? count($items);
-                    $log->failed_count = $result['failed'] ?? 0;
+                    $log->records_success = $result['updated'] ?? count($items);
+                    $log->records_failed = $result['failed'] ?? 0;
+                    $log->records_processed = ($log->records_success ?? 0) + ($log->records_failed ?? 0);
                     foreach ($mappings as $mapping) {
                         $mapping->markSynced();
                     }
                 } else {
-                    $log->failed_count = count($items);
+                    $log->records_failed = count($items);
+                    $log->records_processed = count($items);
                 }
             }
 

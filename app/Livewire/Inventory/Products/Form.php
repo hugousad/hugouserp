@@ -132,7 +132,7 @@ class Form extends Component
 
                 foreach ($p->fieldValues as $fv) {
                     if ($fv->field) {
-                        $this->dynamicData[$fv->field->field_key] = $fv->field_value;
+                        $this->dynamicData[$fv->field->field_key] = $fv->value;
                     }
                 }
             }

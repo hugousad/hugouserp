@@ -368,7 +368,7 @@ class ProductService implements ProductServiceInterface
                 ProductFieldValue::create([
                     'product_id' => $product->id,
                     'module_product_field_id' => $field->id,
-                    'field_value' => is_array($value) ? json_encode($value) : (string) $value,
+                    'value' => is_array($value) ? json_encode($value) : (string) $value,
                 ]);
             }
         }
