@@ -702,6 +702,18 @@ Route::middleware('auth')->group(function () {
             ->name('create')
             ->middleware('can:documents.manage');
 
+        Route::get('/tags', \App\Livewire\Documents\Tags\Index::class)
+            ->name('tags.index')
+            ->middleware('can:documents.tags.manage');
+
+        Route::get('/tags/create', \App\Livewire\Documents\Tags\Form::class)
+            ->name('tags.create')
+            ->middleware('can:documents.tags.manage');
+
+        Route::get('/tags/{tag}/edit', \App\Livewire\Documents\Tags\Form::class)
+            ->name('tags.edit')
+            ->middleware('can:documents.tags.manage');
+
         Route::get('/{document}', \App\Livewire\Documents\Show::class)
             ->name('show')
             ->middleware('can:documents.view');
