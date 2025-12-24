@@ -731,6 +731,38 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
         Route::get('/categories', \App\Livewire\Helpdesk\Categories\Index::class)
             ->name('categories.index')
             ->middleware('can:helpdesk.manage');
+
+        Route::get('/categories/create', \App\Livewire\Helpdesk\Categories\Form::class)
+            ->name('categories.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/categories/{category}/edit', \App\Livewire\Helpdesk\Categories\Form::class)
+            ->name('categories.edit')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities', \App\Livewire\Helpdesk\Priorities\Index::class)
+            ->name('priorities.index')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities/create', \App\Livewire\Helpdesk\Priorities\Form::class)
+            ->name('priorities.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities/{priority}/edit', \App\Livewire\Helpdesk\Priorities\Form::class)
+            ->name('priorities.edit')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies', \App\Livewire\Helpdesk\SLAPolicies\Index::class)
+            ->name('sla-policies.index')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies/create', \App\Livewire\Helpdesk\SLAPolicies\Form::class)
+            ->name('sla-policies.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies/{policy}/edit', \App\Livewire\Helpdesk\SLAPolicies\Form::class)
+            ->name('sla-policies.edit')
+            ->middleware('can:helpdesk.manage');
     });
 
     // ACCOUNTING MODULE (kept separate as it's more complex)
