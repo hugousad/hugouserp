@@ -16,12 +16,12 @@
                     </svg>
                     {{ __('Back') }}
                 </a>
-                <button wire:click="openModal" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
+                <a href="{{ route('app.inventory.products.store-mappings.create', ['product' => $productId]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     {{ __('Add Mapping') }}
-                </button>
+                </a>
             </div>
         </div>
     @endif
@@ -97,11 +97,11 @@
                             </td>
                             <td class="px-6 py-4 text-end">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button wire:click="openModal({{ $mapping->id }})" class="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition" title="{{ __('Edit') }}">
+                                    <a href="{{ route('app.inventory.products.store-mappings.edit', ['product' => $productId, 'mapping' => $mapping->id]) }}" class="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition" title="{{ __('Edit') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                    </button>
+                                    </a>
                                     <button wire:click="delete({{ $mapping->id }})" wire:confirm="{{ __('Are you sure you want to delete this mapping?') }}" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="{{ __('Delete') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -118,9 +118,9 @@
                                 </svg>
                                 <p class="mt-2">{{ __('No store mappings found') }}</p>
                                 @if($product)
-                                    <button wire:click="openModal" class="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
+                                    <a href="{{ route('app.inventory.products.store-mappings.create', ['product' => $productId]) }}" class="mt-4 inline-block text-emerald-600 hover:text-emerald-700 font-medium">
                                         {{ __('Add your first mapping') }}
-                                    </button>
+                                    </a>
                                 @endif
                             </td>
                         </tr>
@@ -135,57 +135,4 @@
             </div>
         @endif
     </div>
-
-    @if($showModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeModal"></div>
-
-                <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-start overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form wire:submit="save">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ $editingId ? __('Edit Store Mapping') : __('Add Store Mapping') }}
-                            </h3>
-                        </div>
-
-                        <div class="px-6 py-4 space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Store') }} *</label>
-                                <select wire:model="store_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500" {{ $editingId ? 'disabled' : '' }}>
-                                    <option value="">{{ __('Select Store') }}</option>
-                                    @foreach($stores as $store)
-                                        <option value="{{ $store['id'] }}">{{ $store['name'] }} ({{ ucfirst($store['type']) }})</option>
-                                    @endforeach
-                                </select>
-                                @error('store_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('External Product ID') }} *</label>
-                                <input type="text" wire:model="external_id" placeholder="e.g. 1234567890" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500 font-mono">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('The product ID in the external store') }}</p>
-                                @error('external_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('External SKU') }}</label>
-                                <input type="text" wire:model="external_sku" placeholder="{{ __('Optional') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('The SKU in the external store (optional)') }}</p>
-                            </div>
-                        </div>
-
-                        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                            <button type="button" wire:click="closeModal" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                {{ __('Cancel') }}
-                            </button>
-                            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
-                                {{ $editingId ? __('Update') : __('Create') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

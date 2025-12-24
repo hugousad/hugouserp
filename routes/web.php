@@ -344,6 +344,14 @@ Route::middleware('auth')->group(function () {
             ->name('products.store-mappings')
             ->middleware('can:inventory.products.view');
 
+        Route::get('/products/{product}/store-mappings/create', \App\Livewire\Inventory\ProductStoreMappings\Form::class)
+            ->name('products.store-mappings.create')
+            ->middleware('can:inventory.products.create');
+
+        Route::get('/products/{product}/store-mappings/{mapping}/edit', \App\Livewire\Inventory\ProductStoreMappings\Form::class)
+            ->name('products.store-mappings.edit')
+            ->middleware('can:inventory.products.update');
+
         Route::get('/products/{product}/compatibility', \App\Livewire\Inventory\ProductCompatibility::class)
             ->name('products.compatibility')
             ->middleware('can:inventory.products.view');
@@ -1154,6 +1162,14 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             Route::get('/scheduled', ScheduledReportsManager::class)
                 ->name('scheduled')
                 ->middleware('can:reports.schedule');
+
+            Route::get('/scheduled/create', \App\Livewire\Reports\ScheduledReports\Form::class)
+                ->name('scheduled.create')
+                ->middleware('can:reports.manage');
+
+            Route::get('/scheduled/{schedule}/edit', \App\Livewire\Reports\ScheduledReports\Form::class)
+                ->name('scheduled.edit')
+                ->middleware('can:reports.manage');
 
             Route::get('/templates', ReportTemplatesManager::class)
                 ->name('templates')
