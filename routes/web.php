@@ -990,8 +990,27 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             ->middleware('can:modules.manage')
             ->whereNumber('module');
 
+        Route::get('/modules/{module}/rental-periods/create', \App\Livewire\Admin\Modules\RentalPeriods\Form::class)
+            ->name('modules.rental-periods.create')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module');
+
+        Route::get('/modules/{module}/rental-periods/{period}/edit', \App\Livewire\Admin\Modules\RentalPeriods\Form::class)
+            ->name('modules.rental-periods.edit')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module')
+            ->whereNumber('period');
+
         Route::get('/modules/product-fields/{moduleId?}', \App\Livewire\Admin\Modules\ProductFields::class)
             ->name('modules.product-fields')
+            ->middleware('can:modules.manage');
+
+        Route::get('/modules/product-fields/{moduleId}/create', \App\Livewire\Admin\Modules\ProductFields\Form::class)
+            ->name('modules.product-fields.create')
+            ->middleware('can:modules.manage');
+
+        Route::get('/modules/product-fields/{moduleId}/{field}/edit', \App\Livewire\Admin\Modules\ProductFields\Form::class)
+            ->name('modules.product-fields.edit')
             ->middleware('can:modules.manage');
 
         // Stores Management
