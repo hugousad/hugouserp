@@ -125,7 +125,7 @@
                                 <div x-show="showModal" 
                                      x-cloak
                                      @click.self="showModal = false"
-                                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                                     class="z-modal fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
                                      style="display: none;">
                                     <div @click.stop 
                                          x-transition:enter="transition ease-out duration-300"

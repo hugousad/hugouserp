@@ -26,7 +26,7 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="absolute {{ app()->getLocale() === 'ar' ? 'left-0' : 'right-0' }} mt-2 w-96 max-w-sm z-50"
+        class="absolute {{ app()->getLocale() === 'ar' ? 'left-0' : 'right-0' }} mt-2 w-96 max-w-sm z-popover"
         style="display: none;"
     >
         <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">

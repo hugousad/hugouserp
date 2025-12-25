@@ -144,7 +144,7 @@
     </div>
 
     @if ($showNoteModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="closeNoteModal">
+        <div class="z-modal fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="closeNoteModal">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
                 <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
                     <h3 class="text-lg font-semibold">
@@ -180,7 +180,7 @@
     @endif
 
     @if ($showFileModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="closeFileModal">
+        <div class="z-modal fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="closeFileModal">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
                 <div class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                     <h3 class="text-lg font-semibold">{{ __('Upload Files') }}</h3>

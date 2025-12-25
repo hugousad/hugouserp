@@ -95,7 +95,7 @@
     </div>
 
     @if($showSettingsModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto" x-data x-init="$el.focus()">
+    <div class="z-modal fixed inset-0 overflow-y-auto" x-data x-init="$el.focus()">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50" wire:click="$set('showSettingsModal', false)"></div>
             <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full p-6">
@@ -140,7 +140,7 @@
     @endif
 
     @if($showAdjustModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="z-modal fixed inset-0 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black opacity-50" wire:click="$set('showAdjustModal', false)"></div>
             <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">

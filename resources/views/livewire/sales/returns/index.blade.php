@@ -91,7 +91,7 @@
     </div>
 
     @if($showReturnModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" wire:click.self="closeReturnModal">
+        <div class="z-modal fixed inset-0 flex items-center justify-center p-4 bg-black/50" wire:click.self="closeReturnModal">
             <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-slate-800 dark:text-white">{{ __('Process Sales Return') }}</h3>

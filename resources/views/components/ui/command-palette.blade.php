@@ -21,7 +21,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm"
+         class="z-modal-backdrop fixed inset-0 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm"
          @click="open = false">
     </div>
 
@@ -33,7 +33,7 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95"
-         class="fixed inset-0 z-50 overflow-y-auto p-4 sm:p-6 md:p-20 pointer-events-none">
+         class="z-modal fixed inset-0 overflow-y-auto p-4 sm:p-6 md:p-20 pointer-events-none">
         <div class="mx-auto max-w-2xl pointer-events-auto" @click.stop>
             @livewire('command-palette')
         </div>

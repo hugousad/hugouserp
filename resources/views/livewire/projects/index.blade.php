@@ -191,7 +191,7 @@
     </div>
 
     {{-- Loading State --}}
-    <div wire:loading class="fixed inset-0 bg-slate-900/10 flex items-center justify-center z-50">
+    <div wire:loading class="loading-overlay bg-slate-900/10 flex items-center justify-center">
         <div class="bg-white rounded-lg p-6 shadow-xl">
             <svg class="animate-spin h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

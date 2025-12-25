@@ -56,7 +56,7 @@
 
     {{-- Add Modal --}}
     @if($showModal)
-    <div class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50" wire:click.self="closeModal">
+    <div class="z-modal fixed inset-0 bg-slate-900/50 flex items-center justify-center" wire:click.self="closeModal">
         <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 class="text-lg font-semibold text-slate-900 mb-4">{{ __('Log Time') }}</h3>
             <div class="space-y-4">

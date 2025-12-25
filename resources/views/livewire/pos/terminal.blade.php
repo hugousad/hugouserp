@@ -238,7 +238,7 @@
     {{-- Payment Modal --}}
     <div x-show="showPaymentModal" 
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+         class="z-modal fixed inset-0 flex items-center justify-center bg-black/50"
          x-transition>
         <div class="w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl p-6" x-on:click.outside="showPaymentModal = false">
             <h3 class="text-lg font-semibold text-slate-800 mb-4">{{ __('Payment') }}</h3>
@@ -347,7 +347,7 @@
     {{-- Session Modal --}}
     <div x-show="showSessionModal" 
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+         class="z-modal fixed inset-0 flex items-center justify-center bg-black/50"
          x-transition>
         <div class="w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl p-6" x-on:click.outside="showSessionModal = false">
             <h3 class="text-lg font-semibold text-slate-800 mb-4" x-text="currentSession ? '{{ __('Close Session') }}' : '{{ __('Open Session') }}'"></h3>

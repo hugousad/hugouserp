@@ -21,7 +21,7 @@
      x-transition:leave="transition ease-in duration-200"
      x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
      x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-     class="fixed bottom-4 right-4 z-50 pointer-events-auto"
+     class="z-notification fixed bottom-4 right-4 pointer-events-auto"
      {{ $attributes }}>
     <div class="bg-slate-800 dark:bg-slate-900 text-white rounded-lg shadow-lg flex items-center gap-4 px-4 py-3 min-w-[320px]">
         <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

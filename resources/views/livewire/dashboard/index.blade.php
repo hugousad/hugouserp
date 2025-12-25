@@ -1,7 +1,7 @@
 {{-- resources/views/livewire/dashboard/index.blade.php --}}
 <div class="space-y-6">
     {{-- Loading Overlay --}}
-    <div wire:loading wire:target="refreshData" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50">
+    <div wire:loading wire:target="refreshData" class="loading-overlay flex items-center justify-center bg-slate-900/50">
         <div class="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-4">
             <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
             <p class="text-slate-600 font-medium">{{ __('Refreshing data...') }}</p>

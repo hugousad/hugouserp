@@ -1,7 +1,7 @@
 {{-- resources/views/livewire/inventory/products/index.blade.php --}}
 <div class="space-y-4">
     {{-- Global Loading Overlay --}}
-    <div wire:loading.delay class="fixed inset-0 bg-slate-900/20 z-50 flex items-center justify-center">
+    <div wire:loading.delay class="loading-overlay bg-slate-900/20 flex items-center justify-center">
         <div class="bg-white rounded-xl shadow-xl p-6 flex items-center gap-3">
             <svg class="animate-spin h-6 w-6 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

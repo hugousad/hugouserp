@@ -53,7 +53,7 @@
         x-show="open"
         x-transition
         @click.away="open = false"
-        class="absolute z-50 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto"
+        class="absolute z-popover mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto"
         style="display: none;"
     >
         @if($query && strlen($query) >= 2)

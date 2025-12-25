@@ -179,7 +179,7 @@
     </div>
 
     @if($showPreview && count($selectedProducts) > 0)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="togglePreview">
+        <div class="z-modal fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="togglePreview">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
                 <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex items-center justify-between">
                     <h3 class="text-lg font-semibold">{{ __('Label Preview') }}</h3>
