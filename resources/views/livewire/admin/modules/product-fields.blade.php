@@ -39,12 +39,12 @@
                 </select>
             </div>
             @if ($moduleId)
-                <button wire:click="openModal" class="erp-btn-primary mt-6">
+                <a href="{{ route('app.admin.modules.product-fields.create', ['moduleId' => $moduleId]) }}" class="erp-btn-primary mt-6">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
                     {{ __('Add Field') }}
-                </button>
+                </a>
             @endif
         </div>
     </div>
@@ -133,11 +133,11 @@
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex items-center justify-center gap-2">
-                                            <button wire:click="openModal({{ $field['id'] }})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="{{ __('Edit') }}">
+                                            <a href="{{ route('app.admin.modules.product-fields.edit', ['moduleId' => $moduleId, 'field' => $field['id']]) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg" title="{{ __('Edit') }}">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
-                                            </button>
+                                            </a>
                                             <button wire:click="delete({{ $field['id'] }})" wire:confirm="{{ __('Are you sure you want to delete this field?') }}" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="{{ __('Delete') }}">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -167,131 +167,6 @@
             </svg>
             <p class="text-lg font-medium text-slate-600 mb-2">{{ __('Select a Module') }}</p>
             <p class="text-slate-400">{{ __('Choose a module from the dropdown above to manage its product fields') }}</p>
-        </div>
-    @endif
-
-    @if ($showModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" wire:click.self="closeModal">
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-                <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-t-2xl">
-                    <h3 class="text-lg font-semibold">
-                        {{ $editingId ? __('Edit Field') : __('Add New Field') }}
-                    </h3>
-                </div>
-                
-                <form wire:submit="save" class="p-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="erp-label">{{ __('Field Key') }} *</label>
-                            <input type="text" wire:model="field_key" class="erp-input w-full mt-1" placeholder="e.g. engine_size">
-                            <p class="text-xs text-slate-400 mt-1">{{ __('Unique identifier, use snake_case') }}</p>
-                            @error('field_key') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="erp-label">{{ __('Field Type') }} *</label>
-                            <select wire:model.live="field_type" class="erp-input w-full mt-1">
-                                @foreach ($fieldTypes as $value => $label)
-                                    <option value="{{ $value }}">{{ __($label) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="erp-label">{{ __('Label (English)') }} *</label>
-                            <input type="text" wire:model="field_label" class="erp-input w-full mt-1" placeholder="Engine Size">
-                            @error('field_label') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="erp-label">{{ __('Label (Arabic)') }}</label>
-                            <input type="text" wire:model="field_label_ar" class="erp-input w-full mt-1" dir="rtl" placeholder="حجم المحرك">
-                        </div>
-                    </div>
-
-                    @if (in_array($field_type, ['select', 'multiselect', 'radio']))
-                        <div>
-                            <label class="erp-label">{{ __('Options') }} *</label>
-                            <textarea wire:model="optionsText" rows="4" class="erp-input w-full mt-1" placeholder="{{ __('Enter each option on a new line') }}"></textarea>
-                            <p class="text-xs text-slate-400 mt-1">{{ __('One option per line') }}</p>
-                        </div>
-                    @endif
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="erp-label">{{ __('Placeholder (English)') }}</label>
-                            <input type="text" wire:model="placeholder" class="erp-input w-full mt-1">
-                        </div>
-                        <div>
-                            <label class="erp-label">{{ __('Placeholder (Arabic)') }}</label>
-                            <input type="text" wire:model="placeholder_ar" class="erp-input w-full mt-1" dir="rtl">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="erp-label">{{ __('Default Value') }}</label>
-                            <input type="text" wire:model="default_value" class="erp-input w-full mt-1">
-                        </div>
-                        <div>
-                            <label class="erp-label">{{ __('Field Group') }}</label>
-                            <select wire:model="field_group" class="erp-input w-full mt-1">
-                                @foreach ($fieldGroups as $value => $label)
-                                    <option value="{{ $value }}">{{ __($label) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="erp-label">{{ __('Validation Rules') }}</label>
-                            <input type="text" wire:model="validation_rules" class="erp-input w-full mt-1" placeholder="e.g. numeric|min:0|max:10000">
-                            <p class="text-xs text-slate-400 mt-1">{{ __('Laravel validation rules (pipe separated)') }}</p>
-                        </div>
-                        <div>
-                            <label class="erp-label">{{ __('Sort Order') }}</label>
-                            <input type="number" wire:model="sort_order" class="erp-input w-full mt-1" min="0">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="is_required" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Required') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="show_in_form" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Show in Form') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="show_in_list" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Show in List') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="is_searchable" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Searchable') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="is_filterable" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Filterable') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" wire:model="is_active" class="erp-checkbox">
-                            <span class="text-sm text-slate-700">{{ __('Active') }}</span>
-                        </label>
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
-                        <button type="button" wire:click="closeModal" class="erp-btn-secondary">
-                            {{ __('Cancel') }}
-                        </button>
-                        <button type="submit" class="erp-btn-primary">
-                            {{ $editingId ? __('Update Field') : __('Create Field') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
         </div>
     @endif
 </div>

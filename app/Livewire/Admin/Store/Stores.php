@@ -6,11 +6,9 @@ namespace App\Livewire\Admin\Store;
 
 use App\Models\Branch;
 use App\Models\Store;
-use App\Models\StoreIntegration;
 use App\Models\StoreSyncLog;
 use App\Services\Store\StoreSyncService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -28,44 +26,9 @@ class Stores extends Component
 
     public ?string $statusFilter = null;
 
-    public bool $showModal = false;
-
     public bool $showSyncModal = false;
 
-    public ?int $editingId = null;
-
     public ?int $syncingStoreId = null;
-
-    public string $name = '';
-
-    public string $type = 'shopify';
-
-    public string $url = '';
-
-    public ?int $branch_id = null;
-
-    public bool $is_active = true;
-
-    public array $settings = [];
-
-    public string $api_key = '';
-
-    public string $api_secret = '';
-
-    public string $access_token = '';
-
-    public string $webhook_secret = '';
-
-    public array $sync_settings = [
-        'sync_products' => true,
-        'sync_inventory' => true,
-        'sync_orders' => true,
-        'sync_customers' => false,
-        'auto_sync' => false,
-        'sync_interval' => 60,
-        'sync_modules' => [],
-        'sync_categories' => [],
-    ];
 
     public array $branches = [];
 
@@ -77,21 +40,6 @@ class Stores extends Component
         'laravel' => 'Laravel API',
         'custom' => 'Custom API',
     ];
-
-    protected function rules(): array
-    {
-        return [
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:shopify,woocommerce,laravel,custom',
-            'url' => 'required|url|max:500',
-            'branch_id' => 'nullable|exists:branches,id',
-            'is_active' => 'boolean',
-            'api_key' => 'nullable|string|max:500',
-            'api_secret' => 'nullable|string|max:500',
-            'access_token' => 'nullable|string|max:1000',
-            'webhook_secret' => 'nullable|string|max:255',
-        ];
-    }
 
     public function mount(): void
     {
@@ -116,123 +64,6 @@ class Stores extends Component
     public function updatingSearch(): void
     {
         $this->resetPage();
-    }
-
-    public function openModal(?int $id = null): void
-    {
-        $this->resetForm();
-
-        if ($id) {
-            $store = Store::with('integration')->findOrFail($id);
-            $this->editingId = $store->id;
-            $this->name = $store->name;
-            $this->type = $store->type;
-            $this->url = $store->url;
-            $this->branch_id = $store->branch_id;
-            $this->is_active = $store->is_active;
-            $this->settings = $store->settings ?? [];
-            $this->sync_settings = array_merge($this->sync_settings, $store->settings['sync'] ?? []);
-            $this->sanitizeSyncSettings();
-
-            if ($store->integration) {
-                $this->api_key = $store->integration->api_key ?? '';
-                $this->api_secret = $store->integration->api_secret ?? '';
-                $this->access_token = $store->integration->access_token ?? '';
-                $this->webhook_secret = $store->integration->webhook_secret ?? '';
-            }
-        }
-
-        $this->showModal = true;
-    }
-
-    public function closeModal(): void
-    {
-        $this->showModal = false;
-        $this->resetForm();
-    }
-
-    protected function resetForm(): void
-    {
-        $this->editingId = null;
-        $this->name = '';
-        $this->type = 'shopify';
-        $this->url = '';
-        $this->branch_id = null;
-        $this->is_active = true;
-        $this->settings = [];
-        $this->api_key = '';
-        $this->api_secret = '';
-        $this->access_token = '';
-        $this->webhook_secret = '';
-        $this->sync_settings = [
-            'sync_products' => true,
-            'sync_inventory' => true,
-            'sync_orders' => true,
-            'sync_customers' => false,
-            'auto_sync' => false,
-            'sync_interval' => 60,
-            'sync_modules' => [],
-            'sync_categories' => [],
-        ];
-        $this->resetValidation();
-    }
-
-    public function save(): void
-    {
-        $this->validate();
-        $this->sanitizeSyncSettings();
-
-        DB::beginTransaction();
-
-        try {
-            $storeData = [
-                'name' => $this->name,
-                'type' => $this->type,
-                'url' => rtrim($this->url, '/'),
-                'branch_id' => $this->branch_id,
-                'is_active' => $this->is_active,
-                'settings' => array_merge($this->settings, ['sync' => $this->sync_settings]),
-            ];
-
-            if ($this->editingId) {
-                $store = Store::findOrFail($this->editingId);
-                $store->update($storeData);
-            } else {
-                $store = Store::create($storeData);
-            }
-
-            $integrationData = [
-                'platform' => $this->type,
-                'is_active' => $this->is_active,
-            ];
-
-            if ($this->api_key) {
-                $integrationData['api_key'] = $this->api_key;
-            }
-            if ($this->api_secret) {
-                $integrationData['api_secret'] = $this->api_secret;
-            }
-            if ($this->access_token) {
-                $integrationData['access_token'] = $this->access_token;
-            }
-            if ($this->webhook_secret) {
-                $integrationData['webhook_secret'] = $this->webhook_secret;
-            }
-
-            StoreIntegration::updateOrCreate(
-                ['store_id' => $store->id],
-                $integrationData
-            );
-
-            DB::commit();
-
-            $this->closeModal();
-            session()->flash('success', $this->editingId ? __('Store updated successfully') : __('Store created successfully'));
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', __('Error saving store: ').$e->getMessage());
-        }
     }
 
     public function delete(int $id): void
@@ -265,21 +96,6 @@ class Stores extends Component
         $this->showSyncModal = false;
         $this->syncingStoreId = null;
         $this->syncLogs = [];
-    }
-
-    protected function sanitizeSyncSettings(): void
-    {
-        $this->sync_settings['sync_modules'] = collect($this->sync_settings['sync_modules'] ?? [])
-            ->filter(fn ($id) => $id !== null && $id !== '')
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
-        $this->sync_settings['sync_categories'] = collect($this->sync_settings['sync_categories'] ?? [])
-            ->filter(fn ($category) => $category !== null && $category !== '')
-            ->values()
-            ->all();
     }
 
     protected function loadSyncLogs(): void
@@ -405,29 +221,9 @@ class Stores extends Component
 
         $stores = $query->orderByDesc('created_at')->paginate(15);
 
-        $moduleQuery = \App\Models\Module::where('is_active', true)
-            ->where('has_inventory', true)
-            ->where('supports_items', true);
-
-        if ($this->branch_id) {
-            $enabledModuleIds = \App\Models\BranchModule::where('branch_id', $this->branch_id)
-                ->where('enabled', true)
-                ->pluck('module_id')
-                ->filter()
-                ->all();
-
-            if (! empty($enabledModuleIds)) {
-                $moduleQuery->whereIn('id', $enabledModuleIds);
-            }
-        }
-
-        $modules = $moduleQuery->orderBy('name')
-            ->get(['id', 'name', 'name_ar']);
-
         return view('livewire.admin.store.stores', [
             'stores' => $stores,
             'storeTypes' => $this->storeTypes,
-            'modules' => $modules,
         ]);
     }
 }

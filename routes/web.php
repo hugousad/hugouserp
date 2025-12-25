@@ -344,6 +344,14 @@ Route::middleware('auth')->group(function () {
             ->name('products.store-mappings')
             ->middleware('can:inventory.products.view');
 
+        Route::get('/products/{product}/store-mappings/create', \App\Livewire\Inventory\ProductStoreMappings\Form::class)
+            ->name('products.store-mappings.create')
+            ->middleware('can:inventory.products.create');
+
+        Route::get('/products/{product}/store-mappings/{mapping}/edit', \App\Livewire\Inventory\ProductStoreMappings\Form::class)
+            ->name('products.store-mappings.edit')
+            ->middleware('can:inventory.products.update');
+
         Route::get('/products/{product}/compatibility', \App\Livewire\Inventory\ProductCompatibility::class)
             ->name('products.compatibility')
             ->middleware('can:inventory.products.view');
@@ -353,10 +361,26 @@ Route::middleware('auth')->group(function () {
             ->name('categories.index')
             ->middleware('can:inventory.categories.view');
 
+        Route::get('/categories/create', \App\Livewire\Admin\Categories\Form::class)
+            ->name('categories.create')
+            ->middleware('can:inventory.categories.manage');
+
+        Route::get('/categories/{category}/edit', \App\Livewire\Admin\Categories\Form::class)
+            ->name('categories.edit')
+            ->middleware('can:inventory.categories.manage');
+
         // Units
         Route::get('/units', \App\Livewire\Admin\UnitsOfMeasure\Index::class)
             ->name('units.index')
             ->middleware('can:inventory.units.view');
+
+        Route::get('/units/create', \App\Livewire\Admin\UnitsOfMeasure\Form::class)
+            ->name('units.create')
+            ->middleware('can:inventory.units.manage');
+
+        Route::get('/units/{unit}/edit', \App\Livewire\Admin\UnitsOfMeasure\Form::class)
+            ->name('units.edit')
+            ->middleware('can:inventory.units.manage');
 
         // Stock Alerts
         Route::get('/stock-alerts', \App\Livewire\Inventory\StockAlerts::class)
@@ -389,6 +413,15 @@ Route::middleware('auth')->group(function () {
             ->name('serials.edit')
             ->middleware('can:inventory.manage');
 
+        // Services
+        Route::get('/services/create', \App\Livewire\Inventory\Services\Form::class)
+            ->name('services.create')
+            ->middleware('can:inventory.products.create');
+
+        Route::get('/services/{service}/edit', \App\Livewire\Inventory\Services\Form::class)
+            ->name('services.edit')
+            ->middleware('can:inventory.products.update');
+
         // Barcode printing
         Route::get('/barcodes', \App\Livewire\Inventory\BarcodePrint::class)
             ->name('barcodes')
@@ -396,8 +429,16 @@ Route::middleware('auth')->group(function () {
 
         // Vehicle Models (for spare parts compatibility)
         Route::get('/vehicle-models', \App\Livewire\Inventory\VehicleModels::class)
-            ->name('vehicle-models')
+            ->name('vehicle-models.index')
             ->middleware('can:inventory.view');
+        
+        Route::get('/vehicle-models/create', \App\Livewire\Inventory\VehicleModels\Form::class)
+            ->name('vehicle-models.create')
+            ->middleware('can:spares.compatibility.manage');
+        
+        Route::get('/vehicle-models/{vehicleModel}/edit', \App\Livewire\Inventory\VehicleModels\Form::class)
+            ->name('vehicle-models.edit')
+            ->middleware('can:spares.compatibility.manage');
     });
 
     // WAREHOUSE MODULE
@@ -406,9 +447,25 @@ Route::middleware('auth')->group(function () {
             ->name('index')
             ->middleware('can:warehouse.view');
 
+        Route::get('/warehouses/create', \App\Livewire\Warehouse\Warehouses\Form::class)
+            ->name('warehouses.create')
+            ->middleware('can:warehouse.manage');
+
+        Route::get('/warehouses/{warehouse}/edit', \App\Livewire\Warehouse\Warehouses\Form::class)
+            ->name('warehouses.edit')
+            ->middleware('can:warehouse.manage');
+
         Route::get('/locations', \App\Livewire\Warehouse\Locations\Index::class)
             ->name('locations.index')
             ->middleware('can:warehouse.view');
+
+        Route::get('/locations/create', \App\Livewire\Warehouse\Locations\Form::class)
+            ->name('locations.create')
+            ->middleware('can:warehouse.manage');
+
+        Route::get('/locations/{warehouse}/edit', \App\Livewire\Warehouse\Locations\Form::class)
+            ->name('locations.edit')
+            ->middleware('can:warehouse.manage');
 
         Route::get('/movements', \App\Livewire\Warehouse\Movements\Index::class)
             ->name('movements.index')
@@ -455,10 +512,26 @@ Route::middleware('auth')->group(function () {
             ->name('properties.index')
             ->middleware('can:rental.view');
 
+        Route::get('/properties/create', \App\Livewire\Rental\Properties\Form::class)
+            ->name('properties.create')
+            ->middleware('can:rental.properties.create');
+
+        Route::get('/properties/{property}/edit', \App\Livewire\Rental\Properties\Form::class)
+            ->name('properties.edit')
+            ->middleware('can:rental.properties.update');
+
         // Tenants
         Route::get('/tenants', \App\Livewire\Rental\Tenants\Index::class)
             ->name('tenants.index')
             ->middleware('can:rental.view');
+
+        Route::get('/tenants/create', \App\Livewire\Rental\Tenants\Form::class)
+            ->name('tenants.create')
+            ->middleware('can:rental.tenants.create');
+
+        Route::get('/tenants/{tenant}/edit', \App\Livewire\Rental\Tenants\Form::class)
+            ->name('tenants.edit')
+            ->middleware('can:rental.tenants.update');
 
         // Contracts
         Route::get('/contracts', RentalContractsIndex::class)
@@ -563,6 +636,14 @@ Route::middleware('auth')->group(function () {
             ->name('shifts.index')
             ->middleware('can:hrm.view');
 
+        Route::get('/shifts/create', \App\Livewire\Hrm\Shifts\Form::class)
+            ->name('shifts.create')
+            ->middleware('can:hrm.manage');
+
+        Route::get('/shifts/{shift}/edit', \App\Livewire\Hrm\Shifts\Form::class)
+            ->name('shifts.edit')
+            ->middleware('can:hrm.manage');
+
         // Reports
         Route::get('/reports', HrmReportsDashboard::class)
             ->name('reports')
@@ -654,6 +735,18 @@ Route::middleware('auth')->group(function () {
             ->name('create')
             ->middleware('can:documents.manage');
 
+        Route::get('/tags', \App\Livewire\Documents\Tags\Index::class)
+            ->name('tags.index')
+            ->middleware('can:documents.tags.manage');
+
+        Route::get('/tags/create', \App\Livewire\Documents\Tags\Form::class)
+            ->name('tags.create')
+            ->middleware('can:documents.tags.manage');
+
+        Route::get('/tags/{tag}/edit', \App\Livewire\Documents\Tags\Form::class)
+            ->name('tags.edit')
+            ->middleware('can:documents.tags.manage');
+
         Route::get('/{document}', \App\Livewire\Documents\Show::class)
             ->name('show')
             ->middleware('can:documents.view');
@@ -706,6 +799,38 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
 
         Route::get('/categories', \App\Livewire\Helpdesk\Categories\Index::class)
             ->name('categories.index')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/categories/create', \App\Livewire\Helpdesk\Categories\Form::class)
+            ->name('categories.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/categories/{category}/edit', \App\Livewire\Helpdesk\Categories\Form::class)
+            ->name('categories.edit')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities', \App\Livewire\Helpdesk\Priorities\Index::class)
+            ->name('priorities.index')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities/create', \App\Livewire\Helpdesk\Priorities\Form::class)
+            ->name('priorities.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/priorities/{priority}/edit', \App\Livewire\Helpdesk\Priorities\Form::class)
+            ->name('priorities.edit')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies', \App\Livewire\Helpdesk\SLAPolicies\Index::class)
+            ->name('sla-policies.index')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies/create', \App\Livewire\Helpdesk\SLAPolicies\Form::class)
+            ->name('sla-policies.create')
+            ->middleware('can:helpdesk.manage');
+
+        Route::get('/sla-policies/{policy}/edit', \App\Livewire\Helpdesk\SLAPolicies\Form::class)
+            ->name('sla-policies.edit')
             ->middleware('can:helpdesk.manage');
     });
 
@@ -882,19 +1007,57 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             ->middleware('can:modules.manage')
             ->whereNumber('module');
 
+        Route::get('/modules/{module}/fields/create', \App\Livewire\Admin\Modules\Fields\Form::class)
+            ->name('modules.fields.create')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module');
+
+        Route::get('/modules/{module}/fields/{field}/edit', \App\Livewire\Admin\Modules\Fields\Form::class)
+            ->name('modules.fields.edit')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module')
+            ->whereNumber('field');
+
         Route::get('/modules/{module}/rental-periods', \App\Livewire\Admin\Modules\RentalPeriods::class)
             ->name('modules.rental-periods')
             ->middleware('can:modules.manage')
             ->whereNumber('module');
 
+        Route::get('/modules/{module}/rental-periods/create', \App\Livewire\Admin\Modules\RentalPeriods\Form::class)
+            ->name('modules.rental-periods.create')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module');
+
+        Route::get('/modules/{module}/rental-periods/{period}/edit', \App\Livewire\Admin\Modules\RentalPeriods\Form::class)
+            ->name('modules.rental-periods.edit')
+            ->middleware('can:modules.manage')
+            ->whereNumber('module')
+            ->whereNumber('period');
+
         Route::get('/modules/product-fields/{moduleId?}', \App\Livewire\Admin\Modules\ProductFields::class)
             ->name('modules.product-fields')
+            ->middleware('can:modules.manage');
+
+        Route::get('/modules/product-fields/{moduleId}/create', \App\Livewire\Admin\Modules\ProductFields\Form::class)
+            ->name('modules.product-fields.create')
+            ->middleware('can:modules.manage');
+
+        Route::get('/modules/product-fields/{moduleId}/{field}/edit', \App\Livewire\Admin\Modules\ProductFields\Form::class)
+            ->name('modules.product-fields.edit')
             ->middleware('can:modules.manage');
 
         // Stores Management
         Route::get('/stores', \App\Livewire\Admin\Store\Stores::class)
             ->name('stores.index')
             ->middleware('can:stores.view');
+
+        Route::get('/stores/create', \App\Livewire\Admin\Store\Form::class)
+            ->name('stores.create')
+            ->middleware('can:stores.manage');
+
+        Route::get('/stores/{store}/edit', \App\Livewire\Admin\Store\Form::class)
+            ->name('stores.edit')
+            ->middleware('can:stores.manage');
 
         Route::get('/stores/orders', \App\Livewire\Admin\Store\OrdersDashboard::class)
             ->name('stores.orders')
@@ -919,9 +1082,25 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             ->name('currencies.index')
             ->middleware('can:settings.view');
 
+        Route::get('/currencies/create', \App\Livewire\Admin\Currency\Form::class)
+            ->name('currencies.create')
+            ->middleware('can:settings.currency.manage');
+
+        Route::get('/currencies/{currency}/edit', \App\Livewire\Admin\Currency\Form::class)
+            ->name('currencies.edit')
+            ->middleware('can:settings.currency.manage');
+
         Route::get('/currency-rates', \App\Livewire\Admin\CurrencyRates::class)
             ->name('currency-rates.index')
             ->middleware('can:settings.view');
+
+        Route::get('/currency-rates/create', \App\Livewire\Admin\CurrencyRate\Form::class)
+            ->name('currency-rates.create')
+            ->middleware('can:settings.manage');
+
+        Route::get('/currency-rates/{currencyRate}/edit', \App\Livewire\Admin\CurrencyRate\Form::class)
+            ->name('currency-rates.edit')
+            ->middleware('can:settings.manage');
 
         // Unified Settings (NEW)
         Route::get('/settings', UnifiedSettings::class)
@@ -1000,6 +1179,14 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             Route::get('/scheduled', ScheduledReportsManager::class)
                 ->name('scheduled')
                 ->middleware('can:reports.schedule');
+
+            Route::get('/scheduled/create', \App\Livewire\Reports\ScheduledReports\Form::class)
+                ->name('scheduled.create')
+                ->middleware('can:reports.manage');
+
+            Route::get('/scheduled/{schedule}/edit', \App\Livewire\Reports\ScheduledReports\Form::class)
+                ->name('scheduled.edit')
+                ->middleware('can:reports.manage');
 
             Route::get('/templates', ReportTemplatesManager::class)
                 ->name('templates')

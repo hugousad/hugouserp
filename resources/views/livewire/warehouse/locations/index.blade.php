@@ -5,10 +5,10 @@
             <p class="text-sm text-slate-500">{{ __('Manage warehouse storage locations') }}</p>
         </div>
         @can('warehouse.manage')
-        <button wire:click="openModal" class="erp-btn erp-btn-primary">
+        <a href="{{ route('app.warehouse.locations.create') }}" class="erp-btn erp-btn-primary">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            {{ __('Add Warehouse') }}
-        </button>
+            {{ __('Add Location') }}
+        </a>
         @endcan
     </div>
 
@@ -98,9 +98,9 @@
                             <td class="text-sm text-slate-500">{{ number_format($warehouse->stock_movements_count) }}</td>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <button wire:click="openModal({{ $warehouse->id }})" class="text-blue-600 hover:text-blue-800" title="{{ __('Edit') }}">
+                                    <a href="{{ route('app.warehouse.locations.edit', $warehouse->id) }}" class="text-blue-600 hover:text-blue-800" title="{{ __('Edit') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </button>
+                                    </a>
                                     <button wire:click="delete({{ $warehouse->id }})" wire:confirm="{{ __('Are you sure?') }}" class="text-red-600 hover:text-red-800" title="{{ __('Delete') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
@@ -127,76 +127,4 @@
             <div class="mt-4">{{ $warehouses->links() }}</div>
         @endif
     </div>
-
-    @if($showModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity" wire:click="closeModal"></div>
-            <div class="inline-block align-bottom bg-white rounded-xl text-start overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form wire:submit="save">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
-                        <h3 class="text-lg font-semibold text-slate-800 mb-4">
-                            {{ $editingId ? __('Edit Warehouse') : __('Add Warehouse') }}
-                        </h3>
-                        
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Code') }}</label>
-                                    <input type="text" wire:model="code" class="erp-input" placeholder="{{ __('Auto-generated') }}">
-                                    @error('code') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Type') }} *</label>
-                                    <select wire:model="type" class="erp-input" required>
-                                        <option value="main">{{ __('Main') }}</option>
-                                        <option value="secondary">{{ __('Secondary') }}</option>
-                                        <option value="virtual">{{ __('Virtual') }}</option>
-                                    </select>
-                                    @error('type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Name') }} *</label>
-                                <input type="text" wire:model="name" class="erp-input" required>
-                                @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Status') }} *</label>
-                                <select wire:model="status" class="erp-input" required>
-                                    <option value="active">{{ __('Active') }}</option>
-                                    <option value="inactive">{{ __('Inactive') }}</option>
-                                </select>
-                                @error('status') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Address') }}</label>
-                                <input type="text" wire:model="address" class="erp-input">
-                                @error('address') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">{{ __('Notes') }}</label>
-                                <textarea wire:model="notes" rows="2" class="erp-input"></textarea>
-                                @error('notes') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-slate-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
-                        <button type="button" wire:click="closeModal" class="erp-btn erp-btn-secondary">
-                            {{ __('Cancel') }}
-                        </button>
-                        <button type="submit" class="erp-btn erp-btn-primary">
-                            {{ $editingId ? __('Update') : __('Save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    @endif
 </div>

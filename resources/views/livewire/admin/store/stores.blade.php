@@ -3,12 +3,12 @@
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
             {{ __('Store Integrations') }}
         </h1>
-        <button wire:click="openModal" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
+        <a href="{{ route('app.admin.stores.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             {{ __('Add Store') }}
-        </button>
+        </a>
     </div>
 
     @if(session('success'))
@@ -117,11 +117,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                         </svg>
                                     </button>
-                                    <button wire:click="openModal({{ $store->id }})" class="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition" title="{{ __('Edit') }}">
+                                    <a href="{{ route('app.admin.stores.edit', $store->id) }}" class="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition" title="{{ __('Edit') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                    </button>
+                                    </a>
                                     <button wire:click="delete({{ $store->id }})" wire:confirm="{{ __('Are you sure you want to delete this store?') }}" class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="{{ __('Delete') }}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -137,9 +137,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                 </svg>
                                 <p class="mt-2">{{ __('No stores found') }}</p>
-                                <button wire:click="openModal" class="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
+                                <a href="{{ route('app.admin.stores.create') }}" class="mt-4 text-emerald-600 hover:text-emerald-700 font-medium">
                                     {{ __('Add your first store') }}
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     @endforelse
@@ -153,153 +153,6 @@
             </div>
         @endif
     </div>
-
-    @if($showModal)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" wire:click="closeModal"></div>
-
-                <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-start overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full z-10">
-                    <form wire:submit="save">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ $editingId ? __('Edit Store') : __('Add Store') }}
-                            </h3>
-                        </div>
-
-                        <div class="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Store Name') }} *</label>
-                                    <input type="text" wire:model="name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                    @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Store Type') }} *</label>
-                                    <select wire:model="type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                        @foreach($storeTypes as $key => $label)
-                                            <option value="{{ $key }}">{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Store URL') }} *</label>
-                                <input type="url" wire:model="url" placeholder="https://your-store.myshopify.com" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                @error('url') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Branch') }}</label>
-                                    <select wire:model="branch_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                        <option value="">{{ __('No Branch') }}</option>
-                                        @foreach($branches as $branch)
-                                            <option value="{{ $branch['id'] }}">{{ $branch['name'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="flex items-center">
-                                    <label class="relative inline-flex items-center cursor-pointer mt-6">
-                                        <input type="checkbox" wire:model="is_active" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                                        <span class="ms-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Active') }}</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">{{ __('API Credentials') }}</h4>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('API Key') }}</label>
-                                        <input type="password" wire:model="api_key" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('API Secret') }}</label>
-                                        <input type="password" wire:model="api_secret" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                    </div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Access Token') }}</label>
-                                    <input type="password" wire:model="access_token" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('For Shopify, use the Admin API access token') }}</p>
-                                </div>
-
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Webhook Secret') }}</label>
-                                    <input type="password" wire:model="webhook_secret" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                </div>
-                            </div>
-
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                                <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">{{ __('Sync Settings') }}</h4>
-                                
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" wire:model="sync_settings.sync_products" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('Sync Products') }}</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" wire:model="sync_settings.sync_inventory" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('Sync Inventory') }}</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" wire:model="sync_settings.sync_orders" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('Sync Orders') }}</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" wire:model="sync_settings.sync_customers" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('Sync Customers') }}</span>
-                                    </label>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" wire:model="sync_settings.auto_sync" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('Enable Auto Sync') }}</span>
-                                    </label>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ __('Sync Interval (minutes)') }}</label>
-                                        <input type="number" wire:model="sync_settings.sync_interval" min="15" max="1440" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500">
-                                    </div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Sync Only These Modules') }}</label>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($modules as $module)
-                                            <label class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                                                <input type="checkbox" wire:model="sync_settings.sync_modules" value="{{ $module->id }}" class="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500">
-                                                <span class="text-sm text-gray-700 dark:text-gray-300">{{ app()->getLocale() === 'ar' ? $module->name_ar : $module->name }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Leave empty to sync all modules') }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                            <button type="button" wire:click="closeModal" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-                                {{ __('Cancel') }}
-                            </button>
-                            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition">
-                                {{ $editingId ? __('Update') : __('Create') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
 
     @if($showSyncModal)
         <div class="fixed inset-0 z-50 overflow-y-auto">

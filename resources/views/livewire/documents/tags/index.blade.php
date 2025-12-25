@@ -4,11 +4,29 @@
             <h1 class="text-2xl font-bold text-slate-800">{{ __('Document Tags') }}</h1>
             <p class="text-sm text-slate-500">{{ __('Manage document tags and labels') }}</p>
         </div>
-        <button wire:click="openModal" class="erp-btn erp-btn-primary">
+        <a href="{{ route('app.documents.tags.create') }}" class="erp-btn erp-btn-primary">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             {{ __('New Tag') }}
-        </button>
+        </a>
     </div>
+
+    @if(session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
         <table class="min-w-full divide-y divide-slate-200">
@@ -35,7 +53,7 @@
                         <td class="px-6 py-4 text-sm">{{ $tag->documents_count }}</td>
                         <td class="px-6 py-4 text-sm">
                             <div class="flex items-center gap-2">
-                                <button wire:click="openModal({{ $tag->id }})" class="text-blue-600 hover:text-blue-900">{{ __('Edit') }}</button>
+                                <a href="{{ route('app.documents.tags.edit', $tag->id) }}" class="text-blue-600 hover:text-blue-900">{{ __('Edit') }}</a>
                                 <button wire:click="delete({{ $tag->id }})" wire:confirm="{{ __('Are you sure?') }}" class="text-red-600 hover:text-red-900">{{ __('Delete') }}</button>
                             </div>
                         </td>
@@ -49,34 +67,4 @@
         </table>
         <div class="px-6 py-4 border-t">{{ $tags->links() }}</div>
     </div>
-
-    {{-- Modal --}}
-    @if($showModal)
-        <div class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-xl max-w-lg w-full">
-                <div class="p-6">
-                    <h2 class="text-xl font-bold text-slate-800 mb-6">{{ $editingId ? __('Edit Tag') : __('New Tag') }}</h2>
-                    <form wire:submit="save" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">{{ __('Name') }} <span class="text-red-500">*</span></label>
-                            <input type="text" wire:model="name" class="erp-input w-full" required>
-                            @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">{{ __('Color') }}</label>
-                            <input type="color" wire:model="color" class="erp-input w-full h-10">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">{{ __('Description') }}</label>
-                            <textarea wire:model="description" rows="3" class="erp-input w-full"></textarea>
-                        </div>
-                        <div class="flex items-center justify-end gap-3 pt-4 border-t">
-                            <button type="button" wire:click="closeModal" class="erp-btn erp-btn-secondary">{{ __('Cancel') }}</button>
-                            <button type="submit" class="erp-btn erp-btn-primary">{{ $editingId ? __('Update') : __('Create') }}</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

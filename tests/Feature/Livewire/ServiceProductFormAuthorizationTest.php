@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\Inventory\ServiceProductForm;
+use App\Livewire\Inventory\Services\Form as ServicesForm;
 use App\Models\Branch;
 use App\Models\Module;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -36,9 +35,9 @@ class ServiceProductFormAuthorizationTest extends TestCase
     }
 
     /**
-     * BUG-001: Test unauthorized user receives 403 when opening form.
+     * BUG-001: Test unauthorized user receives 403 when accessing form.
      */
-    public function test_unauthorized_user_receives_403_when_opening_form(): void
+    public function test_unauthorized_user_receives_403_when_accessing_form(): void
     {
         $branch = Branch::factory()->create();
         $user = User::factory()->create(['branch_id' => $branch->id]);
@@ -48,8 +47,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        app()->call([$component, 'open']);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount']);
     }
 
     /**
@@ -64,14 +63,14 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        app()->call([$component, 'open']);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount']);
     }
 
     /**
-     * BUG-001: Test user with permission can open form.
+     * BUG-001: Test user with permission can access form.
      */
-    public function test_user_with_permission_can_open_form(): void
+    public function test_user_with_permission_can_access_form(): void
     {
         $branch = Branch::factory()->create();
         $user = User::factory()->create(['branch_id' => $branch->id]);
@@ -79,10 +78,11 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->actingAs($user);
         
-        $component = new ServiceProductForm();
-        app()->call([$component, 'open']);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount']);
         
-        $this->assertTrue($component->showModal);
+        // If we reach here without exception, the component mounted successfully
+        $this->assertTrue(true);
     }
 
     /**
@@ -104,8 +104,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        app()->call([$component, 'edit'], ['productId' => $product->id]);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount'], ['service' => $product->id]);
     }
 
     /**
@@ -127,8 +127,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        $component->productId = $product->id;
+        $component = new ServicesForm();
+        $component->serviceId = $product->id;
         $component->name = 'Test Service';
         $component->defaultPrice = 100;
         app()->call([$component, 'save']);
@@ -153,8 +153,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->actingAs($user);
 
-        $component = new ServiceProductForm();
-        app()->call([$component, 'open'], ['moduleId' => $serviceModule->id]);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount'], ['moduleId' => $serviceModule->id]);
         
         $component->name = 'Test Service';
         $component->defaultPrice = 100;
@@ -187,8 +187,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        app()->call([$component, 'open'], ['moduleId' => $nonServiceModule->id]);
+        $component = new ServicesForm();
+        app()->call([$component, 'mount'], ['moduleId' => $nonServiceModule->id]);
     }
 
     /**
@@ -209,8 +209,8 @@ class ServiceProductFormAuthorizationTest extends TestCase
 
         $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
         
-        $component = new ServiceProductForm();
-        $component->productId = $product->id;
+        $component = new ServicesForm();
+        $component->serviceId = $product->id;
         $component->name = 'Updated Service';
         $component->defaultPrice = 200;
         app()->call([$component, 'save']);
