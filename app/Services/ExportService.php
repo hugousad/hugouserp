@@ -182,9 +182,11 @@ class ExportService
                     throw new \InvalidArgumentException('At least one column must be specified for export');
                 }
 
-                if ($data->isEmpty()) {
-                    throw new \InvalidArgumentException('No data available to export');
-                }
+                // Empty data exports are allowed to enable users to export template files
+                // with headers only. This is useful for:
+                // 1. Creating templates for bulk import
+                // 2. Exporting filtered results that may have no matching records
+                // 3. Demonstrating export format to users
 
                 $availableColumns = $options['available_columns'] ?? [];
                 $dateFormat = $options['date_format'] ?? 'Y-m-d';

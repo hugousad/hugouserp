@@ -1127,6 +1127,11 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             ->name('export.customize')
             ->middleware('can:reports.export');
 
+        // Bulk Import
+        Route::get('/bulk-import', \App\Livewire\Admin\BulkImport::class)
+            ->name('bulk-import')
+            ->middleware('can:settings.view');
+
         // Media Library
         Route::get('/media', \App\Livewire\Admin\MediaLibrary::class)
             ->name('media.index')
@@ -1144,6 +1149,11 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
         Route::get('/activity-log', \App\Livewire\Admin\ActivityLog::class)
             ->name('activity-log')
             ->middleware('can:logs.audit.view');
+
+        Route::get('/activity-log/{id}', \App\Livewire\Admin\ActivityLogShow::class)
+            ->name('activity-log.show')
+            ->middleware('can:logs.audit.view')
+            ->whereNumber('id');
 
         /*
         |--------------------------------------------------------------------------
