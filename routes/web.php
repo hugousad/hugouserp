@@ -1153,6 +1153,11 @@ Route::get('/app/media/{media}/download', \App\Http\Controllers\Admin\MediaDownl
             ->name('logs.audit')
             ->middleware('can:'.config('screen_permissions.logs.audit', 'logs.audit.view'));
 
+        // Login Activity (detailed auth events)
+        Route::get('/login-activity', \App\Livewire\Admin\LoginActivity\Index::class)
+            ->name('login-activity')
+            ->middleware('can:logs.login.view');
+
         // Activity Log (Spatie)
         Route::get('/activity-log', \App\Livewire\Admin\ActivityLog::class)
             ->name('activity-log')
