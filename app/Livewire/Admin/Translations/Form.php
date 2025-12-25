@@ -21,10 +21,20 @@ class Form extends Component
     {
         // Handle query string parameters for editing
         if (request()->has('key') && request()->has('group')) {
-            $this->isEdit = true;
             // URL decode the key since it's passed via URL
-            $this->originalKey = urldecode(request()->get('key'));
-            $this->group = request()->get('group');
+            $decodedKey = urldecode(request()->get('key'));
+            $decodedGroup = request()->get('group');
+            
+            // Security: Validate key and group format before assignment
+            if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $decodedKey) || !preg_match('/^[a-zA-Z0-9_-]+$/', $decodedGroup)) {
+                // Invalid format, redirect back with error
+                session()->flash('error', __('Invalid translation key or group format.'));
+                return redirect()->route('admin.translations.index');
+            }
+            
+            $this->isEdit = true;
+            $this->originalKey = $decodedKey;
+            $this->group = $decodedGroup;
             $this->loadTranslation($this->originalKey, $this->group);
         }
     }
@@ -86,7 +96,7 @@ class Form extends Component
     
     public function getTranslationGroups()
     {
-        $groups = [];
+        $groups = ['app']; // Always include 'app' as default
         $langPath = lang_path('en');
         
         if (File::isDirectory($langPath)) {
@@ -96,7 +106,8 @@ class Form extends Component
             }
         }
         
-        return array_unique($groups);
+        // Return unique groups, ensuring 'app' is always included
+        return array_values(array_unique($groups));
     }
     
     public function save()

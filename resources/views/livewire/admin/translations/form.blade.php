@@ -32,9 +32,6 @@
                         @foreach($groups as $g)
                             <option value="{{ $g }}">{{ ucfirst($g) }}{{ $g === 'app' ? ' (' . __('Default') . ')' : '' }}</option>
                         @endforeach
-                        @if(!in_array('app', $groups))
-                            <option value="app">App ({{ __('Default') }})</option>
-                        @endif
                     </select>
                     @if(!$isEdit)
                         <input type="text" wire:model="group" 

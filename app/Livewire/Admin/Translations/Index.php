@@ -161,6 +161,10 @@ class Index extends Component
     {
         // Security: Validate inputs
         if (!is_string($key) || !is_string($group)) {
+            $this->dispatch('notify', [
+                'type' => 'error',
+                'message' => __('Invalid input type.'),
+            ]);
             return;
         }
         
@@ -192,6 +196,7 @@ class Index extends Component
     {
         // Security: Validate locale and group to prevent path traversal
         if (!preg_match('/^[a-z]{2}$/', $locale) || !preg_match('/^[a-zA-Z0-9_-]+$/', $group)) {
+            // Silently fail - validation already done in deleteTranslation
             return;
         }
         
