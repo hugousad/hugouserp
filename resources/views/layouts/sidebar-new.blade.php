@@ -6,6 +6,8 @@
     - One level expand/collapse only
     - Active state based on route name
     - Auto-expand parent for child routes
+    - Search functionality for quick navigation
+    - Auto-scroll to active item
 --}}
 @php
     use Illuminate\Support\Str;
@@ -78,6 +80,14 @@
                     'label' => __('Reports Hub'),
                     'permission' => 'reports.view',
                     'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                    'children' => [
+                        ['route' => 'admin.reports.sales', 'label' => __('Sales'), 'permission' => 'sales.view-reports'],
+                        ['route' => 'admin.reports.inventory', 'label' => __('Inventory'), 'permission' => 'inventory.view-reports'],
+                        ['route' => 'admin.reports.pos', 'label' => __('POS'), 'permission' => 'pos.view-reports'],
+                        ['route' => 'admin.reports.aggregate', 'label' => __('Aggregate'), 'permission' => 'reports.aggregate'],
+                        ['route' => 'admin.reports.scheduled', 'label' => __('Scheduled'), 'permission' => 'reports.schedule'],
+                        ['route' => 'admin.reports.templates', 'label' => __('Templates'), 'permission' => 'reports.templates'],
+                    ],
                 ],
             ],
         ],
@@ -105,6 +115,8 @@
                         ['route' => 'app.purchases.create', 'label' => __('New Purchase'), 'permission' => 'purchases.manage'],
                         ['route' => 'app.purchases.returns.index', 'label' => __('Returns'), 'permission' => 'purchases.return'],
                         ['route' => 'app.purchases.requisitions.index', 'label' => __('Requisitions'), 'permission' => 'purchases.requisitions.view'],
+                        ['route' => 'app.purchases.quotations.index', 'label' => __('Quotations'), 'permission' => 'purchases.view'],
+                        ['route' => 'app.purchases.grn.index', 'label' => __('Goods Received'), 'permission' => 'purchases.view'],
                     ],
                 ],
                 [
@@ -141,6 +153,10 @@
                         ['route' => 'app.inventory.categories.index', 'label' => __('Categories'), 'permission' => 'inventory.products.view'],
                         ['route' => 'app.inventory.units.index', 'label' => __('Units'), 'permission' => 'inventory.products.view'],
                         ['route' => 'app.inventory.stock-alerts', 'label' => __('Stock Alerts'), 'permission' => 'inventory.stock.alerts.view'],
+                        ['route' => 'app.inventory.barcodes', 'label' => __('Barcodes'), 'permission' => 'inventory.products.view'],
+                        ['route' => 'app.inventory.batches.index', 'label' => __('Batches'), 'permission' => 'inventory.products.view'],
+                        ['route' => 'app.inventory.serials.index', 'label' => __('Serial Numbers'), 'permission' => 'inventory.products.view'],
+                        ['route' => 'app.inventory.vehicle-models', 'label' => __('Vehicle Models'), 'permission' => 'spares.compatibility.manage'],
                     ],
                 ],
                 [
@@ -156,8 +172,11 @@
                     'icon' => 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z',
                     'children' => [
                         ['route' => 'app.warehouse.locations.index', 'label' => __('Locations'), 'permission' => 'warehouse.view'],
+                        ['route' => 'app.warehouse.movements.index', 'label' => __('Movements'), 'permission' => 'warehouse.view'],
                         ['route' => 'app.warehouse.transfers.index', 'label' => __('Transfers'), 'permission' => 'warehouse.view'],
+                        ['route' => 'app.warehouse.transfers.create', 'label' => __('New Transfer'), 'permission' => 'warehouse.manage'],
                         ['route' => 'app.warehouse.adjustments.index', 'label' => __('Adjustments'), 'permission' => 'warehouse.view'],
+                        ['route' => 'app.warehouse.adjustments.create', 'label' => __('New Adjustment'), 'permission' => 'warehouse.manage'],
                     ],
                 ],
             ],
@@ -193,6 +212,7 @@
                     'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
                     'children' => [
                         ['route' => 'app.income.create', 'label' => __('New Income'), 'permission' => 'income.manage'],
+                        ['route' => 'app.income.categories.index', 'label' => __('Categories'), 'permission' => 'income.manage'],
                     ],
                 ],
                 [
@@ -203,6 +223,7 @@
                     'children' => [
                         ['route' => 'app.banking.accounts.create', 'label' => __('Add Account'), 'permission' => 'banking.create'],
                         ['route' => 'app.banking.transactions.index', 'label' => __('Transactions'), 'permission' => 'banking.view'],
+                        ['route' => 'app.banking.reconciliation', 'label' => __('Reconciliation'), 'permission' => 'banking.reconcile'],
                     ],
                 ],
             ],
@@ -220,6 +241,8 @@
                         ['route' => 'app.hrm.employees.index', 'label' => __('Employees'), 'permission' => 'hrm.employees.view'],
                         ['route' => 'app.hrm.attendance.index', 'label' => __('Attendance'), 'permission' => 'hrm.attendance.manage'],
                         ['route' => 'app.hrm.payroll.index', 'label' => __('Payroll'), 'permission' => 'hrm.payroll.manage'],
+                        ['route' => 'app.hrm.shifts.index', 'label' => __('Shifts'), 'permission' => 'hrm.shifts.manage'],
+                        ['route' => 'app.hrm.reports', 'label' => __('Reports'), 'permission' => 'hr.view-reports'],
                     ],
                 ],
             ],
@@ -235,7 +258,10 @@
                     'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
                     'children' => [
                         ['route' => 'app.rental.units.index', 'label' => __('Units'), 'permission' => 'rental.units.view'],
+                        ['route' => 'app.rental.properties.index', 'label' => __('Properties'), 'permission' => 'rental.properties.view'],
+                        ['route' => 'app.rental.tenants.index', 'label' => __('Tenants'), 'permission' => 'rental.tenants.view'],
                         ['route' => 'app.rental.contracts.index', 'label' => __('Contracts'), 'permission' => 'rental.contracts.view'],
+                        ['route' => 'app.rental.reports', 'label' => __('Reports'), 'permission' => 'rental.view-reports'],
                     ],
                 ],
                 [
@@ -246,6 +272,7 @@
                     'children' => [
                         ['route' => 'app.manufacturing.boms.index', 'label' => __('BOMs'), 'permission' => 'manufacturing.view'],
                         ['route' => 'app.manufacturing.orders.index', 'label' => __('Production Orders'), 'permission' => 'manufacturing.view'],
+                        ['route' => 'app.manufacturing.work-centers.index', 'label' => __('Work Centers'), 'permission' => 'manufacturing.view'],
                     ],
                 ],
                 [
@@ -253,18 +280,39 @@
                     'label' => __('Fixed Assets'),
                     'permission' => 'fixed-assets.view',
                     'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+                    'children' => [
+                        ['route' => 'app.fixed-assets.create', 'label' => __('Add Asset'), 'permission' => 'fixed-assets.view'],
+                        ['route' => 'app.fixed-assets.depreciation', 'label' => __('Depreciation'), 'permission' => 'fixed-assets.view'],
+                    ],
                 ],
                 [
                     'route' => 'app.projects.index',
                     'label' => __('Projects'),
                     'permission' => 'projects.view',
                     'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    'children' => [
+                        ['route' => 'app.projects.create', 'label' => __('New Project'), 'permission' => 'projects.view'],
+                    ],
+                ],
+                [
+                    'route' => 'app.documents.index',
+                    'label' => __('Documents'),
+                    'permission' => 'documents.view',
+                    'icon' => 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+                    'children' => [
+                        ['route' => 'app.documents.create', 'label' => __('Upload Document'), 'permission' => 'documents.view'],
+                    ],
                 ],
                 [
                     'route' => 'app.helpdesk.index',
                     'label' => __('Helpdesk'),
                     'permission' => 'helpdesk.view',
                     'icon' => 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+                    'children' => [
+                        ['route' => 'app.helpdesk.tickets.index', 'label' => __('Tickets'), 'permission' => 'helpdesk.view'],
+                        ['route' => 'app.helpdesk.tickets.create', 'label' => __('New Ticket'), 'permission' => 'helpdesk.view'],
+                        ['route' => 'app.helpdesk.categories.index', 'label' => __('Categories'), 'permission' => 'helpdesk.view'],
+                    ],
                 ],
             ],
         ],
@@ -301,12 +349,50 @@
                     'label' => __('Modules'),
                     'permission' => 'modules.manage',
                     'icon' => 'M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z',
+                    'children' => [
+                        ['route' => 'admin.modules.create', 'label' => __('Add Module'), 'permission' => 'modules.manage'],
+                        ['route' => 'admin.modules.product-fields', 'label' => __('Product Fields'), 'permission' => 'modules.manage'],
+                    ],
+                ],
+                [
+                    'route' => 'admin.stores.index',
+                    'label' => __('Store Integrations'),
+                    'permission' => 'stores.view',
+                    'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+                    'children' => [
+                        ['route' => 'admin.stores.orders', 'label' => __('Store Orders'), 'permission' => 'stores.view'],
+                        ['route' => 'admin.api-docs', 'label' => __('API Docs'), 'permission' => 'stores.view'],
+                    ],
+                ],
+                [
+                    'route' => 'admin.translations.index',
+                    'label' => __('Translations'),
+                    'permission' => 'settings.view',
+                    'icon' => 'M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129',
+                ],
+                [
+                    'route' => 'admin.currencies.index',
+                    'label' => __('Currencies'),
+                    'permission' => 'settings.view',
+                    'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                    'children' => [
+                        ['route' => 'admin.currency-rates.index', 'label' => __('Exchange Rates'), 'permission' => 'settings.view'],
+                    ],
+                ],
+                [
+                    'route' => 'admin.media.index',
+                    'label' => __('Media Library'),
+                    'permission' => 'media.view',
+                    'icon' => 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
                 ],
                 [
                     'route' => 'admin.logs.audit',
                     'label' => __('Audit Logs'),
                     'permission' => 'logs.audit.view',
                     'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+                    'children' => [
+                        ['route' => 'admin.activity-log', 'label' => __('Activity Log'), 'permission' => 'logs.audit.view'],
+                    ],
                 ],
             ],
         ],
@@ -347,6 +433,31 @@
     x-cloak
     x-data="{
         expandedSections: {},
+        searchQuery: '',
+        searchResults: [],
+        showSearchResults: false,
+        allMenuItems: @js(collect($filteredSections)->flatMap(function($section) use ($safeRoute) {
+            return collect($section['items'])->flatMap(function($item) use ($section, $safeRoute) {
+                $items = [[
+                    'label' => $item['label'],
+                    'route' => $item['route'],
+                    'url' => Route::has($item['route']) ? route($item['route']) : '#',
+                    'section' => $section['title'],
+                    'icon' => $item['icon']
+                ]];
+                foreach ($item['children'] ?? [] as $child) {
+                    $items[] = [
+                        'label' => $child['label'],
+                        'route' => $child['route'],
+                        'url' => Route::has($child['route']) ? route($child['route']) : '#',
+                        'section' => $section['title'],
+                        'parent' => $item['label'],
+                        'icon' => $item['icon']
+                    ];
+                }
+                return $items;
+            });
+        })->values()->all()),
         init() {
             // Auto-expand sections with active items
             @foreach($filteredSections as $sectionIndex => $section)
@@ -356,14 +467,55 @@
                     @endif
                 @endforeach
             @endforeach
+            
+            // Auto-scroll to active item after DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    const activeItem = this.$el.querySelector('.erp-sidebar-item.active, .erp-sidebar-subitem.active');
+                    if (activeItem) {
+                        const nav = this.$el.querySelector('.erp-sidebar-nav');
+                        if (nav) {
+                            const navRect = nav.getBoundingClientRect();
+                            const itemRect = activeItem.getBoundingClientRect();
+                            const scrollTop = nav.scrollTop + (itemRect.top - navRect.top) - (navRect.height / 2) + (itemRect.height / 2);
+                            nav.scrollTo({ top: scrollTop, behavior: 'smooth' });
+                        }
+                    }
+                }, 100);
+            });
         },
         toggle(key) {
             this.expandedSections[key] = !this.expandedSections[key];
         },
         isExpanded(key) {
             return this.expandedSections[key] ?? false;
+        },
+        performSearch() {
+            if (this.searchQuery.length < 2) {
+                this.searchResults = [];
+                this.showSearchResults = false;
+                return;
+            }
+            const query = this.searchQuery.toLowerCase();
+            this.searchResults = this.allMenuItems.filter(item => 
+                item.label.toLowerCase().includes(query) ||
+                item.section.toLowerCase().includes(query) ||
+                (item.parent && item.parent.toLowerCase().includes(query))
+            ).slice(0, 8);
+            this.showSearchResults = true;
+        },
+        navigateTo(url) {
+            this.searchQuery = '';
+            this.showSearchResults = false;
+            window.location.href = url;
+        },
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchResults = [];
+            this.showSearchResults = false;
         }
     }"
+    @click.away="showSearchResults = false"
 >
     {{-- Sidebar Header --}}
     <div class="erp-sidebar-header">
@@ -387,6 +539,75 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
         </button>
+    </div>
+
+    {{-- Search Box --}}
+    <div class="px-3 py-2 relative">
+        <div class="relative">
+            <input 
+                type="text" 
+                x-model="searchQuery"
+                @input.debounce.200ms="performSearch()"
+                @focus="searchQuery.length >= 2 && (showSearchResults = true)"
+                @keydown.escape="clearSearch()"
+                placeholder="{{ __('Search...') }}"
+                class="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 ps-9 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all"
+            >
+            <svg class="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <button 
+                x-show="searchQuery.length > 0"
+                @click="clearSearch()"
+                class="absolute end-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-700/50 text-slate-500 hover:text-slate-300 transition-colors"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        {{-- Search Results Dropdown --}}
+        <div 
+            x-show="showSearchResults && searchResults.length > 0"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-1"
+            class="absolute start-3 end-3 top-full mt-1 bg-slate-800 border border-slate-700/50 rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto"
+        >
+            <template x-for="(result, index) in searchResults" :key="index">
+                <button 
+                    @click="navigateTo(result.url)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-start hover:bg-slate-700/50 transition-colors border-b border-slate-700/30 last:border-0"
+                >
+                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700/50 text-emerald-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" :d="result.icon"/>
+                        </svg>
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-sm text-slate-200 truncate" x-text="result.label"></div>
+                        <div class="text-xs text-slate-500 truncate">
+                            <span x-text="result.section"></span>
+                            <template x-if="result.parent">
+                                <span> → <span x-text="result.parent"></span></span>
+                            </template>
+                        </div>
+                    </div>
+                </button>
+            </template>
+        </div>
+        
+        {{-- No Results Message --}}
+        <div 
+            x-show="showSearchResults && searchQuery.length >= 2 && searchResults.length === 0"
+            class="absolute start-3 end-3 top-full mt-1 bg-slate-800 border border-slate-700/50 rounded-lg shadow-xl p-4 text-center"
+        >
+            <p class="text-sm text-slate-500">{{ __('No results found') }}</p>
+        </div>
     </div>
 
     {{-- Sidebar Navigation --}}
@@ -478,10 +699,9 @@
     <div class="erp-sidebar-footer">
         <div class="flex items-center justify-between text-xs text-slate-500">
             <span class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                {{ __('Ready') }}
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                {{ __('Developed By Hugous') }}
             </span>
-            <span>{{ $dir === 'rtl' ? 'RTL' : 'LTR' }}</span>
         </div>
     </div>
 </aside>
