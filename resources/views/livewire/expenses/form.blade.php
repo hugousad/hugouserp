@@ -11,8 +11,8 @@
             <div>
                 <div class="flex items-center justify-between">
                     <label class="erp-label">{{ __('Category') }}</label>
-                    <x-quick-add-link 
-                        :route="route('app.expenses.categories.index')" 
+                    <x-quick-add-link
+                        :route="route('app.expenses.categories.create')"
                         label="{{ __('Add Category') }}"
                         permission="expenses.manage" />
                 </div>
