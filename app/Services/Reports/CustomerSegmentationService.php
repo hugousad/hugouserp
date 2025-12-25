@@ -35,7 +35,7 @@ class CustomerSegmentationService
             $segment = $this->calculateSegment($customer);
             $segments[$segment][] = [
                 'id' => $customer->id,
-                'name' => $customer->business_name,
+                'name' => $customer->name,
                 'lifetime_revenue' => $customer->lifetime_revenue ?? 0,
                 'purchase_frequency' => $customer->purchase_frequency,
                 'recency_days' => $customer->recency_days ?? 999,
@@ -153,7 +153,7 @@ class CustomerSegmentationService
             'at_risk_customers' => $at_risk->map(function($customer) {
                 return [
                     'id' => $customer->id,
-                    'name' => $customer->business_name,
+                    'name' => $customer->name,
                     'days_since_purchase' => $customer->days_since_purchase,
                     'lifetime_revenue' => $customer->lifetime_revenue ?? 0,
                     'churn_probability' => min(90, ($customer->days_since_purchase / 365) * 100),
