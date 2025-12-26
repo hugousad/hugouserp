@@ -138,7 +138,7 @@
         ></div>
 
         {{-- Modal Content --}}
-        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden z-modal">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden z-modal">
             {{-- Header (Sticky) --}}
             <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
                 <div>
@@ -290,7 +290,7 @@
             </div>
 
             {{-- Media Grid (Scrollable Area) --}}
-            <div class="flex-1 overflow-y-auto px-6 pb-4 scroll-smooth" id="media-grid-scroll-{{ $fieldId }}" x-data="{ 
+            <div class="flex-1 overflow-y-auto px-6 pb-4 scroll-smooth min-h-0" id="media-grid-scroll-{{ $fieldId }}" x-data="{ 
                 showBackToTop: false,
                 checkScroll() {
                     this.showBackToTop = this.$el.scrollTop > 300;
