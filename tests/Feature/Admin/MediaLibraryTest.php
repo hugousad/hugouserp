@@ -92,12 +92,10 @@ class MediaLibraryTest extends TestCase
             'branch_id' => $branch->id,
         ]);
 
-        // Media library now uses array-based "Load More" pagination
-        // The media is passed as an array, not a paginator
         Livewire::actingAs($user)
             ->test(MediaLibrary::class)
             ->set('filterOwner', 'mine')
             ->set('search', 'report')
-            ->assertViewHas('media', fn ($media) => count($media) === 0);
+            ->assertViewHas('media', fn ($media) => $media->count() === 0);
     }
 }
