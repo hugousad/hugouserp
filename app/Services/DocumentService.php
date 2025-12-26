@@ -45,7 +45,9 @@ class DocumentService
         'text/csv',
         'text/plain',
         'application/zip',
+        'application/x-zip-compressed',
         'application/x-rar-compressed',
+        'application/vnd.rar',
     ];
 
     private string $documentsDisk;
