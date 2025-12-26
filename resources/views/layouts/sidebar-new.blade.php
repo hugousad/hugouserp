@@ -478,7 +478,7 @@
         searchQuery: '',
         searchResults: [],
         showSearchResults: false,
-        allMenuItems: @js(collect($filteredSections)->flatMap(function($section) use ($safeRoute, $isActive) {
+        allMenuItems: @js(collect($filteredSections)->flatMap(function($section) use ($currentRoute) {
             // Define keyword mappings for bilingual search (English -> Arabic and vice versa)
             $keywordMappings = [
                 'dashboard' => ['لوحة التحكم', 'لوحة', 'home', 'الرئيسية'],
@@ -524,7 +524,15 @@
                 'adjustments' => ['التسويات', 'تسوية', 'تعديل'],
             ];
             
-            return collect($section['items'])->flatMap(function($item) use ($section, $safeRoute, $keywordMappings) {
+            // Helper to check if route is active (inline version for this scope)
+            $checkActive = function ($route) use ($currentRoute) {
+                if (!$route) return false;
+                if (str_starts_with($currentRoute, $route)) return true;
+                $baseRoute = Str::beforeLast($route, '.');
+                return $baseRoute && str_starts_with($currentRoute, $baseRoute);
+            };
+            
+            return collect($section['items'])->flatMap(function($item) use ($section, $keywordMappings, $checkActive) {
                 // Get keywords for this item
                 $routeKey = strtolower(last(explode('.', $item['route'])));
                 $keywords = $keywordMappings[$routeKey] ?? [];
@@ -536,7 +544,7 @@
                     'section' => $section['title'],
                     'icon' => $item['icon'],
                     'keywords' => implode(' ', $keywords),
-                    'active' => $isActive($item['route'])
+                    'active' => $checkActive($item['route'])
                 ]];
                 foreach ($item['children'] ?? [] as $child) {
                     $childRouteKey = strtolower(last(explode('.', $child['route'])));
@@ -550,7 +558,7 @@
                         'parent' => $item['label'],
                         'icon' => $item['icon'],
                         'keywords' => implode(' ', array_merge($keywords, $childKeywords)),
-                        'active' => $isActive($child['route'])
+                        'active' => $checkActive($child['route'])
                     ];
                 }
                 return $items;

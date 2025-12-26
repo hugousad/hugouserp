@@ -38,7 +38,7 @@ class Form extends Component
      */
     public array $schema = [];
 
-    public function mount(?int $branch = null): void
+    public function mount(?Branch $branch = null): void
     {
         $user = Auth::user();
 
@@ -48,8 +48,8 @@ class Form extends Component
             abort(403, __('Unauthorized access'));
         }
 
-        $this->branchId = $branch;
-        $branchModel = $branch ? Branch::query()->findOrFail($branch) : null;
+        $this->branchId = $branch?->id;
+        $branchModel = $branch;
 
         // Get available timezones and currencies for dropdowns
         $timezones = \DateTimeZone::listIdentifiers();
