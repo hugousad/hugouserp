@@ -10,19 +10,23 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination;
 
 /**
- * Reusable Media Library Picker Component
+ * Reusable Media Library Picker Component with Type-Scoping
  * 
  * Usage in Blade (listen for events in parent component):
  * <livewire:components.media-picker 
  *     :value="$branding_logo_id"
- *     :accept-types="['image']"
+ *     accept-mode="image"
  *     :max-size="2048"
  *     :constraints="['maxWidth' => 400, 'maxHeight' => 100]"
  *     field-id="logo-picker"
  * />
+ * 
+ * Accept modes:
+ * - "image": Only show/accept images (jpg, png, gif, webp, ico)
+ * - "file": Only show/accept non-image files (pdf, doc, xls, etc.)
+ * - "mixed": Show and accept both images and files
  * 
  * Parent component should listen for events:
  * #[On('media-selected')] public function handleMediaSelected(string $fieldId, int $mediaId, array $media)
@@ -30,7 +34,7 @@ use Livewire\WithPagination;
  */
 class MediaPicker extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithFileUploads;
 
     // Modal state
     public bool $showModal = false;
@@ -46,10 +50,18 @@ class MediaPicker extends Component
     public string $search = '';
     public string $filterType = 'all';
     
-    // Constraints passed from parent
+    // Accept mode: 'image' | 'file' | 'mixed'
+    // This is the PRIMARY configuration that controls type-scoping
+    public string $acceptMode = 'mixed';
+    
+    // Legacy support - will be converted to acceptMode
     public array $acceptTypes = ['image']; // ['image', 'document', 'all']
+    
     public int $maxSize = 10240; // KB
     public array $constraints = []; // ['maxWidth' => 400, 'maxHeight' => 100, 'aspectRatio' => '16:9']
+    
+    // Optional: specific allowed mimes/extensions (overrides default for acceptMode)
+    public array $allowedMimes = [];
     
     // Field identification
     public string $fieldId = 'media-picker';
@@ -57,31 +69,104 @@ class MediaPicker extends Component
     // Current preview URL (for display outside modal)
     public ?string $previewUrl = null;
     public ?string $previewName = null;
+    
+    // Load more pagination
+    public int $perPage = 12;
+    public int $page = 1;
+    public bool $hasMorePages = false;
+    public array $loadedMedia = [];
+    public bool $isLoadingMore = false;
 
     // NOTE: These extension lists mirror those in MediaLibrary.php and Media model.
     // Consider centralizing to config/media.php in future refactor.
     private const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'ico'];
-    private const ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'];
+    private const ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'ppt', 'pptx'];
+    
+    private const ALLOWED_IMAGE_MIMES = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
+    ];
+    
+    private const ALLOWED_DOCUMENT_MIMES = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/csv',
+        'text/plain',
+    ];
 
     protected $listeners = ['openMediaPicker'];
 
     public function mount(
         ?int $value = null,
-        array $acceptTypes = ['image'],
+        string $acceptMode = 'mixed',
+        array $acceptTypes = ['image'], // Legacy - will be converted to acceptMode
         int $maxSize = 10240,
         array $constraints = [],
+        array $allowedMimes = [],
         string $fieldId = 'media-picker'
     ): void {
         $this->selectedMediaId = $value;
-        $this->acceptTypes = $acceptTypes;
         $this->maxSize = $maxSize;
         $this->constraints = $constraints;
         $this->fieldId = $fieldId;
+        $this->allowedMimes = $allowedMimes;
+        
+        // Convert legacy acceptTypes to new acceptMode if acceptMode wasn't explicitly set
+        // This maintains backward compatibility while preferring the new acceptMode
+        if ($acceptMode === 'mixed') {
+            // Check if acceptTypes was explicitly passed (non-default value)
+            if ($acceptTypes === ['all'] || (in_array('image', $acceptTypes) && in_array('document', $acceptTypes))) {
+                $this->acceptMode = 'mixed';
+            } elseif (in_array('document', $acceptTypes) && !in_array('image', $acceptTypes)) {
+                $this->acceptMode = 'file';
+            } elseif (in_array('image', $acceptTypes)) {
+                $this->acceptMode = 'image';
+            } else {
+                $this->acceptMode = 'mixed';
+            }
+        } else {
+            $this->acceptMode = $acceptMode;
+        }
+        
+        // Store for legacy compatibility
+        $this->acceptTypes = $acceptTypes;
+        
+        // Set initial filter based on acceptMode
+        $this->filterType = $this->getDefaultFilterType();
         
         // Load existing media if ID provided
         if ($this->selectedMediaId) {
             $this->loadSelectedMedia();
         }
+    }
+    
+    /**
+     * Get the default filter type based on acceptMode
+     */
+    protected function getDefaultFilterType(): string
+    {
+        return match ($this->acceptMode) {
+            'image' => 'images',
+            'file' => 'documents',
+            default => 'all',
+        };
+    }
+    
+    /**
+     * Check if filter type switching is allowed
+     */
+    public function canSwitchFilterType(): bool
+    {
+        return $this->acceptMode === 'mixed';
     }
 
     public function loadSelectedMedia(): void
@@ -123,18 +208,163 @@ class MediaPicker extends Component
         
         $this->showModal = true;
         $this->search = '';
-        $this->filterType = 'all';
+        $this->filterType = $this->getDefaultFilterType();
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->hasMorePages = false;
+        
+        // Load initial media
+        $this->loadMedia();
     }
 
     public function closeModal(): void
     {
         $this->showModal = false;
         $this->uploadFile = null;
+        $this->loadedMedia = [];
+        $this->page = 1;
     }
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
+        $this->loadedMedia = [];
+    }
+    
+    public function updatedSearch(): void
+    {
+        $this->loadMedia();
+    }
+    
+    public function updatedFilterType(): void
+    {
+        // Only allow filter type changes in mixed mode
+        if (!$this->canSwitchFilterType()) {
+            $this->filterType = $this->getDefaultFilterType();
+            return;
+        }
+        
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
+    }
+    
+    /**
+     * Load media with "Load More" pagination
+     */
+    public function loadMedia(): void
+    {
+        $user = auth()->user();
+        if (!$user || !$user->can('media.view')) {
+            return;
+        }
+        
+        $canBypassBranch = !$user->branch_id || $user->can('media.manage-all');
+
+        $query = Media::query()
+            ->with('user')
+            ->when($user->branch_id && !$canBypassBranch, fn ($q) => $q->forBranch($user->branch_id));
+
+        // Apply type filtering based on acceptMode
+        $this->applyTypeFilter($query);
+
+        // Apply permission filter
+        if (!$user->can('media.view-others')) {
+            $query->forUser($user->id);
+        }
+
+        // Apply search
+        if ($this->search) {
+            $search = "%{$this->search}%";
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', $search)
+                  ->orWhere('original_name', 'like', $search);
+            });
+        }
+
+        $results = $query->orderBy('created_at', 'desc')
+            ->paginate($this->perPage, ['*'], 'page', $this->page);
+        
+        $newItems = $results->items();
+        
+        if ($this->page === 1) {
+            $this->loadedMedia = collect($newItems)->map(fn ($m) => $this->formatMediaItem($m))->toArray();
+        } else {
+            $this->loadedMedia = array_merge(
+                $this->loadedMedia,
+                collect($newItems)->map(fn ($m) => $this->formatMediaItem($m))->toArray()
+            );
+        }
+        
+        $this->hasMorePages = $results->hasMorePages();
+    }
+    
+    /**
+     * Load more media items
+     */
+    public function loadMore(): void
+    {
+        if (!$this->hasMorePages) {
+            return;
+        }
+        
+        $this->isLoadingMore = true;
+        $this->page++;
+        $this->loadMedia();
+        $this->isLoadingMore = false;
+    }
+    
+    /**
+     * Apply type filter to query based on acceptMode and current filterType
+     */
+    protected function applyTypeFilter($query): void
+    {
+        // Strict type enforcement based on acceptMode
+        switch ($this->acceptMode) {
+            case 'image':
+                // ONLY images - no exceptions
+                $query->images();
+                break;
+                
+            case 'file':
+                // ONLY files (non-images) - no exceptions
+                $query->documents();
+                break;
+                
+            case 'mixed':
+            default:
+                // Allow user to filter within mixed mode
+                if ($this->filterType === 'images') {
+                    $query->images();
+                } elseif ($this->filterType === 'documents') {
+                    $query->documents();
+                }
+                // 'all' shows everything
+                break;
+        }
+    }
+    
+    /**
+     * Format a media item for display
+     */
+    protected function formatMediaItem(Media $media): array
+    {
+        return [
+            'id' => $media->id,
+            'name' => $media->name,
+            'original_name' => $media->original_name,
+            'url' => $media->url,
+            'thumbnail_url' => $media->thumbnail_url,
+            'mime_type' => $media->mime_type,
+            'extension' => $media->extension,
+            'size' => $media->size,
+            'human_size' => $media->human_size,
+            'width' => $media->width,
+            'height' => $media->height,
+            'is_image' => $media->isImage(),
+            'created_at' => $media->created_at?->format('Y-m-d H:i'),
+            'user_name' => $media->user?->name ?? __('Unknown'),
+        ];
     }
 
     public function updatedUploadFile(): void
@@ -148,9 +378,12 @@ class MediaPicker extends Component
         }
 
         $allowedExtensions = $this->getAllowedExtensions();
+        $allowedMimeTypes = $this->getAllowedMimeTypes();
         
         $this->validate([
-            'uploadFile' => 'file|max:' . $this->maxSize . '|mimes:' . implode(',', $allowedExtensions),
+            'uploadFile' => 'file|max:' . $this->maxSize 
+                . '|mimes:' . implode(',', $allowedExtensions)
+                . '|mimetypes:' . implode(',', $allowedMimeTypes),
         ]);
 
         $optimizationService = app(ImageOptimizationService::class);
@@ -179,6 +412,11 @@ class MediaPicker extends Component
         // Auto-select the newly uploaded file
         $this->selectMedia($media->id);
         $this->uploadFile = null;
+        
+        // Refresh the media list to include the new item
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
         
         session()->flash('upload-success', __('File uploaded successfully'));
     }
@@ -253,19 +491,26 @@ class MediaPicker extends Component
 
     protected function checkConstraints(Media $media): bool
     {
-        // Check file type
-        if (!empty($this->acceptTypes) && !in_array('all', $this->acceptTypes)) {
-            $isImage = $media->isImage();
-            $isDocument = $media->isDocument();
-            
-            if (in_array('image', $this->acceptTypes) && !$isImage) {
-                session()->flash('error', __('Please select an image file'));
-                return false;
-            }
-            if (in_array('document', $this->acceptTypes) && !$isDocument) {
-                session()->flash('error', __('Please select a document file'));
-                return false;
-            }
+        // Check file type based on acceptMode (strict enforcement)
+        switch ($this->acceptMode) {
+            case 'image':
+                if (!$media->isImage()) {
+                    session()->flash('error', __('Please select an image file'));
+                    return false;
+                }
+                break;
+                
+            case 'file':
+                if ($media->isImage()) {
+                    session()->flash('error', __('Please select a document file, not an image'));
+                    return false;
+                }
+                break;
+                
+            case 'mixed':
+            default:
+                // Mixed mode accepts both
+                break;
         }
 
         // Check dimension constraints for images
@@ -291,23 +536,70 @@ class MediaPicker extends Component
         return true;
     }
 
+    /**
+     * Get allowed extensions based on acceptMode
+     */
     protected function getAllowedExtensions(): array
     {
-        $extensions = [];
-        
-        if (in_array('all', $this->acceptTypes)) {
-            return array_merge(self::ALLOWED_IMAGE_EXTENSIONS, self::ALLOWED_DOCUMENT_EXTENSIONS);
+        // If custom allowedMimes are specified, derive extensions from them
+        if (!empty($this->allowedMimes)) {
+            // Return a combined list based on custom mimes
+            $extensions = [];
+            foreach ($this->allowedMimes as $mime) {
+                if (str_starts_with($mime, 'image/')) {
+                    $extensions = array_merge($extensions, self::ALLOWED_IMAGE_EXTENSIONS);
+                } else {
+                    $extensions = array_merge($extensions, self::ALLOWED_DOCUMENT_EXTENSIONS);
+                }
+            }
+            return array_unique($extensions);
         }
         
-        if (in_array('image', $this->acceptTypes)) {
-            $extensions = array_merge($extensions, self::ALLOWED_IMAGE_EXTENSIONS);
+        // Use acceptMode to determine allowed extensions
+        return match ($this->acceptMode) {
+            'image' => self::ALLOWED_IMAGE_EXTENSIONS,
+            'file' => self::ALLOWED_DOCUMENT_EXTENSIONS,
+            default => array_merge(self::ALLOWED_IMAGE_EXTENSIONS, self::ALLOWED_DOCUMENT_EXTENSIONS),
+        };
+    }
+    
+    /**
+     * Get allowed MIME types based on acceptMode
+     */
+    protected function getAllowedMimeTypes(): array
+    {
+        // If custom allowedMimes are specified, use them directly
+        if (!empty($this->allowedMimes)) {
+            return $this->allowedMimes;
         }
         
-        if (in_array('document', $this->acceptTypes)) {
-            $extensions = array_merge($extensions, self::ALLOWED_DOCUMENT_EXTENSIONS);
-        }
-        
-        return $extensions ?: self::ALLOWED_IMAGE_EXTENSIONS;
+        // Use acceptMode to determine allowed MIME types
+        return match ($this->acceptMode) {
+            'image' => self::ALLOWED_IMAGE_MIMES,
+            'file' => self::ALLOWED_DOCUMENT_MIMES,
+            default => array_merge(self::ALLOWED_IMAGE_MIMES, self::ALLOWED_DOCUMENT_MIMES),
+        };
+    }
+    
+    /**
+     * Get file input accept attribute value
+     */
+    public function getAcceptAttribute(): string
+    {
+        $extensions = $this->getAllowedExtensions();
+        return implode(',', array_map(fn($ext) => '.' . $ext, $extensions));
+    }
+    
+    /**
+     * Get human-readable description of allowed file types
+     */
+    public function getAllowedTypesDescription(): string
+    {
+        return match ($this->acceptMode) {
+            'image' => __('Images') . ' (JPG, PNG, GIF, WebP)',
+            'file' => __('Documents') . ' (PDF, DOC, XLS, TXT, CSV)',
+            default => __('Images & Documents'),
+        };
     }
 
     protected function guardAgainstHtmlPayload($file): void
@@ -334,47 +626,12 @@ class MediaPicker extends Component
 
     public function render()
     {
-        $user = auth()->user();
-        $media = collect();
-
-        if ($this->showModal && $user && $user->can('media.view')) {
-            $canBypassBranch = !$user->branch_id || $user->can('media.manage-all');
-
-            $query = Media::query()
-                ->with('user')
-                ->when($user->branch_id && !$canBypassBranch, fn ($q) => $q->forBranch($user->branch_id));
-
-            // Filter by type based on acceptTypes
-            if (in_array('image', $this->acceptTypes) && !in_array('document', $this->acceptTypes) && !in_array('all', $this->acceptTypes)) {
-                $query->images();
-            } elseif (in_array('document', $this->acceptTypes) && !in_array('image', $this->acceptTypes) && !in_array('all', $this->acceptTypes)) {
-                $query->documents();
-            } elseif ($this->filterType === 'images') {
-                $query->images();
-            } elseif ($this->filterType === 'documents') {
-                $query->documents();
-            }
-
-            // Apply permission filter
-            if (!$user->can('media.view-others')) {
-                $query->forUser($user->id);
-            }
-
-            // Apply search
-            if ($this->search) {
-                $search = "%{$this->search}%";
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', $search)
-                      ->orWhere('original_name', 'like', $search);
-                });
-            }
-
-            $media = $query->orderBy('created_at', 'desc')->paginate(12);
-        }
-
         return view('livewire.components.media-picker', [
-            'media' => $media,
+            'media' => $this->loadedMedia,
             'allowedExtensions' => $this->getAllowedExtensions(),
+            'acceptAttribute' => $this->getAcceptAttribute(),
+            'allowedTypesDescription' => $this->getAllowedTypesDescription(),
+            'canSwitchFilter' => $this->canSwitchFilterType(),
         ]);
     }
 }

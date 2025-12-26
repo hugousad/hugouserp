@@ -10,12 +10,11 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
 class MediaLibrary extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithFileUploads;
 
     private const ALLOWED_EXTENSIONS = [
         'jpg',
@@ -23,6 +22,7 @@ class MediaLibrary extends Component
         'png',
         'gif',
         'webp',
+        'ico',
         'pdf',
         'doc',
         'docx',
@@ -39,6 +39,8 @@ class MediaLibrary extends Component
         'image/png',
         'image/gif',
         'image/webp',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
         'application/pdf',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -54,8 +56,16 @@ class MediaLibrary extends Component
     public string $search = '';
     public string $filterType = 'all'; // all, images, documents
     public string $filterOwner = 'all'; // all, mine
+    public string $sortOrder = 'newest'; // newest, oldest, name, size
+    
+    // Load more pagination
+    public int $perPage = 24;
+    public int $page = 1;
+    public bool $hasMorePages = false;
+    public array $loadedMedia = [];
+    public bool $isLoading = false;
 
-    protected $queryString = ['search', 'filterType', 'filterOwner'];
+    protected $queryString = ['search', 'filterType', 'filterOwner', 'sortOrder'];
 
     public function mount(): void
     {
@@ -63,11 +73,131 @@ class MediaLibrary extends Component
         if (!$user || !$user->can('media.view')) {
             abort(403, __('Unauthorized access to media library'));
         }
+        
+        $this->loadMedia();
     }
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->page = 1;
+        $this->loadedMedia = [];
+    }
+    
+    public function updatedSearch(): void
+    {
+        $this->loadMedia();
+    }
+    
+    public function updatedFilterType(): void
+    {
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
+    }
+    
+    public function updatedFilterOwner(): void
+    {
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
+    }
+    
+    public function updatedSortOrder(): void
+    {
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
+    }
+    
+    public function loadMedia(): void
+    {
+        $user = auth()->user();
+        if (!$user || !$user->can('media.view')) {
+            return;
+        }
+        
+        $canBypassBranch = !$user->branch_id || $user->can('media.manage-all');
+
+        $query = Media::query()
+            ->with('user')
+            ->when($user->branch_id && !$canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
+            ->when($this->filterType === 'images', fn ($q) => $q->images())
+            ->when($this->filterType === 'documents', fn ($q) => $q->documents())
+            ->when(
+                $this->filterOwner === 'mine' || !$user->can('media.view-others'),
+                fn ($q) => $q->forUser($user->id)
+            )
+            ->when($this->search, function ($query) {
+                $search = "%{$this->search}%";
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('name', 'like', $search)
+                        ->orWhere('original_name', 'like', $search);
+                });
+            });
+        
+        // Apply sorting
+        switch ($this->sortOrder) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'name':
+                $query->orderBy('original_name', 'asc');
+                break;
+            case 'size':
+                $query->orderBy('size', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $results = $query->paginate($this->perPage, ['*'], 'page', $this->page);
+        
+        $newItems = collect($results->items())->map(fn ($m) => $this->formatMediaItem($m))->toArray();
+        
+        if ($this->page === 1) {
+            $this->loadedMedia = $newItems;
+        } else {
+            $this->loadedMedia = array_merge($this->loadedMedia, $newItems);
+        }
+        
+        $this->hasMorePages = $results->hasMorePages();
+    }
+    
+    public function loadMore(): void
+    {
+        if (!$this->hasMorePages) {
+            return;
+        }
+        
+        $this->isLoading = true;
+        $this->page++;
+        $this->loadMedia();
+        $this->isLoading = false;
+    }
+    
+    protected function formatMediaItem(Media $media): array
+    {
+        return [
+            'id' => $media->id,
+            'name' => $media->name,
+            'original_name' => $media->original_name,
+            'url' => $media->url,
+            'thumbnail_url' => $media->thumbnail_url,
+            'mime_type' => $media->mime_type,
+            'extension' => $media->extension,
+            'size' => $media->size,
+            'human_size' => $media->human_size,
+            'optimized_human_size' => $media->optimized_human_size,
+            'compression_ratio' => $media->compression_ratio,
+            'width' => $media->width,
+            'height' => $media->height,
+            'is_image' => $media->isImage(),
+            'created_at' => $media->created_at?->format('Y-m-d H:i'),
+            'user_id' => $media->user_id,
+            'user_name' => $media->user?->name ?? __('Unknown'),
+        ];
     }
 
     public function updatedFiles(): void
@@ -109,6 +239,12 @@ class MediaLibrary extends Component
         }
 
         $this->files = [];
+        
+        // Refresh the media list
+        $this->page = 1;
+        $this->loadedMedia = [];
+        $this->loadMedia();
+        
         session()->flash('success', __('Files uploaded successfully'));
     }
 
@@ -136,47 +272,38 @@ class MediaLibrary extends Component
         }
 
         $media->delete();
+        
+        // Remove from loadedMedia array
+        $this->loadedMedia = array_filter($this->loadedMedia, fn ($item) => $item['id'] !== $id);
+        $this->loadedMedia = array_values($this->loadedMedia);
+        
         session()->flash('success', __('File deleted successfully'));
     }
 
     public function render()
     {
-        $user = auth()->user();
-        $canBypassBranch = !$user->branch_id || $user->can('media.manage-all');
-
-        $query = Media::query()
-            ->with('user')
-            ->when($user->branch_id && ! $canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
-            ->when($this->filterType === 'images', fn ($q) => $q->images())
-            ->when($this->filterType === 'documents', fn ($q) => $q->documents())
-            ->when(
-                $this->filterOwner === 'mine' || !$user->can('media.view-others'),
-                fn ($q) => $q->forUser($user->id)
-            )
-            ->when($this->search, function ($query) {
-                $search = "%{$this->search}%";
-
-                $query->where(function ($searchQuery) use ($search) {
-                    $searchQuery->where('name', 'like', $search)
-                        ->orWhere('original_name', 'like', $search);
-                });
-            })
-            ->orderBy('created_at', 'desc');
-
-        $media = $query->paginate(20);
-
         return view('livewire.admin.media-library', [
-            'media' => $media,
+            'media' => $this->loadedMedia,
         ])->layout('layouts.app', ['title' => __('Media Library')]);
     }
 
     protected function guardAgainstHtmlPayload($file): void
     {
-        $contents = strtolower((string) $file->get());
-        $patterns = ['<script', '<iframe', '<html', '<object', '<embed', '&lt;script'];
+        // Only read the first 8KB for HTML detection (efficient for large files)
+        $handle = fopen($file->getRealPath(), 'r');
+        if (!$handle) {
+            abort(422, __('Unable to verify file content. Upload rejected.'));
+        }
+        
+        try {
+            $contents = strtolower((string) fread($handle, 8192));
+            $patterns = ['<script', '<iframe', '<html', '<object', '<embed', '&lt;script'];
 
-        if (collect($patterns)->contains(fn ($needle) => str_contains($contents, $needle))) {
-            abort(422, __('Uploaded file contains HTML content and was rejected.'));
+            if (collect($patterns)->contains(fn ($needle) => str_contains($contents, $needle))) {
+                abort(422, __('Uploaded file contains HTML content and was rejected.'));
+            }
+        } finally {
+            fclose($handle);
         }
     }
 }
