@@ -7,6 +7,7 @@ namespace App\Livewire\Admin\Branches;
 use App\Livewire\Concerns\HandlesErrors;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -53,7 +54,25 @@ class Form extends Component
 
         // Get available timezones and currencies for dropdowns
         $timezones = \DateTimeZone::listIdentifiers();
-        $currencies = \App\Models\Currency::active()->ordered()->pluck('code', 'code')->toArray();
+        
+        // Get currencies with fallback if table is empty
+        try {
+            $currencies = \App\Models\Currency::active()->ordered()->pluck('code', 'code')->toArray();
+            
+            // Fallback to common currencies if database is empty
+            if (empty($currencies)) {
+                $currencies = $this->getDefaultCurrencies();
+            }
+        } catch (\Illuminate\Database\QueryException | \PDOException $e) {
+            // Log the error for debugging while providing fallback for user
+            Log::warning('Currency table access failed, using default currencies', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+            
+            // Fallback if currencies table doesn't exist or has database errors
+            $currencies = $this->getDefaultCurrencies();
+        }
 
         $this->schema = [
             ['name' => 'name',      'label' => __('Name'),      'type' => 'text'],
@@ -137,6 +156,22 @@ class Form extends Component
                 : __('Branch created successfully.'),
             redirectRoute: 'admin.branches.index'
         );
+    }
+
+    /**
+     * Get default currencies as fallback when database is empty or unavailable
+     *
+     * @return array<string, string>
+     */
+    private function getDefaultCurrencies(): array
+    {
+        return [
+            'EGP' => 'EGP',
+            'USD' => 'USD',
+            'EUR' => 'EUR',
+            'GBP' => 'GBP',
+            'SAR' => 'SAR',
+        ];
     }
 
     public function render()
