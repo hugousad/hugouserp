@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentService
 {
+    // Documents only - no images allowed (images go to Media Library)
     public const ALLOWED_EXTENSIONS = [
         'pdf',
         'doc',
@@ -27,12 +28,10 @@ class DocumentService
         'xlsx',
         'ppt',
         'pptx',
-        'png',
-        'jpg',
-        'jpeg',
-        'gif',
         'csv',
         'txt',
+        'zip',
+        'rar',
     ];
 
     public const ALLOWED_MIME_TYPES = [
@@ -43,11 +42,12 @@ class DocumentService
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.ms-powerpoint',
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'image/png',
-        'image/jpeg',
-        'image/gif',
         'text/csv',
         'text/plain',
+        'application/zip',
+        'application/x-zip-compressed',
+        'application/x-rar-compressed',
+        'application/vnd.rar',
     ];
 
     private string $documentsDisk;

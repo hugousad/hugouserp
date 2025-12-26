@@ -17,21 +17,14 @@ class MediaLibrary extends Component
 {
     use WithFileUploads, WithPagination;
 
+    // Media Library only accepts images
     private const ALLOWED_EXTENSIONS = [
         'jpg',
         'jpeg',
         'png',
         'gif',
         'webp',
-        'pdf',
-        'doc',
-        'docx',
-        'xls',
-        'xlsx',
-        'ppt',
-        'pptx',
-        'csv',
-        'txt',
+        'ico',
     ];
 
     private const ALLOWED_MIME_TYPES = [
@@ -39,23 +32,19 @@ class MediaLibrary extends Component
         'image/png',
         'image/gif',
         'image/webp',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'text/csv',
-        'text/plain',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
     ];
 
     public $files = [];
     public string $search = '';
-    public string $filterType = 'all'; // all, images, documents
     public string $filterOwner = 'all'; // all, mine
+    
+    // Image preview modal
+    public bool $showPreview = false;
+    public ?array $previewImage = null;
 
-    protected $queryString = ['search', 'filterType', 'filterOwner'];
+    protected $queryString = ['search', 'filterOwner'];
 
     public function mount(): void
     {
@@ -112,6 +101,38 @@ class MediaLibrary extends Component
         session()->flash('success', __('Files uploaded successfully'));
     }
 
+    public function viewImage(int $id): void
+    {
+        $user = auth()->user();
+        $canBypassBranch = !$user->branch_id || $user->can('media.manage-all');
+        $media = Media::query()
+            ->when($user->branch_id && ! $canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
+            ->findOrFail($id);
+
+        if (!$media->isImage()) {
+            session()->flash('error', __('This file is not an image'));
+            return;
+        }
+
+        $this->previewImage = [
+            'id' => $media->id,
+            'name' => $media->original_name,
+            'url' => $media->url,
+            'size' => $media->human_size,
+            'width' => $media->width,
+            'height' => $media->height,
+            'uploaded_by' => $media->user->name ?? __('Unknown'),
+            'created_at' => $media->created_at?->format('Y-m-d H:i'),
+        ];
+        $this->showPreview = true;
+    }
+
+    public function closePreview(): void
+    {
+        $this->showPreview = false;
+        $this->previewImage = null;
+    }
+
     public function delete(int $id): void
     {
         $user = auth()->user();
@@ -147,8 +168,7 @@ class MediaLibrary extends Component
         $query = Media::query()
             ->with('user')
             ->when($user->branch_id && ! $canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
-            ->when($this->filterType === 'images', fn ($q) => $q->images())
-            ->when($this->filterType === 'documents', fn ($q) => $q->documents())
+            ->images() // Only show images in media library
             ->when(
                 $this->filterOwner === 'mine' || !$user->can('media.view-others'),
                 fn ($q) => $q->forUser($user->id)

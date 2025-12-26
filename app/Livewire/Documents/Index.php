@@ -21,6 +21,17 @@ class Index extends Component
     use WithPagination;
 
     private const ALLOWED_SORT_FIELDS = ['created_at', 'title', 'file_name'];
+    
+    // Image MIME types to exclude from documents
+    private const IMAGE_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/svg+xml',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
+    ];
 
     #[Url]
     public string $search = '';
@@ -116,7 +127,7 @@ class Index extends Component
         $sortDirection = $this->sanitizeSortDirection($this->sortDirection);
         $search = $this->normalizedSearch();
 
-        // Build query
+        // Build query - exclude images (documents should be files only)
         $query = Document::with(['uploader', 'tags'])
             ->where(function ($q) use ($user) {
                 $q->where('uploaded_by', $user->id)
@@ -125,6 +136,7 @@ class Index extends Component
                         $shareQuery->where('shared_with_user_id', $user->id)->active();
                     });
             })
+            ->whereNotIn('mime_type', self::IMAGE_MIME_TYPES)
             ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
             ->when($search !== '', fn($q) => $q->where(function ($query) use ($search) {
                 $query->where('title', 'like', "%{$search}%")
