@@ -1,4 +1,16 @@
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    copyToClipboard(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = @js(__('Link copied!'));
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }).catch(() => {
+            alert(@js(__('Failed to copy link')));
+        });
+    }
+}" @copy-link.window="copyToClipboard($event.detail)">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -111,13 +123,7 @@
                     <a href="{{ route('app.documents.show', $doc->id) }}" class="text-xs text-blue-600 hover:text-blue-900">{{ __('View') }}</a>
                     <button 
                         type="button"
-                        onclick="navigator.clipboard.writeText('{{ route('app.documents.download', $doc->id) }}').then(() => { 
-                            const toast = document.createElement('div');
-                            toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                            toast.textContent = '{{ __('Link copied!') }}';
-                            document.body.appendChild(toast);
-                            setTimeout(() => toast.remove(), 2000);
-                        })"
+                        @click="copyToClipboard('{{ route('app.documents.download', $doc->id) }}')"
                         class="text-xs text-slate-600 hover:text-slate-900"
                         title="{{ __('Copy Link') }}"
                     >{{ __('Copy Link') }}</button>

@@ -1,4 +1,16 @@
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    copyToClipboard(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            toast.textContent = @js(__('Link copied!'));
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }).catch(() => {
+            alert(@js(__('Failed to copy link')));
+        });
+    }
+}" @copy-link.window="copyToClipboard($event.detail)">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">{{ __('Media Library') }}</h1>
@@ -89,13 +101,7 @@
                         </a>
                         <button 
                             type="button"
-                            onclick="navigator.clipboard.writeText('{{ route('app.media.download', $item->id) }}').then(() => { 
-                                const toast = document.createElement('div');
-                                toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                                toast.textContent = '{{ __('Link copied!') }}';
-                                document.body.appendChild(toast);
-                                setTimeout(() => toast.remove(), 2000);
-                            })"
+                            @click="copyToClipboard('{{ route('app.media.download', $item->id) }}')"
                             class="p-2 bg-white rounded-full hover:bg-slate-100"
                             title="{{ __('Copy Link') }}"
                         >
