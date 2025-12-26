@@ -165,96 +165,133 @@
     <!-- Image Preview Modal -->
     @if($showPreview && $previewImage)
         <div 
-            class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50"
-            wire:click="closePreview"
+            class="fixed inset-0 pointer-events-none flex items-center justify-center p-4"
+            style="z-index: 9000;"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="image-preview-title"
             x-data="{ scale: 1 }"
             @keydown.escape.window="$wire.closePreview()"
         >
-            <div class="relative max-w-7xl max-h-full" @click.stop>
-                <!-- Close Button -->
-                <button 
-                    wire:click="closePreview"
-                    class="absolute -top-12 right-0 p-2 text-white hover:text-gray-300 transition"
-                    title="{{ __('Close') }}"
-                >
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-
-                <!-- Image Info Bar -->
-                <div class="absolute -top-12 left-0 flex items-center gap-4 text-white text-sm">
-                    <span class="font-medium">{{ $previewImage['name'] }}</span>
-                    <span>{{ $previewImage['size'] }}</span>
-                    @if($previewImage['width'] && $previewImage['height'])
-                        <span>{{ $previewImage['width'] }} × {{ $previewImage['height'] }}px</span>
-                    @endif
-                </div>
-
-                <!-- Image Container -->
-                <div class="relative bg-white rounded-lg overflow-hidden shadow-2xl">
-                    <img 
-                        src="{{ $previewImage['url'] }}" 
-                        alt="{{ $previewImage['name'] }}"
-                        class="max-h-[85vh] max-w-full mx-auto object-contain"
-                        :style="'transform: scale(' + scale + ')'"
-                    >
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="absolute -bottom-16 left-0 right-0 flex items-center justify-center gap-4">
+            {{-- Modal Content - Card Style without backdrop --}}
+            <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden pointer-events-auto border-2 border-emerald-500/30"
+                style="z-index: 9001;"
+                @click.stop>
+                
+                {{-- Header (Sticky) --}}
+                <div class="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
+                    <div>
+                        <h2 id="image-preview-title" class="text-xl font-bold text-gray-900 dark:text-white">{{ $previewImage['name'] }}</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ $previewImage['size'] }}
+                            @if($previewImage['width'] && $previewImage['height'])
+                                • {{ $previewImage['width'] }} × {{ $previewImage['height'] }}px
+                            @endif
+                        </p>
+                    </div>
                     <button 
-                        @click="scale = Math.max(0.5, scale - 0.25)"
-                        class="p-3 bg-white rounded-full hover:bg-gray-100 shadow-lg"
-                        title="{{ __('Zoom Out') }}"
+                        type="button" 
+                        wire:click="closePreview"
+                        aria-label="{{ __('Close modal') }}"
+                        class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
-                        </svg>
-                    </button>
-                    <button 
-                        @click="scale = 1"
-                        class="p-3 bg-white rounded-full hover:bg-gray-100 shadow-lg"
-                        title="{{ __('Reset Zoom') }}"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
-                        </svg>
-                    </button>
-                    <button 
-                        @click="scale = Math.min(3, scale + 0.25)"
-                        class="p-3 bg-white rounded-full hover:bg-gray-100 shadow-lg"
-                        title="{{ __('Zoom In') }}"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
-                        </svg>
-                    </button>
-                    <a 
-                        href="{{ $previewImage['url'] }}" 
-                        download="{{ $previewImage['name'] }}"
-                        class="p-3 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 shadow-lg"
-                        title="{{ __('Download') }}"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                    </a>
-                    <button 
-                        @click="copyToClipboard('{{ route('app.media.download', $previewImage['id']) }}')"
-                        class="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-lg"
-                        title="{{ __('Copy Link') }}"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
 
-                <!-- Image Details -->
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white text-sm">
-                    <p class="font-medium">{{ __('Uploaded by') }}: {{ $previewImage['uploaded_by'] }}</p>
-                    <p class="text-xs opacity-90">{{ $previewImage['created_at'] }}</p>
+                {{-- Image Preview Area (Scrollable) --}}
+                <div class="flex-1 overflow-y-auto px-6 pb-4 scroll-smooth min-h-0 bg-gray-50 dark:bg-gray-900">
+                    <div class="flex items-center justify-center min-h-full py-4">
+                        <img 
+                            src="{{ $previewImage['url'] }}" 
+                            alt="{{ $previewImage['name'] }}"
+                            class="max-h-[60vh] max-w-full object-contain rounded-lg shadow-lg transition-transform duration-200"
+                            :style="'transform: scale(' + scale + ')'"
+                        >
+                    </div>
+                </div>
+
+                {{-- Footer with Actions (Sticky) --}}
+                <div class="flex-shrink-0 px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10">
+                    <div class="flex flex-col gap-4">
+                        {{-- Zoom Controls --}}
+                        <div class="flex items-center justify-center gap-3">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ __('Zoom') }}:</span>
+                            <button 
+                                type="button"
+                                @click="scale = Math.max(0.5, scale - 0.25)"
+                                class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                title="{{ __('Zoom Out') }}"
+                                :disabled="scale <= 0.5"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                                </svg>
+                            </button>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[60px] text-center" x-text="Math.round(scale * 100) + '%'"></span>
+                            <button 
+                                type="button"
+                                @click="scale = 1"
+                                class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                title="{{ __('Reset Zoom') }}"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                </svg>
+                            </button>
+                            <button 
+                                type="button"
+                                @click="scale = Math.min(3, scale + 0.25)"
+                                class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                title="{{ __('Zoom In') }}"
+                                :disabled="scale >= 3"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ __('Uploaded by') }}: <span class="font-medium">{{ $previewImage['uploaded_by'] }}</span>
+                                <span class="mx-2">•</span>
+                                {{ $previewImage['created_at'] }}
+                            </div>
+                            <div class="flex gap-3">
+                                <a 
+                                    href="{{ $previewImage['url'] }}" 
+                                    download="{{ $previewImage['name'] }}"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    {{ __('Download') }}
+                                </a>
+                                <button 
+                                    type="button"
+                                    @click="copyToClipboard('{{ route('app.media.download', $previewImage['id']) }}')"
+                                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                    </svg>
+                                    {{ __('Copy Link') }}
+                                </button>
+                                <button 
+                                    type="button"
+                                    wire:click="closePreview"
+                                    class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium"
+                                >
+                                    {{ __('Close') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
