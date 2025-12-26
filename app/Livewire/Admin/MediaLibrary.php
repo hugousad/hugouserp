@@ -17,21 +17,14 @@ class MediaLibrary extends Component
 {
     use WithFileUploads, WithPagination;
 
+    // Media Library only accepts images
     private const ALLOWED_EXTENSIONS = [
         'jpg',
         'jpeg',
         'png',
         'gif',
         'webp',
-        'pdf',
-        'doc',
-        'docx',
-        'xls',
-        'xlsx',
-        'ppt',
-        'pptx',
-        'csv',
-        'txt',
+        'ico',
     ];
 
     private const ALLOWED_MIME_TYPES = [
@@ -39,23 +32,15 @@ class MediaLibrary extends Component
         'image/png',
         'image/gif',
         'image/webp',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'text/csv',
-        'text/plain',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
     ];
 
     public $files = [];
     public string $search = '';
-    public string $filterType = 'all'; // all, images, documents
     public string $filterOwner = 'all'; // all, mine
 
-    protected $queryString = ['search', 'filterType', 'filterOwner'];
+    protected $queryString = ['search', 'filterOwner'];
 
     public function mount(): void
     {
@@ -147,8 +132,7 @@ class MediaLibrary extends Component
         $query = Media::query()
             ->with('user')
             ->when($user->branch_id && ! $canBypassBranch, fn ($q) => $q->forBranch($user->branch_id))
-            ->when($this->filterType === 'images', fn ($q) => $q->images())
-            ->when($this->filterType === 'documents', fn ($q) => $q->documents())
+            ->images() // Only show images in media library
             ->when(
                 $this->filterOwner === 'mine' || !$user->can('media.view-others'),
                 fn ($q) => $q->forUser($user->id)

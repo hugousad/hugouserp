@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">{{ __('Documents') }}</h1>
-            <p class="text-sm text-slate-500">{{ __('Manage documents and files') }}</p>
+            <p class="text-sm text-slate-500">{{ __('Manage documents and files (non-images)') }}</p>
         </div>
         <div class="flex items-center gap-2">
             @can('documents.create')
@@ -109,6 +109,18 @@
                 </a>
                 <div class="flex items-center gap-2 mt-3 pt-3 border-t">
                     <a href="{{ route('app.documents.show', $doc->id) }}" class="text-xs text-blue-600 hover:text-blue-900">{{ __('View') }}</a>
+                    <button 
+                        type="button"
+                        onclick="navigator.clipboard.writeText('{{ route('app.documents.download', $doc->id) }}').then(() => { 
+                            const toast = document.createElement('div');
+                            toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                            toast.textContent = '{{ __('Link copied!') }}';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 2000);
+                        })"
+                        class="text-xs text-slate-600 hover:text-slate-900"
+                        title="{{ __('Copy Link') }}"
+                    >{{ __('Copy Link') }}</button>
                     @can('documents.edit')
                         @if($doc->uploaded_by === auth()->id())
                             <a href="{{ route('app.documents.edit', $doc->id) }}" class="text-xs text-emerald-600 hover:text-emerald-900">{{ __('Edit') }}</a>

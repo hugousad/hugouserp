@@ -16,20 +16,20 @@
     <!-- Upload Section -->
     @can('media.upload')
     <div class="erp-card p-6">
-        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ __('Upload') }}</h2>
+        <h2 class="text-lg font-semibold text-slate-800 mb-4">{{ __('Upload Images') }}</h2>
         <div class="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-emerald-500 transition-colors"
              x-data="{ dragging: false }"
              @dragover.prevent="dragging = true"
              @dragleave.prevent="dragging = false"
              @drop.prevent="dragging = false"
              :class="{ 'border-emerald-500 bg-emerald-50': dragging }">
-            <input type="file" wire:model="files" multiple class="hidden" id="file-upload" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv">
+            <input type="file" wire:model="files" multiple class="hidden" id="file-upload" accept="image/*">
             <label for="file-upload" class="cursor-pointer">
                 <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <p class="mt-4 text-sm text-slate-600">{{ __('Drop files here or click to upload') }}</p>
-                <p class="mt-1 text-xs text-slate-500">{{ __('Supported formats') }}: JPG, PNG, GIF, WebP, PDF, DOC, XLS, TXT</p>
+                <p class="mt-4 text-sm text-slate-600">{{ __('Drop images here or click to upload') }}</p>
+                <p class="mt-1 text-xs text-slate-500">{{ __('Supported formats') }}: JPG, PNG, GIF, WebP, ICO</p>
                 <p class="mt-1 text-xs text-slate-500">{{ __('Maximum file size') }}: 10 {{ __('MB') }}</p>
             </label>
         </div>
@@ -49,20 +49,13 @@
     <div class="erp-card p-4">
         <div class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[200px]">
-                <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Search...') }}" class="erp-input">
-            </div>
-            <div>
-                <select wire:model.live="filterType" class="erp-input">
-                    <option value="all">{{ __('All Files') }}</option>
-                    <option value="images">{{ __('Images') }}</option>
-                    <option value="documents">{{ __('Documents') }}</option>
-                </select>
+                <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Search images...') }}" class="erp-input">
             </div>
             @can('media.view-others')
             <div>
                 <select wire:model.live="filterOwner" class="erp-input">
-                    <option value="all">{{ __('All Users Files') }}</option>
-                    <option value="mine">{{ __('My Files') }}</option>
+                    <option value="all">{{ __('All Users Images') }}</option>
+                    <option value="mine">{{ __('My Images') }}</option>
                 </select>
             </div>
             @endcan
@@ -88,14 +81,30 @@
                     
                     <!-- Actions Overlay -->
                     <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <a href="{{ $item->url }}" target="_blank" class="p-2 bg-white rounded-full hover:bg-slate-100">
+                        <a href="{{ $item->url }}" target="_blank" class="p-2 bg-white rounded-full hover:bg-slate-100" title="{{ __('View') }}">
                             <svg class="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </a>
+                        <button 
+                            type="button"
+                            onclick="navigator.clipboard.writeText('{{ route('app.media.download', $item->id) }}').then(() => { 
+                                const toast = document.createElement('div');
+                                toast.className = 'fixed top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                                toast.textContent = '{{ __('Link copied!') }}';
+                                document.body.appendChild(toast);
+                                setTimeout(() => toast.remove(), 2000);
+                            })"
+                            class="p-2 bg-white rounded-full hover:bg-slate-100"
+                            title="{{ __('Copy Link') }}"
+                        >
+                            <svg class="h-5 w-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                            </svg>
+                        </button>
                         @if(auth()->user()->can('media.manage') || (auth()->user()->can('media.delete') && $item->user_id === auth()->id()))
-                        <button wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Are you sure?') }}" class="p-2 bg-white rounded-full hover:bg-red-100">
+                        <button wire:click="delete({{ $item->id }})" wire:confirm="{{ __('Are you sure?') }}" class="p-2 bg-white rounded-full hover:bg-red-100" title="{{ __('Delete') }}">
                             <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
@@ -120,7 +129,7 @@
                 <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                <p class="mt-2 text-sm text-slate-500">{{ __('No media files found') }}</p>
+                <p class="mt-2 text-sm text-slate-500">{{ __('No images found') }}</p>
             </div>
         @endforelse
     </div>

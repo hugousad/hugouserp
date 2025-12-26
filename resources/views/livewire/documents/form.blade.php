@@ -16,7 +16,9 @@
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-slate-700 mb-2">{{ __('File') }} <span class="text-red-500">*</span></label>
                     <input type="file" wire:model="file" class="erp-input w-full" required>
-                    <p class="text-xs text-slate-500 mt-1">{{ __('Maximum file size: 50MB') }}</p>
+                    <p class="text-xs text-slate-500 mt-1">{{ __('Supported formats: PDF, DOC, XLS, PPT, CSV, TXT, ZIP') }}</p>
+                    <p class="text-xs text-slate-500">{{ __('Maximum file size: 50MB') }}</p>
+                    <p class="text-xs text-amber-600">{{ __('Note: For images, please use the Media Library') }}</p>
                     @error('file') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
             @endif
