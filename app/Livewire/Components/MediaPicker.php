@@ -60,6 +60,7 @@ class MediaPicker extends Component
     // Search and filters
     public string $search = '';
     public string $filterType = 'all';
+    public string $sortBy = 'newest'; // newest, oldest, name_asc, name_desc
     
     // Accept mode: 'image' | 'file' | 'mixed'
     // This is the PRIMARY configuration that controls type-scoping
@@ -404,6 +405,9 @@ class MediaPicker extends Component
         $this->uploadFile = null;
         $this->loadedMedia = [];
         $this->page = 1;
+        
+        // Dispatch event to trigger Alpine.js cleanup
+        $this->dispatch('close-media-modal');
     }
 
     public function updatingSearch(): void
@@ -414,6 +418,13 @@ class MediaPicker extends Component
     
     public function updatedSearch(): void
     {
+        $this->loadMedia();
+    }
+    
+    public function updatedSortBy(): void
+    {
+        $this->page = 1;
+        $this->loadedMedia = [];
         $this->loadMedia();
     }
     
@@ -463,8 +474,24 @@ class MediaPicker extends Component
             });
         }
 
-        $results = $query->orderBy('created_at', 'desc')
-            ->paginate($this->perPage, ['*'], 'page', $this->page);
+        // Apply sorting
+        switch ($this->sortBy) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'name_asc':
+                $query->orderBy('original_name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('original_name', 'desc');
+                break;
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $results = $query->paginate($this->perPage, ['*'], 'page', $this->page);
         
         $newItems = $results->items();
         
@@ -785,7 +812,13 @@ class MediaPicker extends Component
 
     public function confirmSelection(): void
     {
-        if ($this->selectedMediaId) {
+        if ($this->storageScope === 'direct' && $this->selectedFilePath) {
+            $this->dispatch('file-uploaded', 
+                fieldId: $this->fieldId,
+                path: $this->selectedFilePath,
+                fileInfo: $this->selectedMedia
+            );
+        } elseif ($this->selectedMediaId) {
             $this->dispatch('media-selected', 
                 fieldId: $this->fieldId,
                 mediaId: $this->selectedMediaId,
